@@ -1,33 +1,47 @@
-from flask import Flask
-from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
-from flask_azure_oauth import FlaskAzureOauth
+from datetime import datetime
 
+from flask import Flask, session
+from flask_admin import Admin, expose, AdminIndexView
+from flask_admin.contrib.sqla import ModelView
+
+import settings
+from azure_sso import AzureSSO
 from db import load_session, User, MembershipCard, Voucher
 
 app = Flask(__name__)
-session = load_session()
+db_session = load_session()
+app.config.from_object(settings)
+sso = AzureSSO(app)
 
 # set optional bootswatch theme
 app.config["FLASK_ADMIN_SWATCH"] = "cerulean"
-app.config['AZURE_OAUTH_TENANCY'] = 'a6e2367a-92ea-4e5a-b565-723830bcc095'
-app.config['AZURE_OAUTH_APPLICATION_ID'] = '4fd277c2-7542-47d4-b4d7-6943c31b0ce3'
-
-admin = Admin(app, name="test flask admin", template_mode="bootstrap3")
-auth = FlaskAzureOauth()
-auth.init_app(app)
 
 
 class AuthorisedModelView(ModelView):
 
-    # @auth()
     def is_accessible(self):
-        return True
+        try:
+            is_not_expired = session["user"]["exp"] >= datetime.utcnow().timestamp()
+            allowed_roles = set(session["user"]["roles"]).issubset({"Admin", "Editor"})
 
+            return is_not_expired and allowed_roles
+        except KeyError:
+            return False
+
+
+class MyAdminIndexView(AdminIndexView):
+
+    @expose('/')
+    @sso.login_required()
+    def index(self):
+        return super(MyAdminIndexView, self).index()
+
+
+admin = Admin(app, name="test flask admin", template_mode="bootstrap3", index_view=MyAdminIndexView())
 
 # Add administrative views here
-admin.add_view(AuthorisedModelView(User, session))
-admin.add_view(AuthorisedModelView(MembershipCard, session))
-admin.add_view(AuthorisedModelView(Voucher, session))
+admin.add_view(AuthorisedModelView(User, db_session))
+admin.add_view(AuthorisedModelView(MembershipCard, db_session))
+admin.add_view(AuthorisedModelView(Voucher, db_session))
 
 app.run()

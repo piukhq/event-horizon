@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6b7726e975d07110ca8e43c1add9f3a44f3c2ff85485f37278809496dfec686e"
+            "sha256": "f92f6234041b17433546b9a6effecb2c58419bcc717e2c9ff0195746944caadd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,13 +16,6 @@
         ]
     },
     "default": {
-        "authlib": {
-            "hashes": [
-                "sha256:270e778201590af8873cf7d5e8e8ca5b625a16f7afba6a4280b6fb4efdd791bf",
-                "sha256:cc52908e9e996f3de2ac2f61bf1ee6c6f1c5ce8e67c89ff2ca473008fffc92f6"
-            ],
-            "version": "==0.14.3"
-        },
         "certifi": {
             "hashes": [
                 "sha256:1a4995114262bffbc2413b159f2a1a480c969de6e6eb13ee966d470af86af59c",
@@ -121,14 +114,6 @@
             "index": "pypi",
             "version": "==1.5.7"
         },
-        "flask-azure-oauth": {
-            "hashes": [
-                "sha256:00464a4316cd8f8c2db7ae0b6d226cb6927ce492bcdcb0c87b134a3331eedfa8",
-                "sha256:3d599b980a58379e30b8f70d4e963d4e75a13749433eddc62e97461b42006da9"
-            ],
-            "index": "pypi",
-            "version": "==0.5.0"
-        },
         "idna": {
             "hashes": [
                 "sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6",
@@ -211,6 +196,14 @@
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==1.1.1"
         },
+        "msal": {
+            "hashes": [
+                "sha256:582e92e3b9fa68084dca6ecfd8db866ddc75cd9043de267c79d6b6277dd27f55",
+                "sha256:daffb9d21fb45b36419182735fa12a4f9d4071b427188aa114162bd623edd812"
+            ],
+            "index": "pypi",
+            "version": "==1.10.0"
+        },
         "psycopg2-binary": {
             "hashes": [
                 "sha256:0deac2af1a587ae12836aa07970f5cb91964f05a7c6cdb69d8425ff4c15d4e2c",
@@ -259,6 +252,17 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==2.20"
+        },
+        "pyjwt": {
+            "extras": [
+                "crypto"
+            ],
+            "hashes": [
+                "sha256:a5c70a06e1f33d81ef25eecd50d50bd30e34de1ca8b2b9fa3fe0daaabcf69bf7",
+                "sha256:b70b15f89dc69b993d8a8d32c299032d5355c82f9b5b7e851d1a6d706dffe847"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==2.0.1"
         },
         "requests": {
             "hashes": [
