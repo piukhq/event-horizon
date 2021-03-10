@@ -8,7 +8,7 @@ flask = "*"
 flask-admin = "*"
 sqlalchemy = "*"
 psycopg2-binary = "*"
-flask-oidc = "*"
+flask-azure-oauth = "*"
 
 [dev-packages]
 mypy = "*"
