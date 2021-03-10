@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f92f6234041b17433546b9a6effecb2c58419bcc717e2c9ff0195746944caadd"
+            "sha256": "e83ddbf16373a4ec888a80c0c1df7ec5683aa8793a2eb0f7356d5a583082f395"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,6 +16,14 @@
         ]
     },
     "default": {
+        "authlib": {
+            "hashes": [
+                "sha256:0f6af3a38d37dd77361808dd3f2e258b647668dac6d2cefcefc4c4ebc3c7d2b2",
+                "sha256:7dde11ba45db51e97169c261362fab3193073100b7387e60c159db1eec470bbc"
+            ],
+            "index": "pypi",
+            "version": "==0.15.3"
+        },
         "certifi": {
             "hashes": [
                 "sha256:1a4995114262bffbc2413b159f2a1a480c969de6e6eb13ee966d470af86af59c",
@@ -196,14 +204,6 @@
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==1.1.1"
         },
-        "msal": {
-            "hashes": [
-                "sha256:582e92e3b9fa68084dca6ecfd8db866ddc75cd9043de267c79d6b6277dd27f55",
-                "sha256:daffb9d21fb45b36419182735fa12a4f9d4071b427188aa114162bd623edd812"
-            ],
-            "index": "pypi",
-            "version": "==1.10.0"
-        },
         "psycopg2-binary": {
             "hashes": [
                 "sha256:0deac2af1a587ae12836aa07970f5cb91964f05a7c6cdb69d8425ff4c15d4e2c",
@@ -253,23 +253,12 @@
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==2.20"
         },
-        "pyjwt": {
-            "extras": [
-                "crypto"
-            ],
-            "hashes": [
-                "sha256:a5c70a06e1f33d81ef25eecd50d50bd30e34de1ca8b2b9fa3fe0daaabcf69bf7",
-                "sha256:b70b15f89dc69b993d8a8d32c299032d5355c82f9b5b7e851d1a6d706dffe847"
-            ],
-            "markers": "python_version >= '3.6'",
-            "version": "==2.0.1"
-        },
         "requests": {
             "hashes": [
                 "sha256:27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804",
                 "sha256:c210084e36a42ae6b9219e00e48287def368a26d03a048ddad7bfee44f75871e"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'",
+            "index": "pypi",
             "version": "==2.25.1"
         },
         "sqlalchemy": {
