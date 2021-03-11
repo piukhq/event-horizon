@@ -10,6 +10,8 @@ sqlalchemy = "*"
 psycopg2-binary = "*"
 authlib = "*"
 requests = "*"
+python-dotenv = "*"
+sqlalchemy-stubs = "*"
 
 [dev-packages]
 mypy = "*"
