@@ -15,12 +15,17 @@ class AuthorisedModelView(ModelView):
         try:
             is_not_expired = session["user"]["exp"] >= datetime.utcnow().timestamp()
             allowed_roles = set(session["user"]["roles"]).issubset({"Admin", "Editor"})
-
             return is_not_expired and allowed_roles
         except KeyError:
             return False
 
     def inaccessible_callback(self, name: str, **kwargs: Optional[dict]) -> "Response":
+        try:
+            if session["user"]["exp"] < datetime.utcnow().timestamp():
+                del session["user"]
+        except KeyError:
+            pass
+
         return redirect(url_for("auth_views.login"))
 
 
