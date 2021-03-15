@@ -8,7 +8,7 @@ admin = Admin(name="test flask admin", template_mode="bootstrap3", index_view=My
 
 
 class UserProfileForm(InlineFormAdmin):
-    form_label = "profile"
+    form_label = "Profile"
 
 
 class UserAdmin(AuthorisedModelView):
