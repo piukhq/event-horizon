@@ -6,18 +6,18 @@ name = "pypi"
 [packages]
 flask = "*"
 flask-admin = "*"
-sqlalchemy = "*"
 psycopg2-binary = "*"
 authlib = "*"
 requests = "*"
 python-dotenv = "*"
-sqlalchemy-stubs = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 mypy = "*"
 black = "==20.8b1"
 isort = "*"
 flake8 = "*"
+sqlalchemy-stubs = "*"
 
 [requires]
 python_version = "3.9"

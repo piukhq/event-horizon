@@ -8,15 +8,15 @@ from app.db.session import engine
 Base = automap_base()
 
 
-class Merchant(Base):
+class Merchant(Base):  # type: ignore
     __tablename__ = "merchant"
     created_at = Column(DateTime, default=datetime.now)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
-class User(Base):
+class User(Base):  # type: ignore
     __tablename__ = "user"
     created_at = Column(DateTime, default=datetime.now)
 
