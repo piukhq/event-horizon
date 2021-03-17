@@ -15,5 +15,5 @@ OAUTH_SERVER_METADATA_URL = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0
 
 DEV_PORT = int(getenv("DEV_PORT", "5000"))
 SQLALCHEMY_DATABASE_URI = getenv(
-    "SQLALCHEMY_DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/test_fastapi"
+    "SQLALCHEMY_DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/polaris"
 )
