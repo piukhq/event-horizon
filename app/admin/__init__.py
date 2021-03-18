@@ -17,10 +17,9 @@ class UserAdmin(AuthorisedModelView):
 
 
 class MerchantAdmin(AuthorisedModelView):
-    form_create_rules = ("name", "slug", "card_number_prefix", "card_number_length")
-    form_edit_rules = ("name", "slug", "card_number_prefix", "card_number_length", "created_at")
+    form_create_rules = ("name", "slug", "card_number_prefix")
     form_excluded_columns = ("user_collection",)
-    form_widget_args = {"created_at": {"disabled": True}}
+    form_widget_args = {"created_at": {"disabled": True}, "card_number_length": {"disabled": True}}
 
 
 with SessionMaker() as db_session:
