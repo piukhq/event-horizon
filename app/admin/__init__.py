@@ -4,7 +4,9 @@ from flask_admin.model.form import InlineFormAdmin
 from app.db import User, UserProfile, Merchant, SessionMaker
 from .classes import MyAdminIndexView, AuthorisedModelView
 
-admin = Admin(name="test flask admin", template_mode="bootstrap3", index_view=MyAdminIndexView())
+admin = Admin(
+    name="Polaris Admin", template_mode="bootstrap3", index_view=MyAdminIndexView()
+)
 
 
 class UserProfileForm(InlineFormAdmin):

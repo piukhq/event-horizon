@@ -19,6 +19,10 @@ class AuthorisedModelView(ModelView):
     def is_accessible(self) -> bool:
         try:
             is_not_expired = session["user"]["exp"] >= datetime.utcnow().timestamp()
+            if not is_not_expired:
+                del session["user"]
+                return False
+
             user_roles = set(session["user"]["roles"])
             valid_user_roles = user_roles.intersection(self.ALL_AZURE_ROLES)
             self.can_create = self.can_edit = self.can_delete = bool(user_roles.intersection(self.RW_AZURE_ROLES))
