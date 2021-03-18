@@ -1,2 +1,2 @@
-from .models import User, UserProfile, Merchant
+from .models import AccountHolder, AccountHolderProfile, Retailer
 from .session import SessionMaker

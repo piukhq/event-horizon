@@ -8,8 +8,8 @@ from app.db.session import engine
 Base = automap_base()
 
 
-class Merchant(Base):  # type: ignore
-    __tablename__ = "merchant"
+class Retailer(Base):  # type: ignore
+    __tablename__ = "retailer"
     created_at = Column(DateTime, default=datetime.now)
     card_number_length = Column(Integer, default=10)
 
@@ -17,12 +17,12 @@ class Merchant(Base):  # type: ignore
         return self.name
 
 
-class User(Base):  # type: ignore
-    __tablename__ = "user"
+class AccountHolder(Base):  # type: ignore
+    __tablename__ = "account_holder"
     created_at = Column(DateTime, default=datetime.now)
 
 
 Base.prepare(engine, reflect=True)
 
 # get models from Base mapping
-UserProfile = Base.classes.userprofile
+AccountHolderProfile = Base.classes.account_holder_profile
