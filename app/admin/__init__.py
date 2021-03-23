@@ -20,10 +20,10 @@ class AccountHolderAdmin(AuthorisedModelView):
 
 class RetailerAdmin(AuthorisedModelView):
     form_create_rules = ("name", "slug", "card_number_prefix")
-    form_excluded_columns = ("account_holder_collection",)
+    form_excluded_columns = ("accountholder_collection",)
     form_widget_args = {"created_at": {"disabled": True}, "card_number_length": {"disabled": True}}
 
 
 with SessionMaker() as db_session:
-    admin.add_view(AccountHolderAdmin(AccountHolder, db_session))
-    admin.add_view(RetailerAdmin(Retailer, db_session))
+    admin.add_view(AccountHolderAdmin(AccountHolder, db_session, "Account Holders"))
+    admin.add_view(RetailerAdmin(Retailer, db_session, "Retailers"))
