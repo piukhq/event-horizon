@@ -8,7 +8,7 @@ from settings import OAUTH_SERVER_METADATA_URL
 if TYPE_CHECKING:
     from werkzeug.wrappers import Response
 
-auth_bl = Blueprint("auth_views", __name__)
+auth_bp = Blueprint("auth_views", __name__)
 
 oauth = OAuth()
 oauth.register(
@@ -18,13 +18,13 @@ oauth.register(
 )
 
 
-@auth_bl.route("/login")
+@auth_bp.route("/login")
 def login() -> "Response":
     redirect_uri = url_for("auth_views.authorize", _external=True)
     return oauth.bpl.authorize_redirect(redirect_uri)
 
 
-@auth_bl.route("/logout")
+@auth_bp.route("/logout")
 def logout() -> "Response":
     # session['user'] will always be set again as long
     # as your AAD session is still alive.
@@ -32,7 +32,7 @@ def logout() -> "Response":
     return redirect("/admin")
 
 
-@auth_bl.route("/admin/callback")
+@auth_bp.route("/admin/callback")
 def authorize() -> "Response":
     token = oauth.bpl.authorize_access_token()
     userinfo = oauth.bpl.parse_id_token(token)
