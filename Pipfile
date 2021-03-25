@@ -21,6 +21,8 @@ isort = "*"
 flake8 = "*"
 sqlalchemy-stubs = "*"
 pytest = "*"
+pytest-cov = "*"
+xenon = "*"
 
 [requires]
 python_version = "3.9"
