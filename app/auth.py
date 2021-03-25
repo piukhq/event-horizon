@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from authlib.integrations.flask_client import OAuth
-from flask import url_for, session, redirect, Blueprint
+from flask import Blueprint, redirect, session, url_for
 
 from settings import OAUTH_SERVER_METADATA_URL
 

@@ -1,13 +1,12 @@
 import json
-
 from typing import List, Optional
 
 import pydantic
 import wtforms
 import yaml
+from pydantic import BaseConfig, BaseModel, Field, validator
 
 from app.db.models import metadata
-from pydantic import BaseConfig, BaseModel, Field, validator
 
 REQUIRED_POLARIS_JOIN_FIELDS = ["first_name", "last_name", "email"]
 

@@ -4,7 +4,8 @@ from wtforms.validators import DataRequired
 
 from app.admin.validators import validate_retailer_config
 from app.db import AccountHolder, AccountHolderProfile, Retailer, SessionMaker
-from .classes import MyAdminIndexView, AuthorisedModelView
+
+from .classes import AuthorisedModelView, MyAdminIndexView
 
 admin = Admin(name="Polaris Admin", template_mode="bootstrap3", index_view=MyAdminIndexView())
 
