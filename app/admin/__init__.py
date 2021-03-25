@@ -43,7 +43,10 @@ last_name:
     form_args = {
         "config": {
             "label": "Profile Field Configuration",
-            "validators": [DataRequired(message="Configuration is required"), validate_retailer_config],
+            "validators": [
+                DataRequired(message="Configuration is required"),
+                validate_retailer_config,
+            ],
             "render_kw": {"placeholder": config_placeholder},
             "description": "Configuration in YAML format",
         },
