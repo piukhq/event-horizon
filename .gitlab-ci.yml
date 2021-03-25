@@ -6,12 +6,20 @@ default:
 
 tests:
   stage: tests
+  variables:
+    POSTGRES_DB: polaris
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: ""
+    POSTGRES_HOST_AUTH_METHOD: trust
+    SQLALCHEMY_DATABASE_URI: "postgresql://postgres@postgres:5432/polaris"
   before_script: &setup
     - pip install pipenv
     - pipenv install --dev --system --deploy --ignore-pipfile
     - pip freeze
   script:
     - pytest --verbose --cov app --cov-report term-missing
+  services:
+    - postgres:11
 
 complexity:
   stage: tests
