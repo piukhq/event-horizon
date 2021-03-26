@@ -19,11 +19,11 @@ class AccountHolderAdmin(AuthorisedModelView):
 
 
 class RetailerAdmin(AuthorisedModelView):
-    form_create_rules = ("name", "slug", "card_number_prefix", "config")
+    form_create_rules = ("name", "slug", "account_number_prefix", "config")
     form_excluded_columns = ("account_holder_collection",)
     form_widget_args = {
         "created_at": {"disabled": True},
-        "card_number_length": {"disabled": True},
+        "account_number_length": {"disabled": True},
         "config": {"rows": 20},
     }
 
@@ -51,7 +51,7 @@ last_name:
         },
         "name": {"validators": [DataRequired(message="Name is required")]},
         "slug": {"validators": [DataRequired(message="Slug is required")]},
-        "card_number_prefix": {"validators": [DataRequired("Card number prefix is required")]},
+        "account_number_prefix": {"validators": [DataRequired("Account number prefix is required")]},
     }
 
 
