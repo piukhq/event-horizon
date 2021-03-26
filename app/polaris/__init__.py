@@ -2,12 +2,11 @@ from flask_admin import Admin
 from flask_admin.model.form import InlineFormAdmin
 from wtforms.validators import DataRequired
 
-from app.admin.validators import validate_retailer_config
-from app.db import AccountHolder, AccountHolderProfile, Retailer, SessionMaker
+from app.polaris.db import AccountHolder, AccountHolderProfile, Retailer, SessionMaker
+from app.polaris.validators import validate_retailer_config
+from app.polaris.views.admin import AuthorisedModelView, PolarisAdminIndexView
 
-from .classes import AuthorisedModelView, MyAdminIndexView
-
-admin = Admin(name="Polaris Admin", template_mode="bootstrap3", index_view=MyAdminIndexView())
+polaris_admin = Admin(name="Polaris Admin", template_mode="bootstrap3", index_view=PolarisAdminIndexView())
 
 
 class AccountHolderProfileForm(InlineFormAdmin):
@@ -57,5 +56,5 @@ last_name:
 
 
 with SessionMaker() as db_session:
-    admin.add_view(AccountHolderAdmin(AccountHolder, db_session, "Account Holders"))
-    admin.add_view(RetailerAdmin(Retailer, db_session, "Retailers"))
+    polaris_admin.add_view(AccountHolderAdmin(AccountHolder, db_session, "Account Holders"))
+    polaris_admin.add_view(RetailerAdmin(Retailer, db_session, "Retailers"))

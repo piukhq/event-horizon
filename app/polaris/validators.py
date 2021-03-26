@@ -1,25 +1,27 @@
 import json
+
 from typing import List, Optional
 
 import pydantic
 import wtforms
 import yaml
+
 from pydantic import BaseConfig, BaseModel, Field, validator
 
-from app.db.models import metadata
+from app.polaris.db.models import metadata
 
 REQUIRED_POLARIS_JOIN_FIELDS = ["first_name", "last_name", "email"]
 
 
-def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
-    def get_optional_profile_field_names() -> List[str]:
-        table = metadata.tables["account_holder_profile"]
-        return [
-            str(col.name)
-            for col in table.c
-            if not (col.primary_key or col.foreign_keys) and str(col.name) not in REQUIRED_POLARIS_JOIN_FIELDS
-        ]
+def _get_optional_profile_field_names() -> List[str]:
+    return [
+        str(col.name)
+        for col in metadata.tables["account_holder_profile"].c
+        if not (col.primary_key or col.foreign_keys) and str(col.name) not in REQUIRED_POLARIS_JOIN_FIELDS
+    ]
 
+
+def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
     class FieldOptionsConfig(BaseConfig):
         extra = pydantic.Extra.forbid
 
@@ -41,7 +43,7 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
     RetailerConfigModel = pydantic.create_model(
         "RetailerConfigModel",
         **{fld: (RequiredFieldOptionsModel, Field(...)) for fld in REQUIRED_POLARIS_JOIN_FIELDS},  # type: ignore
-        **{fld: (FieldOptionsModel, Field(None)) for fld in get_optional_profile_field_names()},  # type: ignore
+        **{fld: (FieldOptionsModel, Field(None)) for fld in _get_optional_profile_field_names()},  # type: ignore
         __config__=FieldOptionsConfig,
     )
 

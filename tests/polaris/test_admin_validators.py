@@ -1,10 +1,9 @@
 from unittest import mock
 
 import pytest
-
 import wtforms
 
-from app.admin.validators import validate_retailer_config
+from app.polaris.validators import validate_retailer_config
 
 
 @pytest.fixture
@@ -33,6 +32,7 @@ def test_validate_retailer_config_string(mock_form: mock.MagicMock, mock_config_
     assert ex_info.value.args[0] == "The submitted YAML is not valid"
 
 
+@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: [])
 def test_validate_retailer_config_minimum1(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
     mock_config_field.data = """
 email:
@@ -48,6 +48,7 @@ last_name:
         pytest.fail(f"Unexpected exception raised ({ex})")
 
 
+@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: [])
 def test_validate_retailer_config_minimum2(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
     mock_config_field.data = """
 email:
@@ -65,6 +66,7 @@ last_name:
     )
 
 
+@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: [])
 def test_validate_retailer_config_minimum3(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
     mock_config_field.data = """
 email:
@@ -85,6 +87,7 @@ last_name:
     )
 
 
+@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: [])
 def test_validate_retailer_config_minimum4(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
     mock_config_field.data = """
 email:
@@ -102,6 +105,7 @@ last_name:
     assert ex_info.value.args[0] == "email -> ooops: extra fields not permitted"
 
 
+@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"])
 def test_validate_retailer_config_optional1(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
     mock_config_field.data = """
 email:
@@ -121,6 +125,7 @@ phone:
         pytest.fail(f"Unexpected exception raised ({ex})")
 
 
+@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"])
 def test_validate_retailer_config_optional2(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
     mock_config_field.data = """
 email:

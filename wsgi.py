@@ -1,5 +1,5 @@
 from app import create_app
-from settings import DEV_PORT
+from app.settings import DEV_PORT
 
 app = create_app()
 
