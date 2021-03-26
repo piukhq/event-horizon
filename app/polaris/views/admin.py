@@ -40,9 +40,9 @@ class AuthorisedModelView(ModelView):
         return redirect(url_for("auth_views.login"))
 
 
-class MyAdminIndexView(AdminIndexView):
+class PolarisAdminIndexView(AdminIndexView):
     @expose("/")
     def index(self) -> "Response":
         if "user" not in session:
-            return redirect("/login")
-        return super(MyAdminIndexView, self).index()
+            return redirect(url_for("auth_views.login"))
+        return super(PolarisAdminIndexView, self).index()

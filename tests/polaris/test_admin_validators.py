@@ -1,10 +1,9 @@
 from unittest import mock
 
 import pytest
-
 import wtforms
 
-from app.admin.validators import validate_retailer_config
+from app.polaris.validators import validate_retailer_config
 
 
 @pytest.fixture

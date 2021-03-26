@@ -1,7 +1,7 @@
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.sql.schema import MetaData
 
-from app.db.session import engine
+from app.polaris.db.session import engine
 
 metadata = MetaData()
 Base = automap_base(metadata=metadata)

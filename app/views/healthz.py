@@ -3,7 +3,7 @@ from typing import Any
 from flask.blueprints import Blueprint
 from sqlalchemy.sql import text
 
-from app.db import SessionMaker
+from app.polaris.db import SessionMaker as PolarisSessionMaker
 
 healthz_bp = Blueprint("healthz", __name__)
 
@@ -18,10 +18,10 @@ def readyz() -> Any:
     payload = {}
     status_code = 200
     try:
-        with SessionMaker() as session:
+        with PolarisSessionMaker() as session:
             session.execute(text("SELECT 1"))
     except Exception as e:
-        payload = {"postgres": f"failed to connect to postgres due to error: {repr(e)}"}
+        payload = {"postgres": f"failed to connect to polaris database due to error: {repr(e)}"}
         status_code = 500
 
     return payload, status_code
