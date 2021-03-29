@@ -1,9 +1,8 @@
+from typing import Callable, Generator
 from unittest import mock
 
 import pytest
 import wtforms
-
-from app.polaris.validators import validate_retailer_config
 
 
 @pytest.fixture
@@ -16,7 +15,20 @@ def mock_config_field() -> mock.MagicMock:
     return mock.MagicMock(spec=wtforms.Field)
 
 
-def test_validate_retailer_config_empty(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+@pytest.fixture(scope="session")
+def validate_retailer_config() -> Generator:
+    with mock.patch("sqlalchemy.ext.automap.automap_base", autospec=True):
+        with mock.patch("app.polaris.db.models.metadata", autospec=True) as mock_metadata:
+            mock_metadata.return_value.tables = {"account_holder_profile": mock.MagicMock()}
+
+            from app.polaris.validators import validate_retailer_config as fn
+
+            yield fn
+
+
+def test_validate_retailer_config_empty(
+    validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
+) -> None:
     mock_config_field.data = ""
     with pytest.raises(wtforms.ValidationError) as ex_info:
         validate_retailer_config(mock_form, mock_config_field)
@@ -24,7 +36,9 @@ def test_validate_retailer_config_empty(mock_form: mock.MagicMock, mock_config_f
     assert ex_info.value.args[0] == "The submitted YAML is not valid"
 
 
-def test_validate_retailer_config_string(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+def test_validate_retailer_config_string(
+    validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
+) -> None:
     mock_config_field.data = "just-a-little-string"
     with pytest.raises(wtforms.ValidationError) as ex_info:
         validate_retailer_config(mock_form, mock_config_field)
@@ -32,8 +46,9 @@ def test_validate_retailer_config_string(mock_form: mock.MagicMock, mock_config_
     assert ex_info.value.args[0] == "The submitted YAML is not valid"
 
 
-@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: [])
-def test_validate_retailer_config_minimum1(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+def test_validate_retailer_config_minimum1(
+    validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
+) -> None:
     mock_config_field.data = """
 email:
     required: true
@@ -48,8 +63,9 @@ last_name:
         pytest.fail(f"Unexpected exception raised ({ex})")
 
 
-@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: [])
-def test_validate_retailer_config_minimum2(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+def test_validate_retailer_config_minimum2(
+    validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
+) -> None:
     mock_config_field.data = """
 email:
 first_name:
@@ -66,8 +82,9 @@ last_name:
     )
 
 
-@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: [])
-def test_validate_retailer_config_minimum3(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+def test_validate_retailer_config_minimum3(
+    validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
+) -> None:
     mock_config_field.data = """
 email:
     required: false
@@ -87,8 +104,9 @@ last_name:
     )
 
 
-@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: [])
-def test_validate_retailer_config_minimum4(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+def test_validate_retailer_config_minimum4(
+    validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
+) -> None:
     mock_config_field.data = """
 email:
     required: true
@@ -106,7 +124,9 @@ last_name:
 
 
 @mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"])
-def test_validate_retailer_config_optional1(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+def test_validate_retailer_config_optional1(
+    validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
+) -> None:
     mock_config_field.data = """
 email:
     required: true
@@ -126,7 +146,9 @@ phone:
 
 
 @mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"])
-def test_validate_retailer_config_optional2(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+def test_validate_retailer_config_optional2(
+    validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
+) -> None:
     mock_config_field.data = """
 email:
     required: true

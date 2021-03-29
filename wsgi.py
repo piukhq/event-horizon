@@ -1,4 +1,4 @@
-from app import create_app
+from app.app import create_app
 from app.settings import DEV_PORT
 
 app = create_app()

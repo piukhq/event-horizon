@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from flask import Blueprint, redirect, session, url_for
 
-from app import oauth
+from app.app import oauth
 
 if TYPE_CHECKING:
     from werkzeug.wrappers import Response
