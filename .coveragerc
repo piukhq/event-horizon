@@ -1,0 +1,8 @@
+[run]
+omit = *test*
+       */app/app.py
+       */app/*/db/*
+       */app/*/views/*
+branch = True
+[report]
+fail_under = 85
