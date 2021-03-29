@@ -1,7 +1,7 @@
 from authlib.integrations.flask_client import OAuth
 from flask import Flask
 
-from app.polaris.admin import polaris_admin
+from app.polaris.views.admin import polaris_admin
 from app.settings import OAUTH_SERVER_METADATA_URL
 
 oauth = OAuth()

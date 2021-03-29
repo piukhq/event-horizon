@@ -1,0 +1,40 @@
+stages:
+  - tests
+
+default:
+  image: binkhq/python:3.9
+
+tests:
+  stage: tests
+  variables:
+    POSTGRES_DB: polaris
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: ""
+    POSTGRES_HOST_AUTH_METHOD: trust
+    SQLALCHEMY_DATABASE_URI: "postgresql://postgres@postgres:5432/polaris"
+  before_script: &setup
+    - pip install pipenv
+    - pipenv install --dev --system --deploy --ignore-pipfile
+    - pip freeze
+  script:
+    - pytest --verbose --cov app --cov-report term-missing
+  services:
+    - postgres:11
+
+complexity:
+  stage: tests
+  before_script: *setup
+  script:
+    - xenon --max-average A --max-modules B --max-absolute B .
+
+style:
+  stage: tests
+  before_script: *setup
+  script:
+    - flake8 && black --line-length 120 --check . && isort --check .
+
+type-check:
+  stage: tests
+  before_script: *setup
+  script:
+    - mypy --config-file .mypy.ini app
