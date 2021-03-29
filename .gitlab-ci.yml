@@ -31,7 +31,7 @@ style:
   stage: tests
   before_script: *setup
   script:
-    - flake8 && black --line-length 120 --check .
+    - flake8 && black --line-length 120 --check . && isort --check .
 
 type-check:
   stage: tests
