@@ -53,7 +53,9 @@ class PolarisAdminIndexView(AdminIndexView):
         return super(PolarisAdminIndexView, self).index()
 
 
-polaris_admin = Admin(name="Polaris Admin", template_mode="bootstrap3", index_view=PolarisAdminIndexView())
+polaris_admin = Admin(
+    name="Polaris Admin", template_mode="bootstrap3", index_view=PolarisAdminIndexView(url="/bpl/admin/")
+)
 
 
 class AccountHolderProfileForm(InlineFormAdmin):
