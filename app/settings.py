@@ -6,7 +6,6 @@ load_dotenv()
 
 FLASK_ADMIN_SWATCH = "cerulean"
 SECRET_KEY = "476dd64f-0a46-47e4-b094-8e2743ebe678"
-SESSION_TYPE = "filesystem"
 
 # AAD SSO
 TENANT_ID = "a6e2367a-92ea-4e5a-b565-723830bcc095"
