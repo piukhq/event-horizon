@@ -10,8 +10,8 @@ SECRET_KEY = "476dd64f-0a46-47e4-b094-8e2743ebe678"
 # AAD SSO
 TENANT_ID = "a6e2367a-92ea-4e5a-b565-723830bcc095"
 OAUTH_SERVER_METADATA_URL = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0/.well-known/openid-configuration"
-EVENT_HORIZON_CLIENT_SECRET = "EMq_4c.h8Pim7.ibmb2-.xxB1n6l-o2wj_"
-EVENT_HORIZON_CLIENT_ID = "2043ed95-8a99-45c9-93b5-71317a50a3ee"
+EVENT_HORIZON_CLIENT_ID = getenv("EVENT_HORIZON_CLIENT_ID")
+EVENT_HORIZON_CLIENT_SECRET = getenv("EVENT_HORIZON_CLIENT_SECRET")
 
 DEV_PORT = int(getenv("DEV_PORT", "5000"))
 SQLALCHEMY_DATABASE_URI = getenv("SQLALCHEMY_DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/polaris")
