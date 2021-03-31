@@ -12,7 +12,8 @@ tests:
     POSTGRES_PASSWORD: ""
     POSTGRES_HOST_AUTH_METHOD: trust
     SQLALCHEMY_DATABASE_URI: "postgresql://postgres@postgres:5432/polaris"
-    TEST_RUNNER: 1
+    EVENT_HORIZON_CLIENT_SECRET: "unused-for-tests"
+    SECRET_KEY: "not-the-real-key"
   before_script: &setup
     - pip install pipenv
     - pipenv install --dev --system --deploy --ignore-pipfile
