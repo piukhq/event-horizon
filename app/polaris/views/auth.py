@@ -10,23 +10,23 @@ if TYPE_CHECKING:
 auth_bp = Blueprint("auth_views", __name__)
 
 
-@auth_bp.route("/login")
+@auth_bp.route("/bpl/admin/login/")
 def login() -> "Response":
     redirect_uri = url_for("auth_views.authorize", _external=True)
     return oauth.event_horizon.authorize_redirect(redirect_uri)
 
 
-@auth_bp.route("/logout")
+@auth_bp.route("/bpl/admin/logout/")
 def logout() -> "Response":
     # session['user'] will always be set again as long
     # as your AAD session is still alive.
     session.pop("user", None)
-    return redirect("/admin")
+    return redirect(url_for("admin.index"))
 
 
-@auth_bp.route("/admin/callback")
+@auth_bp.route("/bpl/admin/authorize/")
 def authorize() -> "Response":
     token = oauth.event_horizon.authorize_access_token()
     userinfo = oauth.event_horizon.parse_id_token(token)
     session["user"] = userinfo
-    return redirect("/admin")
+    return redirect(url_for("admin.index"))
