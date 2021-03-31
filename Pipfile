@@ -13,6 +13,8 @@ python-dotenv = "*"
 sqlalchemy = "*"
 pyyaml = "*"
 pydantic = "*"
+azure-keyvault = "*"
+azure-identity = "*"
 
 [dev-packages]
 mypy = "*"
