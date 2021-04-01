@@ -7,8 +7,8 @@ from app.key_vault import KeyVault
 load_dotenv()
 FLASK_ADMIN_SWATCH = "cerulean"
 
-KEYVAULT_URI = getenv("KEYVAULT_URI", "https://bink-uksouth-dev-com.vault.azure.net/")
-key_vault = KeyVault(KEYVAULT_URI)
+KEY_VAULT_URI = getenv("KEY_VAULT_URI", "https://bink-uksouth-dev-com.vault.azure.net/")
+key_vault = KeyVault(KEY_VAULT_URI)
 
 SECRET_KEY = getenv("SECRET_KEY") or key_vault.get_secret("bpl-event-horizon-secret-key")
 
