@@ -1,4 +1,6 @@
-# Event Horizon - BPL Admin Dashboard
+# Event Horizon
+
+BPL Admin Dashboard
 
 ## Configuration
 
