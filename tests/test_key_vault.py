@@ -1,3 +1,4 @@
+from typing import Generator
 from unittest import mock
 
 import pytest
@@ -13,51 +14,50 @@ def mock_client() -> SecretClient:
 
 
 def test_init_keyvault() -> None:
+    try:
+        KeyVault("http://vault")
+    except Exception:
+        pytest.fail("Could not init KeyVault instance")
+
+
+def test_init_keyvault_no_args() -> None:
     with pytest.raises(ValueError):
         KeyVault()
 
 
 def test_get_secret(mock_client: SecretClient) -> None:
-    mock_client.get_secret.return_value.value = '{"value": "shhh! secret"}'
+    fake_secrets = [
+        ('{"value": "secret #1"}', "value"),
+        ('{"other_key": "secret #2"}', "other_key"),
+        ('"a-json-string-object"', None),
+        ('{"another_key": "secret #2"}', None),
+        ("just-a-normal-string", None),
+    ]
+
+    def secret_factory() -> Generator:
+        for i, _ in enumerate(fake_secrets):
+            mock_secret = mock.MagicMock()
+            mock_secret.value = fake_secrets[i][0]
+            yield mock_secret
+
+    mock_client.get_secret.side_effect = secret_factory()
+
     key_vault = KeyVault(client=mock_client)
-    assert key_vault.get_secret("test") == "shhh! secret"
+    results = []
+    for _, key_to_retrieve in list(fake_secrets):
+        results.append(key_vault.get_secret("made-up-name", key=key_to_retrieve))
+
+    assert results == [
+        "secret #1",
+        "secret #2",
+        "a-json-string-object",
+        {"another_key": "secret #2"},
+        "just-a-normal-string",
+    ]
 
 
 def test_get_secret_no_key_in_secret(mock_client: SecretClient) -> None:
     mock_client.get_secret.return_value.value = '{"value": "shhh! secret"}'
     key_vault = KeyVault(client=mock_client)
     with pytest.raises(KeyError):
-        key_vault.get_secret("test", "no-key-with-this-name")
-
-
-def test_get_secrets(mock_client: SecretClient) -> None:
-    secret_values = [
-        '{"value": "secret #1"}',
-        '{"other_key": "secret #2"}',
-        '"just-a-stringy-secret"',
-        '{"another_key": "secret #2"}',
-    ]
-
-    def secret_factory(arg: str) -> mock.MagicMock:
-        mock_secret = mock.MagicMock()
-        mock_secret.value = secret_values.pop(0)
-        return mock_secret
-
-    mock_client.get_secret.side_effect = secret_factory
-
-    key_vault = KeyVault(client=mock_client)
-    secret_dict = key_vault.get_secrets({"name1": "value", "name2": "other_key", "name3": None, "name4": None})
-    assert secret_dict == {
-        "name1": "secret #1",
-        "name2": "secret #2",
-        "name3": "just-a-stringy-secret",
-        "name4": {"another_key": "secret #2"},
-    }
-
-
-def test_get_secrets_no_key_in_any_secret_requested(mock_client: SecretClient) -> None:
-    mock_client.get_secret.return_value.value = '{"value": "shhh! secret"}'
-
-    key_vault = KeyVault(client=mock_client)
-    with pytest.raises(KeyError):
-        key_vault.get_secrets({"name1": "no-key-with-this-name"})
+        key_vault.get_secret("made-up-name", key="no-key-with-this-name")
