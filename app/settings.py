@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from app.key_vault import KeyVault
 
 load_dotenv()
-FLASK_ADMIN_SWATCH = "cerulean"
+FLASK_ADMIN_SWATCH = "simplex"
 
 KEY_VAULT_URI = getenv("KEY_VAULT_URI", "https://bink-uksouth-dev-com.vault.azure.net/")
 key_vault = KeyVault(KEY_VAULT_URI)
