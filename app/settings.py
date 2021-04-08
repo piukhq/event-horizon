@@ -13,6 +13,7 @@ key_vault = KeyVault(KEY_VAULT_URI)
 SECRET_KEY = getenv("SECRET_KEY") or key_vault.get_secret("bpl-event-horizon-secret-key")
 
 # AAD SSO
+OAUTH_REDIRECT_URI = getenv("OAUTH_REDIRECT_URI")
 AZURE_TENANT_ID = getenv("AZURE_TENANT_ID", "a6e2367a-92ea-4e5a-b565-723830bcc095")
 OAUTH_SERVER_METADATA_URL = f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/v2.0/.well-known/openid-configuration"
 EVENT_HORIZON_CLIENT_ID = getenv("EVENT_HORIZON_CLIENT_ID")
