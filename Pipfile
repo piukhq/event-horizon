@@ -15,6 +15,7 @@ pyyaml = "*"
 pydantic = "*"
 azure-keyvault = "*"
 azure-identity = "*"
+werkzeug = "*"
 
 [dev-packages]
 mypy = "*"
