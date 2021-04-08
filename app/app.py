@@ -1,5 +1,6 @@
 from authlib.integrations.flask_client import OAuth
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.polaris.views.admin import polaris_admin
 from app.settings import OAUTH_SERVER_METADATA_URL
@@ -17,6 +18,7 @@ def create_app(config_name: str = "app.settings") -> Flask:
     from app.views.healthz import healthz_bp
 
     app = Flask(__name__)
+    app.wsgi_app = ProxyFix(app.wsgi_app)
     app.config.from_object(config_name)
 
     oauth.init_app(app)

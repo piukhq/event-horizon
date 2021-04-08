@@ -21,7 +21,7 @@ def logout() -> "Response":
     # session['user'] will always be set again as long
     # as your AAD session is still alive.
     session.pop("user", None)
-    return redirect(url_for("admin.index"))
+    return redirect(url_for("admin.index", _external=True))
 
 
 @auth_bp.route("/bpl/admin/authorize/")
@@ -29,4 +29,4 @@ def authorize() -> "Response":
     token = oauth.event_horizon.authorize_access_token()
     userinfo = oauth.event_horizon.parse_id_token(token)
     session["user"] = userinfo
-    return redirect(url_for("admin.index"))
+    return redirect(url_for("admin.index", _external=True))
