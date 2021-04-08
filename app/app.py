@@ -18,7 +18,7 @@ def create_app(config_name: str = "app.settings") -> Flask:
     from app.views.healthz import healthz_bp
 
     app = Flask(__name__)
-    app.wsgi_app = ProxyFix(app.wsgi_app)
+    app.wsgi_app = ProxyFix(app.wsgi_app)  # type: ignore
     app.config.from_object(config_name)
 
     oauth.init_app(app)
