@@ -7,6 +7,20 @@ metadata = MetaData()
 Base = automap_base(metadata=metadata)
 
 
+class AccountHolder(Base):  # type: ignore
+    __tablename__ = "account_holder"
+
+    def __str__(self) -> str:
+        return self.id
+
+
+class AccountHolderProfile(Base):  # type: ignore
+    __tablename__ = "account_holder_profile"
+
+    def __str__(self) -> str:
+        return f"{self.first_name} {self.last_name}"
+
+
 class Retailer(Base):  # type: ignore
     __tablename__ = "retailer"
 
@@ -15,7 +29,3 @@ class Retailer(Base):  # type: ignore
 
 
 Base.prepare(engine, reflect=True)
-
-# get models from Base mapping
-AccountHolder = Base.classes.account_holder
-AccountHolderProfile = Base.classes.account_holder_profile

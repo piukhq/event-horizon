@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from flask import redirect, session, url_for
+from flask import Markup, redirect, session, url_for
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.model.form import InlineFormAdmin
@@ -53,7 +53,9 @@ class PolarisAdminIndexView(AdminIndexView):
         return super(PolarisAdminIndexView, self).index()
 
 
-polaris_admin = Admin(name="Polaris Admin", template_mode="bootstrap3", index_view=PolarisAdminIndexView())
+polaris_admin = Admin(
+    name="Polaris Admin", template_mode="bootstrap4", index_view=PolarisAdminIndexView(url="/bpl/admin/")
+)
 
 
 class AccountHolderProfileForm(InlineFormAdmin):
@@ -61,8 +63,20 @@ class AccountHolderProfileForm(InlineFormAdmin):
 
 
 class AccountHolderAdmin(AuthorisedModelView):
+    column_display_pk = True
+    column_filters = ("retailer.name", "status")
+    column_searchable_list = ("email", "id")
     inline_models = (AccountHolderProfileForm(AccountHolderProfile),)
     form_widget_args = {"created_at": {"disabled": True}}
+    column_formatters = dict(retailer=lambda v, c, model, p: Markup.escape(model.retailer.name))
+
+
+class AccountHolderProfileAdmin(AuthorisedModelView):
+    column_labels = dict(accountholder="Account Holder")
+    column_formatters = dict(
+        accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
+        + Markup("<br />" + f"({model.accountholder.id})")
+    )
 
 
 class RetailerAdmin(AuthorisedModelView):
@@ -73,6 +87,7 @@ class RetailerAdmin(AuthorisedModelView):
         "account_number_length": {"disabled": True},
         "config": {"rows": 20},
     }
+    form_edit_rules = ("name", "config")
 
     config_placeholder = """
 email:
@@ -100,8 +115,12 @@ last_name:
         "slug": {"validators": [DataRequired(message="Slug is required")]},
         "account_number_prefix": {"validators": [DataRequired("Account number prefix is required")]},
     }
+    column_formatters = dict(
+        config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.config) + Markup("</pre>")
+    )
 
 
 with SessionMaker() as db_session:
-    polaris_admin.add_view(AccountHolderAdmin(AccountHolder, db_session, "Account Holders"))
-    polaris_admin.add_view(RetailerAdmin(Retailer, db_session, "Retailers"))
+    polaris_admin.add_view(AccountHolderAdmin(AccountHolder, db_session, "Account Holders", endpoint="account-holders"))
+    polaris_admin.add_view(AccountHolderProfileAdmin(AccountHolderProfile, db_session, "Profiles", endpoint="profiles"))
+    polaris_admin.add_view(RetailerAdmin(Retailer, db_session, "Retailers", endpoint="retailers"))
