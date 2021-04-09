@@ -1,5 +1,5 @@
 from authlib.integrations.flask_client import OAuth
-from flask import Flask
+from flask import Flask, Response
 
 from app.polaris.views.admin import polaris_admin
 from app.settings import OAUTH_SERVER_METADATA_URL
@@ -12,12 +12,19 @@ oauth.register(
 )
 
 
+class RelativeLocationHeaderResponse(Response):
+    # Below setting allows relative location headers, allowing us to redirect
+    # without having to hardcode the Azure Front Door host to all redirects
+    autocorrect_location_header = False
+
+
 def create_app(config_name: str = "app.settings") -> Flask:
     from app.polaris.views.auth import auth_bp
     from app.views.healthz import healthz_bp
 
     app = Flask(__name__)
     app.config.from_object(config_name)
+    app.response_class = RelativeLocationHeaderResponse
 
     oauth.init_app(app)
     polaris_admin.init_app(app)
