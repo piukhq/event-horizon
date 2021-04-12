@@ -6,7 +6,7 @@ import pydantic
 import wtforms
 import yaml
 
-from pydantic import BaseConfig, BaseModel, Field, validator
+from pydantic import BaseConfig, BaseModel, validator
 
 from app.polaris.db.models import metadata
 
@@ -25,26 +25,27 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
     class FieldOptionsConfig(BaseConfig):
         extra = pydantic.Extra.forbid
 
-    class FieldOptionsModel(BaseModel):
-        required: bool = False
+    class FieldOptions(BaseModel):
+        required: bool
         label: Optional[str] = None
 
         Config = FieldOptionsConfig
 
-    class RequiredFieldOptionsModel(FieldOptionsModel, BaseModel):
-        required: bool
-
-        @validator("required", allow_reuse=True)
-        def must_be_true(cls, v: bool) -> bool:
-            if not v:
-                raise ValueError("'required' must be true")
-            return v
+    def ensure_required_true(options: FieldOptions) -> FieldOptions:
+        if not options.required:
+            raise ValueError("'required' must be true")
+        return options
 
     RetailerConfigModel = pydantic.create_model(
         "RetailerConfigModel",
-        **{fld: (RequiredFieldOptionsModel, Field(...)) for fld in REQUIRED_POLARIS_JOIN_FIELDS},  # type: ignore
-        **{fld: (FieldOptionsModel, Field(None)) for fld in _get_optional_profile_field_names()},  # type: ignore
+        **{
+            field: (FieldOptions, ...) for field in REQUIRED_POLARIS_JOIN_FIELDS + _get_optional_profile_field_names()
+        },  # type: ignore
         __config__=FieldOptionsConfig,
+        __validators__={
+            f"{field}_validator": validator(field, allow_reuse=True)(ensure_required_true)
+            for field in REQUIRED_POLARIS_JOIN_FIELDS
+        },
     )
 
     try:
