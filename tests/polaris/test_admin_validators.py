@@ -98,9 +98,9 @@ last_name:
         validate_retailer_config(mock_form, mock_config_field)
 
     assert (
-        ex_info.value.args[0] == "first_name -> required: 'required' must be true, "
-        "last_name -> required: 'required' must be true, "
-        "email -> required: 'required' must be true"
+        ex_info.value.args[0] == "first_name: 'required' must be true, "
+        "last_name: 'required' must be true, "
+        "email: 'required' must be true"
     )
 
 
@@ -173,3 +173,23 @@ worse:
         "bad: extra fields not permitted, "
         "worse: extra fields not permitted"
     )
+
+
+@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone", "city"])
+def test_validate_retailer_config_optional3(
+    validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
+) -> None:
+    mock_config_field.data = """
+email:
+    required: true
+first_name:
+    required: true
+last_name:
+    required: true
+phone:
+city:
+"""
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_retailer_config(mock_form, mock_config_field)
+
+    assert ex_info.value.args[0] == "phone: none is not an allowed value, city: none is not an allowed value"
