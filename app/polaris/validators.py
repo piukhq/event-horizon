@@ -7,6 +7,7 @@ import wtforms
 import yaml
 
 from pydantic import BaseConfig, BaseModel, validator
+from yaml.error import YAMLError
 
 from app.polaris.db.models import metadata
 
@@ -36,7 +37,14 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
             raise ValueError("'required' must be true")
         return options
 
-    form_data = yaml.safe_load(field.data)
+    try:
+        form_data = yaml.safe_load(field.data)
+    except yaml.YAMLError:
+        form_data = None
+
+    if not isinstance(form_data, dict):
+        raise wtforms.ValidationError("The submitted YAML is not valid")
+
     required_fields = REQUIRED_POLARIS_JOIN_FIELDS + [
         field for field in _get_optional_profile_field_names() if field in form_data
     ]
@@ -53,8 +61,6 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
 
     try:
         RetailerConfigModel(**form_data)
-    except (yaml.YAMLError, TypeError):
-        raise wtforms.ValidationError("The submitted YAML is not valid")
     except pydantic.ValidationError as ex:
         raise wtforms.ValidationError(
             ", ".join([f"{' -> '.join(err.get('loc'))}: {err.get('msg')}" for err in json.loads(ex.json())])
