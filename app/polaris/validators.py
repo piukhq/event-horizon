@@ -36,11 +36,14 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
             raise ValueError("'required' must be true")
         return options
 
+    form_data = yaml.safe_load(field.data)
+    required_fields = REQUIRED_POLARIS_JOIN_FIELDS + [
+        field for field in _get_optional_profile_field_names() if field in form_data
+    ]
+
     RetailerConfigModel = pydantic.create_model(
         "RetailerConfigModel",
-        **{
-            field: (FieldOptions, ...) for field in REQUIRED_POLARIS_JOIN_FIELDS + _get_optional_profile_field_names()
-        },  # type: ignore
+        **{field: (FieldOptions, ...) for field in required_fields},  # type: ignore
         __config__=FieldOptionsConfig,
         __validators__={
             f"{field}_validator": validator(field, allow_reuse=True)(ensure_required_true)
@@ -49,7 +52,7 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
     )
 
     try:
-        RetailerConfigModel(**yaml.safe_load(field.data))
+        RetailerConfigModel(**form_data)
     except (yaml.YAMLError, TypeError):
         raise wtforms.ValidationError("The submitted YAML is not valid")
     except pydantic.ValidationError as ex:
