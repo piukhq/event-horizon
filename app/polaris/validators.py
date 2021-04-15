@@ -36,11 +36,21 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
             raise ValueError("'required' must be true")
         return options
 
+    try:
+        form_data = yaml.safe_load(field.data)
+    except yaml.YAMLError:
+        form_data = None
+
+    if not isinstance(form_data, dict):
+        raise wtforms.ValidationError("The submitted YAML is not valid")
+
+    required_fields = REQUIRED_POLARIS_JOIN_FIELDS + [
+        field for field in _get_optional_profile_field_names() if field in form_data
+    ]
+
     RetailerConfigModel = pydantic.create_model(
         "RetailerConfigModel",
-        **{
-            field: (FieldOptions, ...) for field in REQUIRED_POLARIS_JOIN_FIELDS + _get_optional_profile_field_names()
-        },  # type: ignore
+        **{field: (FieldOptions, ...) for field in required_fields},  # type: ignore
         __config__=FieldOptionsConfig,
         __validators__={
             f"{field}_validator": validator(field, allow_reuse=True)(ensure_required_true)
@@ -49,9 +59,7 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
     )
 
     try:
-        RetailerConfigModel(**yaml.safe_load(field.data))
-    except (yaml.YAMLError, TypeError):
-        raise wtforms.ValidationError("The submitted YAML is not valid")
+        RetailerConfigModel(**form_data)
     except pydantic.ValidationError as ex:
         raise wtforms.ValidationError(
             ", ".join([f"{' -> '.join(err.get('loc'))}: {err.get('msg')}" for err in json.loads(ex.json())])

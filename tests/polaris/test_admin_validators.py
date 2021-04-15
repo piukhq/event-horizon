@@ -19,11 +19,12 @@ def mock_config_field() -> mock.MagicMock:
 def validate_retailer_config() -> Generator:
     with mock.patch("sqlalchemy.ext.automap.automap_base", autospec=True):
         with mock.patch("app.polaris.db.models.metadata", autospec=True) as mock_metadata:
-            mock_metadata.return_value.tables = {"account_holder_profile": mock.MagicMock()}
+            with mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"]):
+                mock_metadata.return_value.tables = {"account_holder_profile": mock.MagicMock()}
 
-            from app.polaris.validators import validate_retailer_config as fn
+                from app.polaris.validators import validate_retailer_config as fn
 
-            yield fn
+                yield fn
 
 
 def test_validate_retailer_config_empty(
@@ -123,7 +124,6 @@ last_name:
     assert ex_info.value.args[0] == "email -> ooops: extra fields not permitted"
 
 
-@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"])
 def test_validate_retailer_config_optional1(
     validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
 ) -> None:
@@ -145,7 +145,6 @@ phone:
         pytest.fail(f"Unexpected exception raised ({ex})")
 
 
-@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"])
 def test_validate_retailer_config_optional2(
     validate_retailer_config: Callable, mock_form: mock.MagicMock, mock_config_field: mock.MagicMock
 ) -> None:
