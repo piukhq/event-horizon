@@ -7,7 +7,6 @@ import wtforms
 import yaml
 
 from pydantic import BaseConfig, BaseModel, validator
-from yaml.error import YAMLError
 
 from app.polaris.db.models import metadata
 
