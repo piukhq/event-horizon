@@ -127,7 +127,7 @@ last_name:
         "account_number_prefix": {"validators": [DataRequired("Account number prefix is required")]},
     }
     column_formatters = dict(
-        config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.config) + Markup("</pre>"),
+        config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.config) + Markup("</pre>")
     )
 
 
