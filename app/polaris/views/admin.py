@@ -20,6 +20,7 @@ class AuthorisedModelView(ModelView):
     RW_AZURE_ROLES = {"Admin", "Editor"}
     ALL_AZURE_ROLES = RW_AZURE_ROLES | RO_AZURE_ROLES
     can_view_details = True
+    can_delete = False
 
     def is_accessible(self) -> bool:
         try:
@@ -30,7 +31,7 @@ class AuthorisedModelView(ModelView):
 
             user_roles = set(session["user"]["roles"])
             valid_user_roles = user_roles.intersection(self.ALL_AZURE_ROLES)
-            self.can_create = self.can_edit = self.can_delete = bool(user_roles.intersection(self.RW_AZURE_ROLES))
+            self.can_create = self.can_edit = bool(user_roles.intersection(self.RW_AZURE_ROLES))
             return is_not_expired and bool(valid_user_roles)
         except KeyError:
             return False
@@ -64,14 +65,21 @@ class AccountHolderProfileForm(InlineFormAdmin):
 
 class AccountHolderAdmin(AuthorisedModelView):
     column_display_pk = True
-    column_filters = ("retailer.name", "status")
+    column_filters = ("retailer.slug", "retailer.name", "retailer.id", "status")
     column_searchable_list = ("email", "id")
     inline_models = (AccountHolderProfileForm(AccountHolderProfile),)
     form_widget_args = {"created_at": {"disabled": True}}
-    column_formatters = dict(retailer=lambda v, c, model, p: Markup.escape(model.retailer.name))
+    column_formatters = dict(
+        retailer=lambda v, c, model, p: Markup("<pre>")
+        + Markup.escape(model.retailer.name)
+        + Markup("<br />(")
+        + Markup.escape(model.retailer.slug)
+        + Markup(") </pre>")
+    )
 
 
 class AccountHolderProfileAdmin(AuthorisedModelView):
+    column_searchable_list = ("accountholder.id", "accountholder.email")
     column_labels = dict(accountholder="Account Holder")
     column_formatters = dict(
         accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
@@ -80,6 +88,9 @@ class AccountHolderProfileAdmin(AuthorisedModelView):
 
 
 class RetailerAdmin(AuthorisedModelView):
+    column_filters = ("created_at",)
+    column_searchable_list = ("id", "slug", "name")
+    column_exclude_list = ("config",)
     form_create_rules = ("name", "slug", "account_number_prefix", "config")
     form_excluded_columns = ("account_holder_collection",)
     form_widget_args = {

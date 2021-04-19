@@ -25,7 +25,7 @@ class Retailer(Base):  # type: ignore
     __tablename__ = "retailer"
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.name} ({self.slug})"
 
 
 Base.prepare(engine, reflect=True)
