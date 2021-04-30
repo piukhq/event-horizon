@@ -7,7 +7,7 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.model.form import InlineFormAdmin
 from wtforms.validators import DataRequired
 
-from app.polaris.db import AccountHolder, AccountHolderProfile, Retailer, SessionMaker
+from app.polaris.db import AccountHolder, AccountHolderProfile, EnrolmentCallback, Retailer, SessionMaker
 from app.polaris.validators import validate_retailer_config
 
 if TYPE_CHECKING:
@@ -131,7 +131,22 @@ last_name:
     )
 
 
+class EnrolmentCallbackAdmin(AuthorisedModelView):
+    column_labels = dict(accountholder="Account Holder", url="URL")
+    column_filters = ("status",)
+    column_default_sort = ("created_at", True)
+    column_exclude_list = ("url", "response_data")
+    column_formatters = dict(
+        accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
+        + Markup("<br />" + f"({model.accountholder.id})")
+    )
+    form_edit_rules = ("retry_at", "status")
+
+
 with SessionMaker() as db_session:
     polaris_admin.add_view(AccountHolderAdmin(AccountHolder, db_session, "Account Holders", endpoint="account-holders"))
     polaris_admin.add_view(AccountHolderProfileAdmin(AccountHolderProfile, db_session, "Profiles", endpoint="profiles"))
+    polaris_admin.add_view(
+        EnrolmentCallbackAdmin(EnrolmentCallback, db_session, "Enrolment Callbacks", endpoint="enrolment-callbacks")
+    )
     polaris_admin.add_view(RetailerAdmin(Retailer, db_session, "Retailers", endpoint="retailers"))
