@@ -43,7 +43,7 @@ type-check:
   stage: tests
   before_script: *setup
   script:
-    - mypy --config-file .mypy.ini app
+    - mypy --config-file .mypy.ini app tests
 
 dev:
   stage: dev
