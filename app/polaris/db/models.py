@@ -21,6 +21,10 @@ class AccountHolderProfile(Base):  # type: ignore
         return f"{self.first_name} {self.last_name}"
 
 
+class EnrolmentCallback(Base):  # type: ignore
+    __tablename__ = "enrolment_callback"
+
+
 class Retailer(Base):  # type: ignore
     __tablename__ = "retailer"
 
