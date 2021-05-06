@@ -13,7 +13,8 @@ def sync_retailer_insert(mapper: Type[RetailerConfig], connection: str, target: 
 
 
 def sync_retailer_delete(mapper: Type[RetailerConfig], connection: str, target: RetailerConfig) -> None:
-    vela_db_session.query(RetailerRewards).filter_by(slug=target.slug).delete(synchronize_session=False)
+    vela_db_session.query(RetailerRewards).filter_by(slug=target.slug).delete()
+    vela_db_session.commit()
 
 
 event.listen(RetailerConfig, "after_insert", sync_retailer_insert)
