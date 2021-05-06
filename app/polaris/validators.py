@@ -8,7 +8,7 @@ import yaml
 
 from pydantic import BaseConfig, BaseModel, validator
 
-from app.polaris.db.models import metadata
+from .db.models import metadata
 
 REQUIRED_POLARIS_JOIN_FIELDS = ["first_name", "last_name", "email"]
 

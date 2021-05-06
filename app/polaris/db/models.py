@@ -25,8 +25,8 @@ class EnrolmentCallback(Base):  # type: ignore
     __tablename__ = "enrolment_callback"
 
 
-class Retailer(Base):  # type: ignore
-    __tablename__ = "retailer"
+class RetailerConfig(Base):  # type: ignore
+    __tablename__ = "retailer_config"
 
     def __str__(self) -> str:
         return f"{self.name} ({self.slug})"

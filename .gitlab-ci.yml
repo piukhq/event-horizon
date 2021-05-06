@@ -15,7 +15,8 @@ tests:
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: ""
     POSTGRES_HOST_AUTH_METHOD: trust
-    SQLALCHEMY_DATABASE_URI: "postgresql://postgres@postgres:5432/polaris"
+    POLARIS_DATABASE_URI: "postgresql://postgres@postgres:5432/polaris"
+    VELA_DATABASE_URI: "postgresql://postgres@postgres:5432/vela"
     EVENT_HORIZON_CLIENT_SECRET: "unused-for-tests"
     SECRET_KEY: "not-the-real-key"
   before_script: &setup
@@ -29,20 +30,20 @@ tests:
 
 complexity:
   stage: tests
-  before_script: *setup
   script:
+    - pip install xenon
     - xenon --max-average A --max-modules B --max-absolute B .
 
 style:
   stage: tests
-  before_script: *setup
   script:
+    - pip install flake8 black
     - flake8 && black --line-length 120 --check . && isort --check .
 
 type-check:
   stage: tests
-  before_script: *setup
   script:
+    - pip install mypy sqlalchemy-stubs
     - mypy --config-file .mypy.ini app tests
 
 dev:
