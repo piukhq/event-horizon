@@ -1,3 +1,5 @@
+from typing import Any, Optional
+
 import sentry_sdk
 
 from authlib.integrations.flask_client import OAuth
@@ -5,6 +7,7 @@ from flask import Flask, Response
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
+from app.polaris.db.session import db_session
 from app.polaris.views.admin import polaris_admin
 from app.settings import OAUTH_SERVER_METADATA_URL, SENTRY_DSN, SENTRY_ENV
 from app.version import __version__
@@ -45,4 +48,9 @@ def create_app(config_name: str = "app.settings") -> Flask:
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(healthz_bp)
+
+    @app.teardown_appcontext
+    def remove_session(exception: Optional[Exception] = None) -> Any:
+        db_session.remove()
+
     return app

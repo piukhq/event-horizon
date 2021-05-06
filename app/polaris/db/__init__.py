@@ -1,2 +1,2 @@
 from .models import AccountHolder, AccountHolderProfile, EnrolmentCallback, Retailer  # noqa
-from .session import SessionMaker  # noqa
+from .session import db_session  # noqa
