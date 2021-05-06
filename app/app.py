@@ -36,7 +36,7 @@ def create_app(config_name: str = "app.settings") -> Flask:
             integrations=[FlaskIntegration(), SqlalchemyIntegration()],
             environment=SENTRY_ENV,
             release=__version__,
-            sample_rate=0.0,
+            traces_sample_rate=0.0,
         )
 
     app = Flask(__name__)
