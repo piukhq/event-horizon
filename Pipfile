@@ -15,6 +15,7 @@ pyyaml = "*"
 pydantic = "*"
 azure-keyvault = "*"
 azure-identity = "*"
+sentry-sdk = {extras = ["flask"], version = "*"}
 
 [dev-packages]
 mypy = "*"

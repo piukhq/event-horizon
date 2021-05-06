@@ -1,8 +1,17 @@
+from typing import Any, Optional
+
+import sentry_sdk
+
 from authlib.integrations.flask_client import OAuth
 from flask import Flask, Response
+from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.admin import event_horizon_admin
-from app.settings import OAUTH_SERVER_METADATA_URL
+from app.polaris.db import db_session as polaris_db_session
+from app.settings import OAUTH_SERVER_METADATA_URL, SENTRY_DSN, SENTRY_ENV
+from app.vela.db import db_session as vela_db_session
+from app.version import __version__
 
 oauth = OAuth()
 oauth.register(
@@ -24,6 +33,15 @@ def create_app(config_name: str = "app.settings") -> Flask:
     from app.views.auth import auth_bp
     from app.views.healthz import healthz_bp
 
+    if SENTRY_DSN is not None:
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[FlaskIntegration(), SqlalchemyIntegration()],
+            environment=SENTRY_ENV,
+            release=__version__,
+            sample_rate=0.0,
+        )
+
     app = Flask(__name__)
     app.config.from_object(config_name)
     app.response_class = RelativeLocationHeaderResponse
@@ -36,5 +54,10 @@ def create_app(config_name: str = "app.settings") -> Flask:
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(healthz_bp)
+
+    @app.teardown_appcontext
+    def remove_session(exception: Optional[Exception] = None) -> Any:
+        polaris_db_session.remove()
+        vela_db_session.remove()
 
     return app
