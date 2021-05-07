@@ -5,7 +5,8 @@ from flask import redirect, session, url_for
 from flask_admin.contrib.sqla import ModelView
 
 if TYPE_CHECKING:
-    from werkzeug.wrappers import Response
+    from werkzeug.wrappers import Response  # pragma: no cover
+
 
 # custom admin classes needed for authorisation
 class AuthorisedModelView(ModelView):

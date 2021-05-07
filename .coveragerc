@@ -1,8 +1,13 @@
 [run]
 omit = *test*
        */app/app.py
+       */app/version.py
        */app/*/db/*
-       */app/*/views/*
+       */app/*/admin.py
+       */app/*/__init__.py
+       */app/admin/*
+       */app/vela/*
+       */app/events.py
 branch = True
 [report]
 fail_under = 85

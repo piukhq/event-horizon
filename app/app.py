@@ -28,6 +28,7 @@ class RelativeLocationHeaderResponse(Response):
 
 
 def create_app(config_name: str = "app.settings") -> Flask:
+    from app import events  # noqa: F401 initialise events
     from app.polaris import register_polaris_admin
     from app.vela import register_vela_admin
     from app.views.auth import auth_bp
