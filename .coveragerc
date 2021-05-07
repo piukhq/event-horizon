@@ -6,7 +6,6 @@ omit = *test*
        */app/*/admin.py
        */app/*/__init__.py
        */app/admin/*
-       */app/vela/*
        */app/events.py
 branch = True
 [report]
