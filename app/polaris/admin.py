@@ -15,6 +15,7 @@ class AccountHolderProfileForm(InlineFormAdmin):
 class AccountHolderAdmin(AuthorisedModelView):
     column_display_pk = True
     column_filters = ("retailerconfig.slug", "retailerconfig.name", "retailerconfig.id", "status")
+    column_exclude_list = ("current_balances",)
     column_searchable_list = ("email", "id")
     inline_models = (AccountHolderProfileForm(AccountHolderProfile),)
     form_widget_args = {"created_at": {"disabled": True}}
