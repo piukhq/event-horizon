@@ -7,7 +7,7 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.model.form import InlineFormAdmin
 from wtforms.validators import DataRequired
 
-from app.polaris.db import AccountHolder, AccountHolderProfile, EnrolmentCallback, Retailer, SessionMaker
+from app.polaris.db import AccountHolder, AccountHolderProfile, EnrolmentCallback, Retailer, db_session
 from app.polaris.validators import validate_retailer_config
 
 if TYPE_CHECKING:
@@ -143,10 +143,9 @@ class EnrolmentCallbackAdmin(AuthorisedModelView):
     form_edit_rules = ("retry_at", "status")
 
 
-with SessionMaker() as db_session:
-    polaris_admin.add_view(AccountHolderAdmin(AccountHolder, db_session, "Account Holders", endpoint="account-holders"))
-    polaris_admin.add_view(AccountHolderProfileAdmin(AccountHolderProfile, db_session, "Profiles", endpoint="profiles"))
-    polaris_admin.add_view(
-        EnrolmentCallbackAdmin(EnrolmentCallback, db_session, "Enrolment Callbacks", endpoint="enrolment-callbacks")
-    )
-    polaris_admin.add_view(RetailerAdmin(Retailer, db_session, "Retailers", endpoint="retailers"))
+polaris_admin.add_view(AccountHolderAdmin(AccountHolder, db_session, "Account Holders", endpoint="account-holders"))
+polaris_admin.add_view(AccountHolderProfileAdmin(AccountHolderProfile, db_session, "Profiles", endpoint="profiles"))
+polaris_admin.add_view(
+    EnrolmentCallbackAdmin(EnrolmentCallback, db_session, "Enrolment Callbacks", endpoint="enrolment-callbacks")
+)
+polaris_admin.add_view(RetailerAdmin(Retailer, db_session, "Retailers", endpoint="retailers"))

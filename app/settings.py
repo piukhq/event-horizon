@@ -23,3 +23,5 @@ EVENT_HORIZON_CLIENT_SECRET = getenv("EVENT_HORIZON_CLIENT_SECRET") or key_vault
 
 DEV_PORT = int(getenv("DEV_PORT", "5000"))
 SQLALCHEMY_DATABASE_URI = getenv("SQLALCHEMY_DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/polaris")
+SENTRY_DSN = getenv("SENTRY_DSN")
+SENTRY_ENV = getenv("SENTRY_ENV")
