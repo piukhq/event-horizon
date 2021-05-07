@@ -37,7 +37,7 @@ complexity:
 style:
   stage: tests
   script:
-    - pip install flake8 black
+    - pip install flake8 black isort
     - flake8 && black --line-length 120 --check . && isort --check .
 
 type-check:
