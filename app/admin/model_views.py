@@ -1,40 +1,49 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from flask import redirect, session, url_for
+from flask import abort, redirect, session, url_for
 from flask_admin.contrib.sqla import ModelView
 
 if TYPE_CHECKING:
     from werkzeug.wrappers import Response  # pragma: no cover
 
 
-# custom admin classes needed for authorisation
-class AuthorisedModelView(ModelView):
+class UserSessionMixin:
     RO_AZURE_ROLES = {"Viewer"}
     RW_AZURE_ROLES = {"Admin", "Editor"}
     ALL_AZURE_ROLES = RW_AZURE_ROLES | RO_AZURE_ROLES
+
+    @property
+    def user_info(self) -> dict:
+        return session.get("user", {})
+
+    @property
+    def user_session_expired(self) -> bool:
+        session_exp: Optional[int] = self.user_info.get("exp")
+        return session_exp < datetime.utcnow().timestamp() if session_exp else True
+
+    @property
+    def user_roles(self) -> set[str]:
+        return set(self.user_info.get("roles", []))
+
+    @property
+    def user_is_authorized(self) -> bool:
+        return bool(self.user_roles.intersection(self.ALL_AZURE_ROLES))
+
+
+# custom admin classes needed for authorisation
+class AuthorisedModelView(ModelView, UserSessionMixin):
     can_view_details = True
     can_delete = False
 
     def is_accessible(self) -> bool:
-        try:
-            is_not_expired = session["user"]["exp"] >= datetime.utcnow().timestamp()
-            if not is_not_expired:
-                del session["user"]
-                return False
-
-            user_roles = set(session["user"]["roles"])
-            valid_user_roles = user_roles.intersection(self.ALL_AZURE_ROLES)
-            self.can_create = self.can_edit = bool(user_roles.intersection(self.RW_AZURE_ROLES))
-            return is_not_expired and bool(valid_user_roles)
-        except KeyError:
+        if not self.user_info:
             return False
+        self.can_create = self.can_edit = bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
+        return not self.user_session_expired and self.user_is_authorized
 
     def inaccessible_callback(self, name: str, **kwargs: Optional[dict]) -> "Response":
-        try:
-            if session["user"]["exp"] < datetime.utcnow().timestamp():
-                del session["user"]
-        except KeyError:
-            pass
-
+        if self.user_info and not self.user_is_authorized:
+            return abort(403)
+        session.pop("user", None)
         return redirect(url_for("auth_views.login"))
