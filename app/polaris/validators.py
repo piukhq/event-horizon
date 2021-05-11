@@ -8,12 +8,12 @@ import yaml
 
 from pydantic import BaseConfig, BaseModel, validator
 
-from app.polaris.db.models import metadata
+from .db.models import metadata
 
 REQUIRED_POLARIS_JOIN_FIELDS = ["first_name", "last_name", "email"]
 
 
-def _get_optional_profile_field_names() -> List[str]:
+def _get_optional_profile_field_names() -> List[str]:  # pragma: no cover
     return [
         str(col.name)
         for col in metadata.tables["account_holder_profile"].c
@@ -38,7 +38,7 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
 
     try:
         form_data = yaml.safe_load(field.data)
-    except yaml.YAMLError:
+    except yaml.YAMLError:  # pragma: no cover
         form_data = None
 
     if not isinstance(form_data, dict):

@@ -16,15 +16,13 @@ def mock_config_field() -> mock.MagicMock:
 
 
 @pytest.fixture(scope="session")
-def validate_retailer_config() -> Generator:
-    with mock.patch("sqlalchemy.ext.automap.automap_base", autospec=True):
-        with mock.patch("app.polaris.db.models.metadata", autospec=True) as mock_metadata:
-            with mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"]):
-                mock_metadata.return_value.tables = {"account_holder_profile": mock.MagicMock()}
+def validate_retailer_config(mock_polaris_metadata: mock.MagicMock) -> Generator:
+    with mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"]):
+        mock_polaris_metadata.return_value.tables = {"account_holder_profile": mock.MagicMock()}
 
-                from app.polaris.validators import validate_retailer_config as fn
+        from app.polaris.validators import validate_retailer_config as fn
 
-                yield fn
+        yield fn
 
 
 def test_validate_retailer_config_empty(
