@@ -17,6 +17,7 @@ class AccountHolderAdmin(AuthorisedModelView):
     column_filters = ("retailerconfig.slug", "retailerconfig.name", "retailerconfig.id", "status")
     column_exclude_list = ("current_balances",)
     column_searchable_list = ("email", "id")
+    column_default_sort = ("created_at", True)
     inline_models = (AccountHolderProfileForm(AccountHolderProfile),)
     form_widget_args = {"created_at": {"disabled": True}}
 
@@ -28,6 +29,7 @@ class AccountHolderProfileAdmin(AuthorisedModelView):
         accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
         + Markup("<br />" + f"({model.accountholder.id})")
     )
+    column_default_sort = ("accountholder.created_at", True)
 
 
 class EnrolmentCallbackAdmin(AuthorisedModelView):
@@ -35,17 +37,20 @@ class EnrolmentCallbackAdmin(AuthorisedModelView):
     column_filters = ("status",)
     column_default_sort = ("created_at", True)
     column_exclude_list = ("url", "response_data")
+    column_default_sort = ("created_at", True)
     column_formatters = dict(
         accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
         + Markup("<br />" + f"({model.accountholder.id})")
     )
     form_edit_rules = ("retry_at", "status")
+    form_widget_args = {"created_at": {"disabled": True}}
 
 
 class RetailerConfigAdmin(AuthorisedModelView):
     column_filters = ("created_at",)
     column_searchable_list = ("id", "slug", "name")
     column_exclude_list = ("config",)
+    column_default_sort = ("created_at", True)
     form_create_rules = ("name", "slug", "account_number_prefix", "config")
     form_excluded_columns = ("account_holder_collection",)
     form_widget_args = {
