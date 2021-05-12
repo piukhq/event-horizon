@@ -16,6 +16,7 @@ class AccountHolderAdmin(AuthorisedModelView):
     column_display_pk = True
     column_filters = ("retailerconfig.slug", "retailerconfig.name", "retailerconfig.id", "status")
     column_exclude_list = ("current_balances",)
+    column_labels = dict(retailerconfig="Retailer")
     column_searchable_list = ("email", "id")
     column_default_sort = ("created_at", True)
     inline_models = (AccountHolderProfileForm(AccountHolderProfile),)
