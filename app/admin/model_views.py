@@ -47,3 +47,13 @@ class AuthorisedModelView(ModelView, UserSessionMixin):
             return abort(403)
         session.pop("user", None)
         return redirect(url_for("auth_views.login"))
+
+
+class BaseModelView(AuthorisedModelView):
+    """
+    Set some baseline behaviour for all ModelViews
+    """
+
+    form_widget_args = {"created_at": {"disabled": True}, "updated_at": {"disabled": True}}
+    column_default_sort = ("created_at", True)
+    form_excluded_columns = ("created_at", "updated_at")
