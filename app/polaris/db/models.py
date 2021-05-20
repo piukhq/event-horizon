@@ -1,8 +1,6 @@
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.sql.schema import MetaData
 
-from .session import engine
-
 metadata = MetaData()
 Base = automap_base(metadata=metadata)
 
@@ -30,6 +28,3 @@ class RetailerConfig(Base):  # type: ignore
 
     def __str__(self) -> str:
         return f"{self.name} ({self.slug})"
-
-
-Base.prepare(engine, reflect=True)
