@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 from flask import abort, redirect, session, url_for
 from flask_admin.contrib.sqla import ModelView
@@ -54,9 +54,8 @@ class BaseModelView(AuthorisedModelView):
     Set some baseline behaviour for all ModelViews
     """
 
-    form_widget_args = {"created_at": {"disabled": True}, "updated_at": {"disabled": True}}
-    column_default_sort = ("created_at", True)
-    form_excluded_columns = ("created_at", "updated_at")
+    column_default_sort: Union[str, Tuple[str, bool]] = ("created_at", True)
+    form_excluded_columns: Tuple[str, ...] = ("created_at", "updated_at")
 
     def get_list_columns(self) -> List[str]:
         # Shunt created_at and updated_at to the end of the table
