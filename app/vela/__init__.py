@@ -10,8 +10,15 @@ if TYPE_CHECKING:
 
 
 def register_vela_admin(event_horizon_admin: "Admin") -> None:
-    event_horizon_admin.add_view(CampaignAdmin(Campaign, db_session, "Campaigns", endpoint="campaigns"))
-    event_horizon_admin.add_view(EarnRuleAdmin(EarnRule, db_session, "Earn Rules", endpoint="earn-rules"))
+    vela_menu_title = "Rewards Management"
     event_horizon_admin.add_view(
-        RetailerRewardsAdmin(RetailerRewards, db_session, "Retailer Rewards", endpoint="retailer-rewards")
+        CampaignAdmin(Campaign, db_session, "Campaigns", endpoint="campaigns", category=vela_menu_title)
+    )
+    event_horizon_admin.add_view(
+        EarnRuleAdmin(EarnRule, db_session, "Earn Rules", endpoint="earn-rules", category=vela_menu_title)
+    )
+    event_horizon_admin.add_view(
+        RetailerRewardsAdmin(
+            RetailerRewards, db_session, "Retailer Rewards", endpoint="retailer-rewards", category=vela_menu_title
+        )
     )
