@@ -2,7 +2,7 @@ from flask import Markup
 from flask_admin.model.form import InlineFormAdmin
 from wtforms.validators import DataRequired
 
-from app.admin.model_views import AuthorisedModelView
+from app.admin.model_views import BaseModelView
 
 from .db import AccountHolderProfile
 from .validators import validate_retailer_config
@@ -12,18 +12,16 @@ class AccountHolderProfileForm(InlineFormAdmin):
     form_label = "Profile"
 
 
-class AccountHolderAdmin(AuthorisedModelView):
+class AccountHolderAdmin(BaseModelView):
     column_display_pk = True
     column_filters = ("retailerconfig.slug", "retailerconfig.name", "retailerconfig.id", "status")
     column_exclude_list = ("current_balances",)
     column_labels = dict(retailerconfig="Retailer")
     column_searchable_list = ("email", "id")
-    column_default_sort = ("created_at", True)
     inline_models = (AccountHolderProfileForm(AccountHolderProfile),)
-    form_widget_args = {"created_at": {"disabled": True}}
 
 
-class AccountHolderProfileAdmin(AuthorisedModelView):
+class AccountHolderProfileAdmin(BaseModelView):
     column_searchable_list = ("accountholder.id", "accountholder.email")
     column_labels = dict(accountholder="Account Holder")
     column_formatters = dict(
@@ -33,29 +31,24 @@ class AccountHolderProfileAdmin(AuthorisedModelView):
     column_default_sort = ("accountholder.created_at", True)
 
 
-class EnrolmentCallbackAdmin(AuthorisedModelView):
+class EnrolmentCallbackAdmin(BaseModelView):
     column_labels = dict(accountholder="Account Holder", url="URL")
     column_filters = ("status",)
-    column_default_sort = ("created_at", True)
     column_exclude_list = ("url", "response_data")
-    column_default_sort = ("created_at", True)
     column_formatters = dict(
         accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
         + Markup("<br />" + f"({model.accountholder.id})")
     )
     form_edit_rules = ("retry_at", "status")
-    form_widget_args = {"created_at": {"disabled": True}}
 
 
-class RetailerConfigAdmin(AuthorisedModelView):
+class RetailerConfigAdmin(BaseModelView):
     column_filters = ("created_at",)
     column_searchable_list = ("id", "slug", "name")
     column_exclude_list = ("config",)
-    column_default_sort = ("created_at", True)
     form_create_rules = ("name", "slug", "account_number_prefix", "config")
     form_excluded_columns = ("account_holder_collection",)
     form_widget_args = {
-        "created_at": {"disabled": True},
         "account_number_length": {"disabled": True},
         "config": {"rows": 20},
     }
