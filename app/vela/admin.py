@@ -15,7 +15,7 @@ class CampaignAdmin(BaseModelView):
 
 class EarnRuleAdmin(BaseModelView):
     column_auto_select_related = True
-    column_filters = ("campaign.name", "campaign.earn_inc_is_tx_value", "campaign.retailer.slug")
+    column_filters = ("campaign.name", "campaign.earn_inc_is_tx_value", "campaign.retailerrewards.slug")
     column_searchable_list = ("campaign.name",)
     column_list = (
         "campaign.name",
