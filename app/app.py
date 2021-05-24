@@ -9,8 +9,12 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.admin import event_horizon_admin
 from app.polaris.db import db_session as polaris_db_session
+from app.polaris.db.models import Base as PolarisModelBase
+from app.polaris.db.session import engine as polaris_engine
 from app.settings import OAUTH_SERVER_METADATA_URL, SENTRY_DSN, SENTRY_ENV
 from app.vela.db import db_session as vela_db_session
+from app.vela.db.models import Base as VelaModelBase
+from app.vela.db.session import engine as vela_engine
 from app.version import __version__
 
 oauth = OAuth()
@@ -28,6 +32,9 @@ class RelativeLocationHeaderResponse(Response):
 
 
 def create_app(config_name: str = "app.settings") -> Flask:
+    PolarisModelBase.prepare(polaris_engine, reflect=True)
+    VelaModelBase.prepare(vela_engine, reflect=True)
+
     from app import events  # noqa: F401 initialise events
     from app.polaris import register_polaris_admin
     from app.vela import register_vela_admin

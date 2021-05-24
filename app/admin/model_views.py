@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 from flask import abort, redirect, session, url_for
 from flask_admin.contrib.sqla import ModelView
@@ -47,3 +47,22 @@ class AuthorisedModelView(ModelView, UserSessionMixin):
             return abort(403)
         session.pop("user", None)
         return redirect(url_for("auth_views.login"))
+
+
+class BaseModelView(AuthorisedModelView):
+    """
+    Set some baseline behaviour for all ModelViews
+    """
+
+    column_default_sort: Union[str, Tuple[str, bool]] = ("created_at", True)
+    form_excluded_columns: Tuple[str, ...] = ("created_at", "updated_at")
+
+    def get_list_columns(self) -> List[str]:
+        # Shunt created_at and updated_at to the end of the table
+        list_columns = super().get_list_columns()
+        for name in ("created_at", "updated_at"):
+            for i, (col_name, _disp_name) in enumerate(list_columns):
+                if col_name == name:
+                    list_columns += [list_columns.pop(i)]
+                    break
+        return list_columns
