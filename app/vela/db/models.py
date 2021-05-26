@@ -23,3 +23,7 @@ class Campaign(Base, UpdatedAtMixin):  # type: ignore
 
 class EarnRule(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "earn_rule"
+
+
+class Transaction(Base, UpdatedAtMixin):  # type: ignore
+    __tablename__ = "transaction"
