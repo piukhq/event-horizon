@@ -42,3 +42,7 @@ class EarnRuleAdmin(BaseModelView):
 
 class RetailerRewardsAdmin(AuthorisedModelView):
     pass
+
+
+class TransactionAdmin(AuthorisedModelView):
+    pass
