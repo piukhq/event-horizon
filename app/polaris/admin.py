@@ -1,6 +1,6 @@
 from flask import Markup
 from flask_admin.model.form import InlineFormAdmin
-from wtforms.validators import DataRequired, Regexp
+from wtforms.validators import DataRequired
 
 from app.admin.model_views import BaseModelView
 
