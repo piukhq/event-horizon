@@ -1,6 +1,6 @@
 from flask import Markup
 from flask_admin.model.form import InlineFormAdmin
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, Regexp
 
 from app.admin.model_views import BaseModelView
 
@@ -78,7 +78,12 @@ last_name:
         },
         "name": {"validators": [DataRequired(message="Name is required")]},
         "slug": {"validators": [DataRequired(message="Slug is required")]},
-        "account_number_prefix": {"validators": [DataRequired("Account number prefix is required")]},
+        "account_number_prefix": {
+            "validators": [
+                DataRequired("Account number prefix is required"),
+                Regexp("^[a-zA-Z]{2,4}$", message="Account number prefix must be alpha only, 2-4 chars"),
+            ]
+        },
     }
     column_formatters = dict(
         config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.config) + Markup("</pre>")
