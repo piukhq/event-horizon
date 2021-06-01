@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 import wtforms
 
-from app.polaris.validators import validate_retailer_config
+from app.polaris.validators import validate_account_number_prefix, validate_retailer_config
 
 
 @pytest.fixture
@@ -170,3 +170,34 @@ city:
         validate_retailer_config(mock_form, mock_config_field)
 
     assert ex_info.value.args[0] == "phone: none is not an allowed value, city: none is not an allowed value"
+
+
+def test_validate_account_number_prefix(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+    mock_config_field.data = "abC"
+    validate_account_number_prefix(mock_form, mock_config_field)
+
+    assert mock_config_field.data == "ABC"
+
+
+def test_validate_account_number_prefix_numbers(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+    mock_config_field.data = "abC6"
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_account_number_prefix(mock_form, mock_config_field)
+
+    assert ex_info.value.args[0] == "Account number prefix needs to be 2-4 alpha characters"
+
+
+def test_validate_account_number_prefix_too_short(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+    mock_config_field.data = "a"
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_account_number_prefix(mock_form, mock_config_field)
+
+    assert ex_info.value.args[0] == "Account number prefix needs to be 2-4 alpha characters"
+
+
+def test_validate_account_number_prefix_too_long(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+    mock_config_field.data = "abCdE"
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_account_number_prefix(mock_form, mock_config_field)
+
+    assert ex_info.value.args[0] == "Account number prefix needs to be 2-4 alpha characters"
