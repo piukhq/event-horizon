@@ -5,7 +5,7 @@ from wtforms.validators import DataRequired, Regexp
 from app.admin.model_views import BaseModelView
 
 from .db import AccountHolderProfile
-from .validators import validate_retailer_config
+from .validators import validate_account_number_prefix, validate_retailer_config
 
 
 class AccountHolderProfileForm(InlineFormAdmin):
@@ -81,7 +81,7 @@ last_name:
         "account_number_prefix": {
             "validators": [
                 DataRequired("Account number prefix is required"),
-                Regexp("^[a-zA-Z]{2,4}$", message="Account number prefix must be alpha only, 2-4 chars"),
+                validate_account_number_prefix,
             ]
         },
     }
