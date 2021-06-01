@@ -5,7 +5,7 @@ from wtforms.validators import DataRequired
 from app.admin.model_views import BaseModelView
 
 from .db import AccountHolderProfile
-from .validators import validate_retailer_config
+from .validators import validate_account_number_prefix, validate_retailer_config
 
 
 class AccountHolderProfileForm(InlineFormAdmin):
@@ -78,7 +78,12 @@ last_name:
         },
         "name": {"validators": [DataRequired(message="Name is required")]},
         "slug": {"validators": [DataRequired(message="Slug is required")]},
-        "account_number_prefix": {"validators": [DataRequired("Account number prefix is required")]},
+        "account_number_prefix": {
+            "validators": [
+                DataRequired("Account number prefix is required"),
+                validate_account_number_prefix,
+            ]
+        },
     }
     column_formatters = dict(
         config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.config) + Markup("</pre>")

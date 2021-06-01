@@ -1,4 +1,5 @@
 import json
+import re
 
 from typing import List, Optional
 
@@ -64,3 +65,11 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
         raise wtforms.ValidationError(
             ", ".join([f"{' -> '.join(err.get('loc'))}: {err.get('msg')}" for err in json.loads(ex.json())])
         )
+
+
+def validate_account_number_prefix(form: wtforms.Form, field: wtforms.Field) -> None:
+    required = re.compile(r"^[a-zA-Z]{2,4}$")
+    if not bool(required.match(field.data)):
+        raise wtforms.ValidationError("Account number prefix needs to be 2-4 alpha characters")
+
+    field.data = field.data.upper()
