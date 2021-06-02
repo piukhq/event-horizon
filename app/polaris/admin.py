@@ -19,6 +19,7 @@ class AccountHolderAdmin(BaseModelView):
     column_labels = dict(retailerconfig="Retailer")
     column_searchable_list = ("email", "id")
     inline_models = (AccountHolderProfileForm(AccountHolderProfile),)
+    can_delete = True
 
 
 class AccountHolderProfileAdmin(BaseModelView):
