@@ -1,4 +1,5 @@
 from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import MetaData
 
 from app.db import UpdatedAtMixin
@@ -9,6 +10,14 @@ Base = automap_base(metadata=metadata)
 
 class AccountHolder(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "account_holder"
+
+    accountholderprofile_collection = relationship(
+        "AccountHolderProfile", backref="account_holder", cascade="all, delete-orphan"
+    )
+
+    enrolmentcallback_collection = relationship(
+        "EnrolmentCallback", backref="enrolment_callback", cascade="all, delete-orphan"
+    )
 
     def __str__(self) -> str:
         return self.id
