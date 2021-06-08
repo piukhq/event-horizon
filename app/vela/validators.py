@@ -1,15 +1,18 @@
 import wtforms
 
+from sqlalchemy import func, select
+
 from app.vela.db import db_session
 from app.vela.db.models import Campaign, EarnRule
 
 
 def _count_earn_rules(campaign_id: int, *, has_inc_value: bool) -> int:
-    query = db_session.query(EarnRule).filter(Campaign.id == campaign_id)
+    stmt = select(func.count()).select_from(EarnRule).join(Campaign).where(Campaign.id == campaign_id)  # type: ignore
     if has_inc_value:
-        return query.filter(EarnRule.increment.isnot(None)).count()
+        stmt = stmt.where(EarnRule.increment.isnot(None))
     else:
-        return query.filter(EarnRule.increment.is_(None)).count()
+        stmt = stmt.where(EarnRule.increment.is_(None))
+    return db_session.execute(stmt).scalar()
 
 
 def validate_campaign_earn_inc_is_tx_value(form: wtforms.Form, field: wtforms.Field) -> None:
