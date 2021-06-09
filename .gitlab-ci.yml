@@ -45,6 +45,7 @@ type-check:
   script:
     - pip install mypy sqlalchemy-stubs
     - pip install types-Flask
+    - pip install types-PyYAML
     - mypy --config-file .mypy.ini app tests
 
 dev:
