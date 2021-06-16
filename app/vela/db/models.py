@@ -31,3 +31,7 @@ class RewardRule(Base, UpdatedAtMixin):  # type: ignore
 
 class Transaction(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "transaction"
+
+
+class ProcessedTransaction(Base, UpdatedAtMixin):  # type: ignore
+    __tablename__ = "processed_transaction"

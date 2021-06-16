@@ -90,4 +90,10 @@ class RetailerRewardsAdmin(AuthorisedModelView):
 
 
 class TransactionAdmin(AuthorisedModelView):
-    pass
+    column_filters = ("retailerrewards.slug",)
+    column_searchable_list = ("transaction_id",)
+
+
+class ProcessedTransactionAdmin(AuthorisedModelView):
+    column_filters = ("retailerrewards.slug",)
+    column_searchable_list = ("transaction_id",)
