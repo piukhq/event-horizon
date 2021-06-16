@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
 
-from app.vela.admin import CampaignAdmin, EarnRuleAdmin, RetailerRewardsAdmin, TransactionAdmin
-from app.vela.db.models import EarnRule, RetailerRewards
+from app.vela.admin import CampaignAdmin, EarnRuleAdmin, RetailerRewardsAdmin, RewardRuleAdmin, TransactionAdmin
 
-from .db import Campaign, EarnRule, Transaction, db_session
+from .db import Campaign, EarnRule, RetailerRewards, RewardRule, Transaction, db_session
 
 if TYPE_CHECKING:
     from flask_admin import Admin
@@ -16,6 +15,9 @@ def register_vela_admin(event_horizon_admin: "Admin") -> None:
     )
     event_horizon_admin.add_view(
         EarnRuleAdmin(EarnRule, db_session, "Earn Rules", endpoint="earn-rules", category=vela_menu_title)
+    )
+    event_horizon_admin.add_view(
+        RewardRuleAdmin(RewardRule, db_session, "Reward Rules", endpoint="reward-rules", category=vela_menu_title)
     )
     event_horizon_admin.add_view(
         RetailerRewardsAdmin(

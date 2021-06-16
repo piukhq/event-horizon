@@ -25,5 +25,9 @@ class EarnRule(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "earn_rule"
 
 
+class RewardRule(Base, UpdatedAtMixin):  # type: ignore
+    __tablename__ = "reward_rule"
+
+
 class Transaction(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "transaction"
