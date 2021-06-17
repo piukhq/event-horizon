@@ -75,7 +75,9 @@ class RewardRuleAdmin(BaseModelView):
     form_args = {
         "reward_goal": {
             "validators": [wtforms.validators.NumberRange(min=1)],
-            "description": ("Balance goal used to calculate if a voucher should be issued."),
+            "description": ("Balance goal used to calculate if a voucher should be issued. "
+                            "This is a money value * 100, e.g. a reward goal of £10.50 should be 1050, "
+                            "and a reward goal of 8 stamps would be 800."),
         },
         "voucher_type_slug": {
             "validators": [DataRequired(message="Slug is required"), wtforms.validators.Length(min=1, max=32)],
