@@ -1,6 +1,7 @@
 import wtforms
 
 from flask_admin.model import typefmt  # type: ignore
+from wtforms.validators import DataRequired
 
 from app.admin.model_views import AuthorisedModelView, BaseModelView
 from app.vela.validators import validate_campaign_earn_inc_is_tx_value, validate_earn_rule_increment
@@ -53,6 +54,37 @@ class EarnRuleAdmin(BaseModelView):
             ),
         },
         "increment_multiplier": {"validators": [wtforms.validators.NumberRange(min=0)]},
+    }
+    column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}
+
+
+class RewardRuleAdmin(BaseModelView):
+    column_auto_select_related = True
+    column_filters = ("campaign.name", "campaign.retailerrewards.slug")
+    column_searchable_list = ("campaign.name",)
+    column_list = (
+        "campaign.name",
+        "reward_goal",
+        "voucher_type_slug",
+        "created_at",
+        "updated_at",
+    )
+    column_labels = {
+        "campaign.name": "Campaign",
+    }
+    form_args = {
+        "reward_goal": {
+            "validators": [wtforms.validators.NumberRange(min=1)],
+            "description": (
+                "Balance goal used to calculate if a voucher should be issued. "
+                "This is a money value * 100, e.g. a reward goal of £10.50 should be 1050, "
+                "and a reward goal of 8 stamps would be 800."
+            ),
+        },
+        "voucher_type_slug": {
+            "validators": [DataRequired(message="Slug is required"), wtforms.validators.Length(min=1, max=32)],
+            "description": ("Used to determine what voucher on the till the Account holder will be allocated."),
+        },
     }
     column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}
 
