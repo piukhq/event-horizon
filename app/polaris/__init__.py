@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from .admin import AccountHolderAdmin, AccountHolderProfileAdmin, EnrolmentCallbackAdmin, RetailerConfigAdmin
-from .db import AccountHolder, AccountHolderProfile, EnrolmentCallback, RetailerConfig, db_session
+from .admin import AccountHolderActivationAdmin, AccountHolderAdmin, AccountHolderProfileAdmin, RetailerConfigAdmin
+from .db import AccountHolder, AccountHolderActivation, AccountHolderProfile, RetailerConfig, db_session
 
 if TYPE_CHECKING:
     from flask_admin import Admin
@@ -20,16 +20,16 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
         )
     )
     event_horizon_admin.add_view(
-        RetailerConfigAdmin(
-            RetailerConfig, db_session, "Retailers' Config", endpoint="retailers-config", category=polaris_menu_title
+        AccountHolderActivationAdmin(
+            AccountHolderActivation,
+            db_session,
+            "Account Holder Activations",
+            endpoint="account-holder-activations",
+            category=polaris_menu_title,
         )
     )
     event_horizon_admin.add_view(
-        EnrolmentCallbackAdmin(
-            EnrolmentCallback,
-            db_session,
-            "Enrolment Callbacks",
-            endpoint="enrolment-callbacks",
-            category=polaris_menu_title,
+        RetailerConfigAdmin(
+            RetailerConfig, db_session, "Retailers' Config", endpoint="retailers-config", category=polaris_menu_title
         )
     )
