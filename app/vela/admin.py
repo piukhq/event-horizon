@@ -25,6 +25,7 @@ class EarnRuleAdmin(BaseModelView):
     column_searchable_list = ("campaign.name",)
     column_list = (
         "campaign.name",
+        "campaign.retailerrewards",
         "threshold",
         "campaign.earn_inc_is_tx_value",
         "increment",
@@ -34,6 +35,7 @@ class EarnRuleAdmin(BaseModelView):
     )
     column_labels = {
         "campaign.name": "Campaign",
+        "campaign.retailerrewards": "Retailer",
         "campaign.earn_inc_is_tx_value": "Earn Inc. is Trans. Value?",
     }
     form_args = {
@@ -64,6 +66,7 @@ class RewardRuleAdmin(BaseModelView):
     column_searchable_list = ("campaign.name",)
     column_list = (
         "campaign.name",
+        "campaign.retailerrewards",
         "reward_goal",
         "voucher_type_slug",
         "created_at",
@@ -71,6 +74,7 @@ class RewardRuleAdmin(BaseModelView):
     )
     column_labels = {
         "campaign.name": "Campaign",
+        "campaign.retailerrewards": "Retailer",
     }
     form_args = {
         "reward_goal": {
