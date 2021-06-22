@@ -34,6 +34,10 @@ class EnrolmentCallback(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "enrolment_callback"
 
 
+class AccountHolderActivation(Base, UpdatedAtMixin):  # type: ignore
+    __tablename__ = "account_holder_activation"
+
+
 class RetailerConfig(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "retailer_config"
 
