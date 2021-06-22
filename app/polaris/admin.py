@@ -32,10 +32,11 @@ class AccountHolderProfileAdmin(BaseModelView):
     column_default_sort = ("accountholder.created_at", True)
 
 
-class EnrolmentCallbackAdmin(BaseModelView):
+class AccountHolderActivationAdmin(BaseModelView):
+    column_searchable_list = ("accountholder.id", "accountholder.email")
     column_labels = dict(accountholder="Account Holder", url="URL")
-    column_filters = ("status",)
-    column_exclude_list = ("url", "response_data")
+    column_filters = ("status", "callback_next_attempt_time", "updated_at", "accountholder.retailerconfig.slug")
+    column_exclude_list = ("callback_url", "callback_response_data")
     column_formatters = dict(
         accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
         + Markup("<br />" + f"({model.accountholder.id})")
