@@ -41,7 +41,7 @@ class AccountHolderActivationAdmin(BaseModelView):
         accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
         + Markup("<br />" + f"({model.accountholder.id})")
     )
-    form_edit_rules = ("retry_at", "status")
+    form_edit_rules = ("callback_url",)
 
 
 class RetailerConfigAdmin(BaseModelView):
