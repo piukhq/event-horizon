@@ -1,6 +1,7 @@
 from os import getenv
 
 from dotenv import load_dotenv
+from redis import Redis
 
 from app.key_vault import KeyVault
 
@@ -27,3 +28,12 @@ VELA_DATABASE_URI = getenv("VELA_DATABASE_URI", "postgresql://postgres:postgres@
 CARINA_DATABASE_URI = getenv("CARINA_DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/carina")
 SENTRY_DSN = getenv("SENTRY_DSN")
 SENTRY_ENV = getenv("SENTRY_ENV")
+ACCOUNT_HOLDER_ACTIVATION_TASK_QUEUE = getenv("ACCOUNT_HOLDER_ACTIVATION_TASK_QUEUE", "bpl_account_holder_activations")
+REDIS_URL = getenv("REDIS_URL", "redis://localhost:6379/0")
+
+redis = Redis.from_url(
+    REDIS_URL,
+    socket_connect_timeout=3,
+    socket_keepalive=True,
+    retry_on_timeout=False,
+)

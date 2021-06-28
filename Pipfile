@@ -17,6 +17,8 @@ azure-keyvault = "*"
 azure-identity = "*"
 sentry-sdk = {extras = ["flask"], version = "*"}
 gunicorn = "*"
+redis = "*"
+rq = "*"
 
 [dev-packages]
 mypy = "*"
@@ -29,7 +31,7 @@ pytest-cov = "*"
 xenon = "*"
 types-flask = "*"
 types-pyyaml = "*"
+types-redis = "*"
 
 [requires]
 python_version = "3.9"
-
