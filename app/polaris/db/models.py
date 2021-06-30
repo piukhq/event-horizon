@@ -15,10 +15,6 @@ class AccountHolder(Base, UpdatedAtMixin):  # type: ignore
         "AccountHolderProfile", backref="account_holder", cascade="all, delete-orphan"
     )
 
-    enrolmentcallback_collection = relationship(
-        "EnrolmentCallback", backref="enrolment_callback", cascade="all, delete-orphan"
-    )
-
     def __str__(self) -> str:
         return self.id
 
@@ -28,10 +24,6 @@ class AccountHolderProfile(Base):  # type: ignore
 
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}"
-
-
-class EnrolmentCallback(Base, UpdatedAtMixin):  # type: ignore
-    __tablename__ = "enrolment_callback"
 
 
 class AccountHolderActivation(Base, UpdatedAtMixin):  # type: ignore
