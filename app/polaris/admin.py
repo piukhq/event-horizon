@@ -52,11 +52,11 @@ class AccountHolderActivationAdmin(BaseModelView):
 class UserVoucherAdmin(BaseModelView):
     column_searchable_list = ("accountholder.id", "accountholder.email")
     column_labels = dict(accountholder="Account Holder")
+    column_filters = ("accountholder.retailerconfig.slug", "status", "voucher_type_slug")
     column_formatters = dict(
         accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
         + Markup("<br />" + f"({model.accountholder.id})")
     )
-    column_default_sort = ("updated_at", True)
     form_widget_args = {
         "voucher_id": {"readonly": True},
         "voucher_code": {"readonly": True},
