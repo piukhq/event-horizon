@@ -30,6 +30,13 @@ class AccountHolderActivation(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "account_holder_activation"
 
 
+class UserVoucher(Base):  # type: ignore
+    __tablename__ = "user_voucher"
+
+    def __str__(self) -> str:
+        return self.voucher_code
+
+
 class RetailerConfig(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "retailer_config"
 

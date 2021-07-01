@@ -1,7 +1,13 @@
 from typing import TYPE_CHECKING
 
-from .admin import AccountHolderActivationAdmin, AccountHolderAdmin, AccountHolderProfileAdmin, RetailerConfigAdmin
-from .db import AccountHolder, AccountHolderActivation, AccountHolderProfile, RetailerConfig, db_session
+from .admin import (
+    AccountHolderActivationAdmin,
+    AccountHolderAdmin,
+    AccountHolderProfileAdmin,
+    RetailerConfigAdmin,
+    UserVoucherAdmin,
+)
+from .db import AccountHolder, AccountHolderActivation, AccountHolderProfile, RetailerConfig, UserVoucher, db_session
 
 if TYPE_CHECKING:
     from flask_admin import Admin
@@ -26,6 +32,11 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             "Account Holder Activations",
             endpoint="account-holder-activations",
             category=polaris_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        UserVoucherAdmin(
+            UserVoucher, db_session, "User Vouchers", endpoint="user-vouchers", category=polaris_menu_title
         )
     )
     event_horizon_admin.add_view(
