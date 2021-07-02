@@ -14,6 +14,7 @@ class AccountHolder(Base, UpdatedAtMixin):  # type: ignore
     accountholderprofile_collection = relationship(
         "AccountHolderProfile", backref="account_holder", cascade="all, delete-orphan"
     )
+    uservoucher_collection = relationship("UserVoucher", backref="account_holder", cascade="all, delete-orphan")
 
     def __str__(self) -> str:
         return self.id
