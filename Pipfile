@@ -26,6 +26,8 @@ sqlalchemy-stubs = "*"
 pytest = "*"
 pytest-cov = "*"
 xenon = "*"
+types-flask = "*"
+types-pyyaml = "*"
 
 [requires]
 python_version = "3.9"
