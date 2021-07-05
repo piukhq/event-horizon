@@ -6,35 +6,39 @@ stages:
 default:
   image: ghcr.io/binkhq/python:3.9
 
-test:pytest:
+variables:
+  POSTGRES_DB: polaris
+  POSTGRES_HOST_AUTH_METHOD: trust
+  POLARIS_DATABASE_URI: "postgresql://postgres@postgres:5432/polaris"
+  VELA_DATABASE_URI: "postgresql://postgres@postgres:5432/vela"
+  EVENT_HORIZON_CLIENT_SECRET: "unused-for-tests"
+  SECRET_KEY: "not-the-real-key"
+
+test:style: &test
   stage: test
-  before_script: &setup
+  before_script:
     - pipenv install --dev --system --deploy --ignore-pipfile
     - pip freeze
+  script:
+    - flake8
+    - black --line-length 120 --check .
+
+test:complexity:
+  <<: *test
+  script:
+    - xenon --no-assert --max-average A --max-modules B --max-absolute B .
+
+test:type-check:
+  <<: *test
+  script:
+    - mypy --config-file .mypy.ini app tests
+
+test:pytest:
+  <<: *test
   script:
     - pytest --verbose --cov app --cov-report term-missing
   services:
     - postgres:latest
-
-test:complexity:
-  stage: test
-  before_script: *setup
-  script:
-    - xenon --max-average A --max-modules B --max-absolute B .
-
-test:style:
-  stage: test
-  before_script: *setup
-  script:
-    - flake8
-    - black --line-length 120 --check .
-    - isort --check --line-length 120 --profile black .
-
-test:type-check:
-  stage: test
-  before_script: *setup
-  script:
-    - mypy --config-file .mypy.ini app tests
 
 build:develop: &build
   stage: build
