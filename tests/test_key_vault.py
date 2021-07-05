@@ -25,7 +25,7 @@ def test_init_keyvault_no_args() -> None:
         KeyVault()
 
 
-def test_get_secret(mock_client: SecretClient) -> None:
+def test_get_secret(mock_client: mock.MagicMock) -> None:
     fake_secrets = [
         ('{"value": "secret #1"}', "value"),
         ('{"other_key": "secret #2"}', "other_key"),
@@ -56,7 +56,7 @@ def test_get_secret(mock_client: SecretClient) -> None:
     ]
 
 
-def test_get_secret_no_key_in_secret(mock_client: SecretClient) -> None:
+def test_get_secret_no_key_in_secret(mock_client: mock.MagicMock) -> None:
     mock_client.get_secret.return_value.value = '{"value": "shhh! secret"}'
     key_vault = KeyVault(client=mock_client)
     with pytest.raises(KeyError):
