@@ -3,7 +3,7 @@ import wtforms
 from flask_admin.model import typefmt  # type: ignore
 from wtforms.validators import DataRequired
 
-from app.admin.model_views import BaseModelView
+from app.admin.model_views import AuthorisedModelView, BaseModelView
 from app.vela.validators import validate_campaign_earn_inc_is_tx_value, validate_earn_rule_increment
 
 
@@ -93,7 +93,7 @@ class RewardRuleAdmin(BaseModelView):
     column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}
 
 
-class RetailerRewardsAdmin(BaseModelView):
+class RetailerRewardsAdmin(AuthorisedModelView):
     pass
 
 
@@ -109,6 +109,11 @@ class ProcessedTransactionAdmin(BaseModelView):
 
 class RewardAdjustmentAdmin(BaseModelView):
     column_exclude_list = ("response_data",)
-    column_filters = ("campaign_slug", "status")
+    column_filters = (
+        "campaign_slug",
+        "status",
+        "processedtransaction.account_holder_uuid",
+        "processedtransaction.retailerrewards.slug",
+    )
     column_searchable_list = ("processed_transaction_id",)
     column_labels = dict(processedtransaction="Processed Transaction")
