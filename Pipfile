@@ -20,7 +20,7 @@ gunicorn = "*"
 
 [dev-packages]
 mypy = "*"
-black = "*"
+black = "==21.6b0"
 isort = "*"
 flake8 = "*"
 sqlalchemy-stubs = "*"
@@ -33,5 +33,3 @@ types-pyyaml = "*"
 [requires]
 python_version = "3.9"
 
-[pipenv]
-allow_prereleases = true
