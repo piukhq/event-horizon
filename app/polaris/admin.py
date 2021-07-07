@@ -1,10 +1,20 @@
 import json
 
-from flask import Markup
+from typing import List
+
+import rq
+
+from flask import Markup, flash
+from flask_admin.actions import action
 from flask_admin.model.form import InlineFormAdmin
+from sqlalchemy import text
+from sqlalchemy.future import select  # type: ignore
 from wtforms.validators import DataRequired
 
+from app import settings
 from app.admin.model_views import BaseModelView
+from app.polaris.db import db_session
+from app.polaris.db.models import AccountHolderActivation
 
 from .db import AccountHolderProfile
 from .validators import validate_account_number_prefix, validate_retailer_config
@@ -47,6 +57,56 @@ class AccountHolderActivationAdmin(BaseModelView):
         + Markup("</pre>"),
     )
     form_edit_rules = ("callback_url",)
+
+    @action("requeue", "Requeue", "Are you sure you want to requeue selected activations?")
+    def action_requeue_activations(self, ids: List[str]) -> None:
+        activations = (
+            db_session.execute(
+                select(AccountHolderActivation)
+                .with_for_update()
+                .where(AccountHolderActivation.id.in_(ids))
+                .where(AccountHolderActivation.status == "FAILED")
+            )
+            .scalars()
+            .all()
+        )
+        if activations:
+            new_activations: List[AccountHolderActivation] = []
+            try:
+                for activation in activations:
+                    new_activation = AccountHolderActivation(
+                        account_holder_id=activation.account_holder_id,
+                        attempts=0,
+                        status="IN_PROGRESS",
+                        callback_url=activation.callback_url,
+                        third_party_identifier=activation.third_party_identifier,
+                        response_data=text("'[]'::jsonb"),
+                    )
+                    db_session.add(new_activation)
+                    activation.status = "REQUEUED"
+                    db_session.flush()
+                    new_activations.append(new_activation)
+
+                q = rq.Queue(settings.ACCOUNT_HOLDER_ACTIVATION_TASK_QUEUE, connection=settings.redis)
+                jobs = q.enqueue_many(
+                    [
+                        rq.Queue.prepare_data(
+                            "app.tasks.account_holder.activate_account_holder",
+                            kwargs={"account_holder_activation_id": activation.id},
+                        )
+                        for activation in new_activations
+                    ]
+                )
+            except Exception as ex:
+                db_session.rollback()
+                if not self.handle_view_exception(ex):
+                    raise
+                flash("Failed to requeue selected activations.", category="error")
+            else:
+                db_session.commit()
+                flash(f"Requeued {len(jobs)} FAILED activations")
+        else:
+            flash("No relevant (FAILED) activations to requeue.", category="error")
 
 
 class UserVoucherAdmin(BaseModelView):

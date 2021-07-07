@@ -9,7 +9,7 @@ from app.key_vault import KeyVault
 
 
 @pytest.fixture
-def mock_client() -> SecretClient:
+def mock_client() -> mock.MagicMock:
     return mock.MagicMock(spec=SecretClient)
 
 
