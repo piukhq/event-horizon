@@ -35,3 +35,10 @@ class Transaction(Base, UpdatedAtMixin):  # type: ignore
 
 class ProcessedTransaction(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "processed_transaction"
+
+    def __str__(self) -> str:
+        return self.transaction_id
+
+
+class RewardAdjustment(Base, UpdatedAtMixin):  # type: ignore
+    __tablename__ = "reward_adjustment"

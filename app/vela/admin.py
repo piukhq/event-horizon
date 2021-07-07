@@ -97,11 +97,23 @@ class RetailerRewardsAdmin(AuthorisedModelView):
     pass
 
 
-class TransactionAdmin(AuthorisedModelView):
+class TransactionAdmin(BaseModelView):
     column_filters = ("retailerrewards.slug",)
     column_searchable_list = ("transaction_id",)
 
 
-class ProcessedTransactionAdmin(AuthorisedModelView):
+class ProcessedTransactionAdmin(BaseModelView):
     column_filters = ("retailerrewards.slug",)
     column_searchable_list = ("transaction_id",)
+
+
+class RewardAdjustmentAdmin(BaseModelView):
+    column_exclude_list = ("response_data",)
+    column_filters = (
+        "campaign_slug",
+        "status",
+        "processedtransaction.account_holder_uuid",
+        "processedtransaction.retailerrewards.slug",
+    )
+    column_searchable_list = ("processed_transaction_id",)
+    column_labels = dict(processedtransaction="Processed Transaction")

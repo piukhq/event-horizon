@@ -5,11 +5,21 @@ from app.vela.admin import (
     EarnRuleAdmin,
     ProcessedTransactionAdmin,
     RetailerRewardsAdmin,
+    RewardAdjustmentAdmin,
     RewardRuleAdmin,
     TransactionAdmin,
 )
 
-from .db import Campaign, EarnRule, ProcessedTransaction, RetailerRewards, RewardRule, Transaction, db_session
+from .db import (
+    Campaign,
+    EarnRule,
+    ProcessedTransaction,
+    RetailerRewards,
+    RewardAdjustment,
+    RewardRule,
+    Transaction,
+    db_session,
+)
 
 if TYPE_CHECKING:
     from flask_admin import Admin
@@ -41,5 +51,10 @@ def register_vela_admin(event_horizon_admin: "Admin") -> None:
             "Processed Transactions",
             endpoint="processed-transactions",
             category=vela_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        RewardAdjustmentAdmin(
+            RewardAdjustment, db_session, "Reward Adjustments", endpoint="reward-adjustment", category=vela_menu_title
         )
     )
