@@ -15,7 +15,5 @@ def register_carina_admin(event_horizon_admin: "Admin") -> None:
         )
     )
     event_horizon_admin.add_view(
-        VoucherAdmin(
-            Voucher, db_session, "Vouchers", endpoint="vouchers", category=carina_menu_title
-        )
+        VoucherAdmin(Voucher, db_session, "Vouchers", endpoint="vouchers", category=carina_menu_title)
     )
