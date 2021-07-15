@@ -109,7 +109,7 @@ class AccountHolderActivationAdmin(BaseModelView):
             flash("No relevant (FAILED) activations to requeue.", category="error")
 
 
-class UserVoucherAdmin(BaseModelView):
+class AccountHolderVoucherAdmin(BaseModelView):
     column_searchable_list = ("accountholder.id", "accountholder.email")
     column_labels = dict(accountholder="Account Holder")
     column_filters = ("accountholder.retailerconfig.slug", "status", "voucher_type_slug")
