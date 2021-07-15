@@ -4,10 +4,17 @@ from .admin import (
     AccountHolderActivationAdmin,
     AccountHolderAdmin,
     AccountHolderProfileAdmin,
+    AccountHolderVoucherAdmin,
     RetailerConfigAdmin,
-    UserVoucherAdmin,
 )
-from .db import AccountHolder, AccountHolderActivation, AccountHolderProfile, RetailerConfig, UserVoucher, db_session
+from .db import (
+    AccountHolder,
+    AccountHolderActivation,
+    AccountHolderProfile,
+    AccountHolderVoucher,
+    RetailerConfig,
+    db_session,
+)
 
 if TYPE_CHECKING:
     from flask_admin import Admin
@@ -35,8 +42,12 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
         )
     )
     event_horizon_admin.add_view(
-        UserVoucherAdmin(
-            UserVoucher, db_session, "User Vouchers", endpoint="user-vouchers", category=polaris_menu_title
+        AccountHolderVoucherAdmin(
+            AccountHolderVoucher,
+            db_session,
+            "Account Holder Vouchers",
+            endpoint="account-holder-vouchers",
+            category=polaris_menu_title,
         )
     )
     event_horizon_admin.add_view(
