@@ -1,2 +1,2 @@
-from .models import Voucher, VoucherConfig, VoucherRetailer
+from .models import Voucher, VoucherConfig
 from .session import db_session
