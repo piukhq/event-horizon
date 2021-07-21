@@ -11,8 +11,6 @@ Base = automap_base(metadata=metadata)
 class VoucherConfig(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "voucher_config"
 
-    voucher_collection = relationship("Voucher", backref="vouchers", cascade="all, delete-orphan")
-
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.retailer_slug}, " f"{self.voucher_type_slug}, {self.validity_days})"
 
