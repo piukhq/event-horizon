@@ -25,7 +25,7 @@ class VoucherAdmin(BaseModelView):
         "voucherconfig.voucher_type_slug",
         "retailer_slug",
     )
-    column_labels = dict(voucherconfig="Voucher config", voucherretailer="Voucher retailer")
+    column_labels = dict(voucherconfig="Voucher config")
     column_filters = ("retailer_slug", "voucherconfig.voucher_type_slug", "allocated")
     column_formatters = dict(
         voucherconfig=lambda v, c, model, p: Markup.escape(model.voucherconfig)
