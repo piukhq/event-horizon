@@ -34,12 +34,15 @@ class UserSessionMixin:
 # custom admin classes needed for authorisation
 class AuthorisedModelView(ModelView, UserSessionMixin):
     can_view_details = True
+    can_edit = True  # Flask admin's usual default for can_edit
+    can_create = True  # Flask admin's usual default for can_create
     can_delete = False
 
     def is_accessible(self) -> bool:
         if not self.user_info:
             return False
-        self.can_create = self.can_edit = bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
+        self.can_create = self.can_create and bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
+        self.can_edit = self.can_edit and bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
         return not self.user_session_expired and self.user_is_authorized
 
     def inaccessible_callback(self, name: str, **kwargs: Optional[dict]) -> "Response":
