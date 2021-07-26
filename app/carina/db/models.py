@@ -19,3 +19,10 @@ class Voucher(Base, UpdatedAtMixin):  # type: ignore
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.retailer_slug}, " f"{self.voucher_code}, {self.allocated})"
+
+
+class VoucherAllocation(Base, UpdatedAtMixin):  # type: ignore
+    __tablename__ = "voucher_allocation"
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.id})"
