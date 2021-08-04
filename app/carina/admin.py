@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from flask import Markup
 from wtforms.validators import NumberRange
@@ -23,8 +23,11 @@ def voucher_config_format(
     )
 
 
-def voucher_format(view: BaseModelView, context: dict, model: "VoucherAllocation", name: str) -> str:
-    return Markup(("<a href='/bpl/admin/vouchers/details/?id={0}'>{0}</a>").format(model.voucher.id))
+def voucher_format(view: BaseModelView, context: dict, model: "VoucherAllocation", name: str) -> Optional[str]:
+    if model.voucher is None:
+        return None
+    else:
+        return Markup(("<a href='/bpl/admin/vouchers/details/?id={0}'>{0}</a>").format(model.voucher.id))
 
 
 class VoucherConfigAdmin(BaseModelView):
