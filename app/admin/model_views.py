@@ -57,6 +57,9 @@ class BaseModelView(AuthorisedModelView):
     Set some baseline behaviour for all ModelViews
     """
 
+    list_template = "eh_list.html"
+    edit_template = "eh_edit.html"
+    create_template = "eh_create.html"
     column_default_sort: Union[str, Tuple[str, bool]] = ("created_at", True)
     form_excluded_columns: Tuple[str, ...] = ("created_at", "updated_at")
 

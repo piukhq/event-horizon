@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional, Union
 from flask import Markup
 from wtforms.validators import NumberRange
 
-from app.admin.model_views import AuthorisedModelView, BaseModelView
+from app.admin.model_views import BaseModelView
 
 if TYPE_CHECKING:
     from app.carina.db.models import Voucher, VoucherAllocation
@@ -52,7 +52,7 @@ class VoucherAdmin(BaseModelView):
     column_formatters = {"voucherconfig": voucher_config_format}
 
 
-class VoucherAllocationAdmin(AuthorisedModelView):
+class VoucherAllocationAdmin(BaseModelView):
     column_searchable_list = ("id", "voucher.id")
     column_exclude_list = ("response_data", "account_url")
     column_filters = ("voucherconfig.retailer_slug", "voucherconfig.voucher_type_slug", "voucherconfig.id")
