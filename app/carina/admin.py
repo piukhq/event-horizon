@@ -41,6 +41,8 @@ class VoucherConfigAdmin(BaseModelView):
         }
     }
 
+    form_excluded_columns = ("voucher_collection", "voucherallocation_collection", "created_at", "updated_at")
+
 
 class VoucherAdmin(BaseModelView):
     can_create = False
