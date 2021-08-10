@@ -1,9 +1,11 @@
+from typing import Tuple, Union
+
 import wtforms
 
 from flask_admin.model import typefmt  # type: ignore
 from wtforms.validators import DataRequired
 
-from app.admin.model_views import AuthorisedModelView, BaseModelView
+from app.admin.model_views import BaseModelView
 from app.vela.validators import validate_campaign_earn_inc_is_tx_value, validate_earn_rule_increment
 
 
@@ -93,8 +95,8 @@ class RewardRuleAdmin(BaseModelView):
     column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}
 
 
-class RetailerRewardsAdmin(AuthorisedModelView):
-    pass
+class RetailerRewardsAdmin(BaseModelView):
+    column_default_sort: Union[str, Tuple[str, bool]] = ("slug", False)
 
 
 class TransactionAdmin(BaseModelView):

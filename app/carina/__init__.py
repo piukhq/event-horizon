@@ -11,7 +11,7 @@ def register_carina_admin(event_horizon_admin: "Admin") -> None:
     carina_menu_title = "Voucher Management"
     event_horizon_admin.add_view(
         VoucherConfigAdmin(
-            VoucherConfig, db_session, "Voucher Configurations", endpoint="voucher-config", category=carina_menu_title
+            VoucherConfig, db_session, "Voucher Configurations", endpoint="voucher-configs", category=carina_menu_title
         )
     )
     event_horizon_admin.add_view(
@@ -22,7 +22,7 @@ def register_carina_admin(event_horizon_admin: "Admin") -> None:
             VoucherAllocation,
             db_session,
             "Voucher Allocations",
-            endpoint="voucher-allocation",
+            endpoint="voucher-allocations",
             category=carina_menu_title,
         )
     )

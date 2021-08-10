@@ -1,0 +1,9 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}
+BPL -  {{ super() }}
+{% endblock %}
+
+{% block brand %}
+<a href="{{ admin_view.admin.url }}"><img src="{{ url_for('eh.static', filename='img/bink_icon_blue_transparent.png') }}" height="40" width="40" alt="Bink logo"></a>
+{% endblock %}
