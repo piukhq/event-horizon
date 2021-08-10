@@ -55,6 +55,6 @@ def register_vela_admin(event_horizon_admin: "Admin") -> None:
     )
     event_horizon_admin.add_view(
         RewardAdjustmentAdmin(
-            RewardAdjustment, db_session, "Reward Adjustments", endpoint="reward-adjustment", category=vela_menu_title
+            RewardAdjustment, db_session, "Reward Adjustments", endpoint="reward-adjustments", category=vela_menu_title
         )
     )
