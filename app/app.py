@@ -3,7 +3,7 @@ from typing import Any, Optional
 import sentry_sdk
 
 from authlib.integrations.flask_client import OAuth
-from flask import Flask, Response
+from flask import Blueprint, Flask, Response
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
@@ -68,6 +68,9 @@ def create_app(config_name: str = "app.settings") -> Flask:
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(healthz_bp)
+
+    eh_bp = Blueprint("eh", __name__, static_url_path="/bpl/admin/eh/static", static_folder="static")
+    app.register_blueprint(eh_bp)
 
     @app.teardown_appcontext
     def remove_session(exception: Optional[BaseException] = None) -> Any:
