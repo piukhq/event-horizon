@@ -32,7 +32,6 @@ key_vault = KeyVault(KEY_VAULT_URI)
 SECRET_KEY = get_env("SECRET_KEY") or key_vault.get_secret("bpl-event-horizon-secret-key")
 
 
-
 # AAD SSO
 OAUTH_REDIRECT_URI = get_env("OAUTH_REDIRECT_URI")
 AZURE_TENANT_ID = get_env("AZURE_TENANT_ID", "a6e2367a-92ea-4e5a-b565-723830bcc095")
