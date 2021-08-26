@@ -4,6 +4,7 @@ from flask import Markup
 from wtforms.validators import NumberRange
 
 from app.admin.model_views import BaseModelView
+from app.carina.validators import voucher_source_validation
 
 if TYPE_CHECKING:
     from app.carina.db.models import Voucher, VoucherAllocation
@@ -42,6 +43,7 @@ class VoucherConfigAdmin(BaseModelView):
     }
 
     form_excluded_columns = ("voucher_collection", "voucherallocation_collection", "created_at", "updated_at")
+    form_args = {"fetch_type": {"validators": [voucher_source_validation]}}
 
 
 class VoucherAdmin(BaseModelView):
