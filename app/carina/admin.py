@@ -62,3 +62,9 @@ class VoucherAllocationAdmin(BaseModelView):
     column_filters = ("voucherconfig.retailer_slug", "voucherconfig.voucher_type_slug", "voucherconfig.id")
     column_labels = {"voucherconfig": "Voucher config"}
     column_formatters = {"voucherconfig": voucher_config_format, "voucher": voucher_format}
+
+
+class VoucherUpdateAdmin(BaseModelView):
+    column_searchable_list = ("id", "voucher_id")
+    column_exclude_list = ("response_data",)
+    column_filters = ("retailer_slug",)
