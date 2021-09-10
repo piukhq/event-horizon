@@ -65,6 +65,6 @@ class VoucherAllocationAdmin(BaseModelView):
 
 
 class VoucherUpdateAdmin(BaseModelView):
-    column_searchable_list = ("id", "voucher_id")
+    column_searchable_list = ("id", "voucher_id", "voucher.voucher_code")
     column_exclude_list = ("response_data",)
-    column_filters = ("retailer_slug",)
+    column_filters = ("voucher.retailer_slug",)
