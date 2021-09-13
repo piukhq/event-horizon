@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from .admin import VoucherAdmin, VoucherAllocationAdmin, VoucherConfigAdmin
-from .db import Voucher, VoucherAllocation, VoucherConfig, db_session
+from .admin import VoucherAdmin, VoucherAllocationAdmin, VoucherConfigAdmin, VoucherUpdateAdmin
+from .db import Voucher, VoucherAllocation, VoucherConfig, VoucherUpdate, db_session
 
 if TYPE_CHECKING:
     from flask_admin import Admin
@@ -23,6 +23,15 @@ def register_carina_admin(event_horizon_admin: "Admin") -> None:
             db_session,
             "Voucher Allocations",
             endpoint="voucher-allocations",
+            category=carina_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        VoucherUpdateAdmin(
+            VoucherUpdate,
+            db_session,
+            "Voucher Updates",
+            endpoint="voucher-updates",
             category=carina_menu_title,
         )
     )
