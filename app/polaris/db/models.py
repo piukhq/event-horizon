@@ -45,3 +45,10 @@ class RetailerConfig(Base, UpdatedAtMixin):  # type: ignore
 
     def __str__(self) -> str:
         return f"{self.name} ({self.slug})"
+
+
+class AccountHolderCampaignBalance(Base, UpdatedAtMixin):  # type: ignore
+    __tablename__ = "account_holder_campaign_balance"
+
+    def __str__(self) -> str:
+        return f"{self.campaign_slug}: ({self.balance})"
