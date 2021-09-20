@@ -1,5 +1,4 @@
 from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import MetaData
 
 from app.db import UpdatedAtMixin
