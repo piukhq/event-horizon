@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from .admin import (
     AccountHolderActivationAdmin,
     AccountHolderAdmin,
+    AccountHolderCampaignBalanceAdmin,
     AccountHolderProfileAdmin,
     AccountHolderVoucherAdmin,
     RetailerConfigAdmin,
@@ -10,6 +11,7 @@ from .admin import (
 from .db import (
     AccountHolder,
     AccountHolderActivation,
+    AccountHolderCampaignBalance,
     AccountHolderProfile,
     AccountHolderVoucher,
     RetailerConfig,
@@ -53,5 +55,14 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
     event_horizon_admin.add_view(
         RetailerConfigAdmin(
             RetailerConfig, db_session, "Retailers' Config", endpoint="retailers-config", category=polaris_menu_title
+        )
+    )
+    event_horizon_admin.add_view(
+        AccountHolderCampaignBalanceAdmin(
+            AccountHolderCampaignBalance,
+            db_session,
+            "Account Holder Campaign Balances",
+            endpoint="account-holder-campaign-balances",
+            category=polaris_menu_title,
         )
     )
