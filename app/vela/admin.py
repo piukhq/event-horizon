@@ -9,14 +9,18 @@ from app.admin.model_views import BaseModelView
 from app.vela.validators import validate_campaign_earn_inc_is_tx_value, validate_earn_rule_increment
 
 
+class CreateDisabled:
+    pass
+
+
 class CampaignAdmin(BaseModelView):
     column_auto_select_related = True
     column_filters = ("retailerrewards.slug", "status")
     column_searchable_list = ("slug", "name")
     column_labels = dict(retailerrewards="Retailer")
-    form_args = {
-        "earn_inc_is_tx_value": {"validators": [validate_campaign_earn_inc_is_tx_value]},
-    }
+    form_args = {"earn_inc_is_tx_value": {"validators": [validate_campaign_earn_inc_is_tx_value]}}
+    form_create_rules = ("retailerrewards", "name", "slug", "earn_inc_is_tx_value", "start_date", "end_date")
+
     # Be careful adding "inline_models = (EarnRule,)" here - the validate_earn_rule_increment
     # validator seemed to be bypassed in that view
 

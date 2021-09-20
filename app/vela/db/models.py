@@ -18,8 +18,6 @@ class RetailerRewards(Base):  # type: ignore
 class Campaign(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "campaign"
 
-    retailer = relationship(RetailerRewards)
-
     def __str__(self) -> str:
         return f"{self.name} - {self.status} ({self.retailer.slug})"
 
