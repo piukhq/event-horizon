@@ -7,11 +7,11 @@ from wtforms.validators import DataRequired
 
 from app.admin.model_views import BaseModelView, CanDeleteModelView
 from app.vela.validators import (
-    validate_earn_rule_deletion,
-    validate_reward_rule_deletion,
     validate_campaign_earn_inc_is_tx_value,
     validate_campaign_status_change,
+    validate_earn_rule_deletion,
     validate_earn_rule_increment,
+    validate_reward_rule_deletion,
 )
 
 if TYPE_CHECKING:

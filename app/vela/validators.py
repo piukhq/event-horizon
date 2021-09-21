@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, noload
 
 from app.vela.db import db_session
-from app.vela.db.models import Campaign, EarnRule, RewardRule
+from app.vela.db.models import Campaign, EarnRule
 
 
 def _count_earn_rules(campaign_id: int, *, has_inc_value: bool) -> int:
