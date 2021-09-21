@@ -18,7 +18,7 @@ class Campaign(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "campaign"
 
     def __str__(self) -> str:
-        return f"{self.name} - {self.status} ({self.retailer.slug})"
+        return f"{self.name} - {self.status} ({self.retailerrewards.slug})"
 
 
 class EarnRule(Base, UpdatedAtMixin):  # type: ignore

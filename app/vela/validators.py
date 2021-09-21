@@ -1,9 +1,11 @@
 import wtforms
 
-from sqlalchemy import func, select
+from sqlalchemy import func
+from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload, noload
 
 from app.vela.db import db_session
-from app.vela.db.models import Campaign, EarnRule
+from app.vela.db.models import Campaign, EarnRule, RewardRule
 
 
 def _count_earn_rules(campaign_id: int, *, has_inc_value: bool) -> int:
@@ -32,3 +34,53 @@ def validate_earn_rule_increment(form: wtforms.Form, field: wtforms.Field) -> No
         raise wtforms.ValidationError(
             "The campaign requires that this field is not populated due to campaign.earn_inc_is_tx_value setting"
         )
+
+
+def validate_campaign_status_change(form: wtforms.Form, field: wtforms.Field) -> None:
+    campaign = (
+        db_session.execute(
+            select(Campaign)
+            .options(joinedload(Campaign.earnrule_collection))
+            .options(joinedload(Campaign.rewardrule_collection))
+            .where(Campaign.id == form._obj.id)
+        )
+        .scalars()
+        .first()
+    )
+
+    if (campaign.status != "ACTIVE" and field.data == "ACTIVE") and (
+        len(campaign.earnrule_collection) < 1 or len(campaign.rewardrule_collection) != 1
+    ):
+        raise wtforms.ValidationError("To activate a campaign one reward rule and at least one earn rule are required.")
+
+
+def validate_earn_rule_deletion(campaign_id: int) -> None:
+    campaign = (
+        db_session.execute(
+            select(Campaign)
+            .options(joinedload(Campaign.earnrule_collection))
+            .options(noload(Campaign.rewardrule_collection))
+            .where(Campaign.id == campaign_id)
+        )
+        .scalars()
+        .first()
+    )
+
+    if campaign.status == "ACTIVE" and len(campaign.earnrule_collection) < 2:
+        raise wtforms.ValidationError("Can not delete the last earn rule of an active campaign.")
+
+
+def validate_reward_rule_deletion(campaign_id: int) -> None:
+    campaign = (
+        db_session.execute(
+            select(Campaign)
+            .options(noload(Campaign.earnrule_collection))
+            .options(joinedload(Campaign.rewardrule_collection))
+            .where(Campaign.id == campaign_id)
+        )
+        .scalars()
+        .first()
+    )
+
+    if campaign.status == "ACTIVE":
+        raise wtforms.ValidationError("Can not delete the reward rule of an active campaign.")

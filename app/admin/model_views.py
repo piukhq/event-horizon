@@ -72,3 +72,16 @@ class BaseModelView(AuthorisedModelView):
                     list_columns += [list_columns.pop(i)]
                     break
         return list_columns
+
+
+class CanDeleteModelView(BaseModelView):
+    """
+    Add delete permissions
+    """
+
+    fast_mass_delete = False
+    can_delete = True
+
+    def is_accessible(self) -> bool:
+        self.can_delete = self.can_delete and bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
+        return super().is_accessible()
