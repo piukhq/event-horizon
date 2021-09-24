@@ -2,7 +2,6 @@ import wtforms
 
 from sqlalchemy import func
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload, noload
 
 from app.vela.db import db_session
 from app.vela.db.models import Campaign, EarnRule
@@ -36,22 +35,8 @@ def validate_earn_rule_increment(form: wtforms.Form, field: wtforms.Field) -> No
         )
 
 
-def _get_campaign_by_id(
-    campaign_id: int, load_earn_rules: bool = True, load_reward_rule: bool = True
-) -> Campaign:  # pragma: no cover
-    earn_option = joinedload if load_earn_rules else noload
-    reward_option = joinedload if load_reward_rule else noload
-
-    return (
-        db_session.execute(
-            select(Campaign)
-            .options(earn_option(Campaign.earnrule_collection))
-            .options(reward_option(Campaign.rewardrule_collection))
-            .where(Campaign.id == campaign_id)
-        )
-        .scalars()
-        .one()
-    )
+def _get_campaign_by_id(campaign_id: int) -> Campaign:  # pragma: no cover
+    return db_session.execute(select(Campaign).where(Campaign.id == campaign_id)).scalars().one()
 
 
 def validate_campaign_status_change(form: wtforms.Form, field: wtforms.Field) -> None:
@@ -64,14 +49,14 @@ def validate_campaign_status_change(form: wtforms.Form, field: wtforms.Field) ->
 
 
 def validate_earn_rule_deletion(campaign_id: int) -> None:
-    campaign = _get_campaign_by_id(campaign_id, load_reward_rule=False)
+    campaign = _get_campaign_by_id(campaign_id)
 
     if campaign.status == "ACTIVE" and len(campaign.earnrule_collection) < 2:
         raise wtforms.ValidationError("Can not delete the last earn rule of an active campaign.")
 
 
 def validate_reward_rule_deletion(campaign_id: int) -> None:
-    campaign = _get_campaign_by_id(campaign_id, load_earn_rules=False, load_reward_rule=False)
+    campaign = _get_campaign_by_id(campaign_ide)
 
     if campaign.status == "ACTIVE":
         raise wtforms.ValidationError("Can not delete the reward rule of an active campaign.")

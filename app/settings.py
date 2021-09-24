@@ -1,3 +1,7 @@
+import logging
+import sys
+
+from logging.config import dictConfig
 from os import getenv
 from typing import Any, Callable
 
@@ -56,4 +60,44 @@ redis = Redis.from_url(
     socket_connect_timeout=3,
     socket_keepalive=True,
     retry_on_timeout=False,
+)
+
+
+ROOT_LOG_LEVEL = "ERROR"
+LOG_FORMATTER = "brief"
+QUERY_LOG_LEVEL = "INFO"
+
+
+dictConfig(
+    {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "brief": {"format": "%(levelname)s:     %(asctime)s - %(message)s"},
+        },
+        "handlers": {
+            "stderr": {
+                "level": logging.NOTSET,
+                "class": "logging.StreamHandler",
+                "stream": sys.stderr,
+                "formatter": LOG_FORMATTER,
+            },
+            "stdout": {
+                "level": logging.NOTSET,
+                "class": "logging.StreamHandler",
+                "stream": sys.stdout,
+                "formatter": LOG_FORMATTER,
+            },
+        },
+        "loggers": {
+            "root": {
+                "level": ROOT_LOG_LEVEL or logging.INFO,
+                "handlers": ["stdout"],
+            },
+            "sqlalchemy": {
+                "level": QUERY_LOG_LEVEL or logging.WARN,
+                "qualname": "sqlalchemy.engine",
+            },
+        },
+    }
 )
