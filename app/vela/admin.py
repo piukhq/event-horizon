@@ -1,12 +1,21 @@
-from typing import Tuple, Union
+from typing import TYPE_CHECKING, Tuple, Union
 
 import wtforms
 
 from flask_admin.model import typefmt  # type: ignore
 from wtforms.validators import DataRequired
 
-from app.admin.model_views import BaseModelView
-from app.vela.validators import validate_campaign_earn_inc_is_tx_value, validate_earn_rule_increment
+from app.admin.model_views import BaseModelView, CanDeleteModelView
+from app.vela.validators import (
+    validate_campaign_earn_inc_is_tx_value,
+    validate_campaign_status_change,
+    validate_earn_rule_deletion,
+    validate_earn_rule_increment,
+    validate_reward_rule_deletion,
+)
+
+if TYPE_CHECKING:
+    from app.vela.db.models import EarnRule, RewardRule
 
 
 class CreateDisabled:
@@ -18,14 +27,17 @@ class CampaignAdmin(BaseModelView):
     column_filters = ("retailerrewards.slug", "status")
     column_searchable_list = ("slug", "name")
     column_labels = dict(retailerrewards="Retailer")
-    form_args = {"earn_inc_is_tx_value": {"validators": [validate_campaign_earn_inc_is_tx_value]}}
+    form_args = {
+        "earn_inc_is_tx_value": {"validators": [validate_campaign_earn_inc_is_tx_value]},
+        "status": {"validators": [validate_campaign_status_change]},
+    }
     form_create_rules = ("retailerrewards", "name", "slug", "earn_inc_is_tx_value", "start_date", "end_date")
 
     # Be careful adding "inline_models = (EarnRule,)" here - the validate_earn_rule_increment
     # validator seemed to be bypassed in that view
 
 
-class EarnRuleAdmin(BaseModelView):
+class EarnRuleAdmin(CanDeleteModelView):
     column_auto_select_related = True
     column_filters = ("campaign.name", "campaign.earn_inc_is_tx_value", "campaign.retailerrewards.slug")
     column_searchable_list = ("campaign.name",)
@@ -65,8 +77,12 @@ class EarnRuleAdmin(BaseModelView):
     }
     column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}
 
+    def on_model_delete(self, model: "EarnRule") -> None:
+        validate_earn_rule_deletion(model.campaign_id)
+        return super().on_model_delete(model)
 
-class RewardRuleAdmin(BaseModelView):
+
+class RewardRuleAdmin(CanDeleteModelView):
     column_auto_select_related = True
     column_filters = ("campaign.name", "campaign.retailerrewards.slug")
     column_searchable_list = ("campaign.name",)
@@ -97,6 +113,10 @@ class RewardRuleAdmin(BaseModelView):
         },
     }
     column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}
+
+    def on_model_delete(self, model: "RewardRule") -> None:
+        validate_reward_rule_deletion(model.campaign_id)
+        return super().on_model_delete(model)
 
 
 class RetailerRewardsAdmin(BaseModelView):
