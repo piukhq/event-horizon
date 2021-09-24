@@ -53,7 +53,6 @@ SENTRY_DSN = get_env("SENTRY_DSN")
 SENTRY_ENV = get_env("SENTRY_ENV")
 ACCOUNT_HOLDER_ACTIVATION_TASK_QUEUE = get_env("ACCOUNT_HOLDER_ACTIVATION_TASK_QUEUE", "bpl_account_holder_activations")
 REDIS_URL = get_env("REDIS_URL", "redis://localhost:6379/0")
-ROOT_LOG_LEVEL = get_env("ROOT_LOG_LEVEL")
 QUERY_LOG_LEVEL = get_env("ROOT_LOG_LEVEL")
 
 
