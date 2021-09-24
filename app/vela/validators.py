@@ -56,7 +56,7 @@ def validate_earn_rule_deletion(campaign_id: int) -> None:
 
 
 def validate_reward_rule_deletion(campaign_id: int) -> None:
-    campaign = _get_campaign_by_id(campaign_ide)
+    campaign = _get_campaign_by_id(campaign_id)
 
     if campaign.status == "ACTIVE":
         raise wtforms.ValidationError("Can not delete the reward rule of an active campaign.")
