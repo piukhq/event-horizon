@@ -1,5 +1,4 @@
 import logging
-import sys
 
 from logging.config import dictConfig
 from os import getenv
@@ -54,6 +53,9 @@ SENTRY_DSN = get_env("SENTRY_DSN")
 SENTRY_ENV = get_env("SENTRY_ENV")
 ACCOUNT_HOLDER_ACTIVATION_TASK_QUEUE = get_env("ACCOUNT_HOLDER_ACTIVATION_TASK_QUEUE", "bpl_account_holder_activations")
 REDIS_URL = get_env("REDIS_URL", "redis://localhost:6379/0")
+ROOT_LOG_LEVEL = get_env("ROOT_LOG_LEVEL")
+QUERY_LOG_LEVEL = get_env("ROOT_LOG_LEVEL")
+
 
 redis = Redis.from_url(
     REDIS_URL,
@@ -63,37 +65,10 @@ redis = Redis.from_url(
 )
 
 
-ROOT_LOG_LEVEL = "ERROR"
-LOG_FORMATTER = "brief"
-QUERY_LOG_LEVEL = "INFO"
-
-
 dictConfig(
     {
         "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "brief": {"format": "%(levelname)s:     %(asctime)s - %(message)s"},
-        },
-        "handlers": {
-            "stderr": {
-                "level": logging.NOTSET,
-                "class": "logging.StreamHandler",
-                "stream": sys.stderr,
-                "formatter": LOG_FORMATTER,
-            },
-            "stdout": {
-                "level": logging.NOTSET,
-                "class": "logging.StreamHandler",
-                "stream": sys.stdout,
-                "formatter": LOG_FORMATTER,
-            },
-        },
         "loggers": {
-            "root": {
-                "level": ROOT_LOG_LEVEL or logging.INFO,
-                "handlers": ["stdout"],
-            },
             "sqlalchemy": {
                 "level": QUERY_LOG_LEVEL or logging.WARN,
                 "qualname": "sqlalchemy.engine",
