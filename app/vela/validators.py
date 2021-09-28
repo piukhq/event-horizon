@@ -1,6 +1,7 @@
 import wtforms
 
-from sqlalchemy import func, select
+from sqlalchemy import func
+from sqlalchemy.future import select
 
 from app.vela.db import db_session
 from app.vela.db.models import Campaign, EarnRule
@@ -32,3 +33,30 @@ def validate_earn_rule_increment(form: wtforms.Form, field: wtforms.Field) -> No
         raise wtforms.ValidationError(
             "The campaign requires that this field is not populated due to campaign.earn_inc_is_tx_value setting"
         )
+
+
+def _get_campaign_by_id(campaign_id: int) -> Campaign:  # pragma: no cover
+    return db_session.execute(select(Campaign).where(Campaign.id == campaign_id)).scalars().one()
+
+
+def validate_campaign_status_change(form: wtforms.Form, field: wtforms.Field) -> None:
+    campaign = _get_campaign_by_id(form._obj.id)
+
+    if (campaign.status != "ACTIVE" and field.data == "ACTIVE") and (
+        len(campaign.earnrule_collection) < 1 or len(campaign.rewardrule_collection) != 1
+    ):
+        raise wtforms.ValidationError("To activate a campaign one reward rule and at least one earn rule are required.")
+
+
+def validate_earn_rule_deletion(campaign_id: int) -> None:
+    campaign = _get_campaign_by_id(campaign_id)
+
+    if campaign.status == "ACTIVE" and len(campaign.earnrule_collection) < 2:
+        raise wtforms.ValidationError("Can not delete the last earn rule of an active campaign.")
+
+
+def validate_reward_rule_deletion(campaign_id: int) -> None:
+    campaign = _get_campaign_by_id(campaign_id)
+
+    if campaign.status == "ACTIVE":
+        raise wtforms.ValidationError("Can not delete the reward rule of an active campaign.")
