@@ -2,10 +2,12 @@ from typing import TYPE_CHECKING, Tuple, Union
 
 import wtforms
 
-from flask_admin.model import typefmt  # type: ignore
+from flask import flash
+from flask_admin.model import typefmt
 from wtforms.validators import DataRequired
 
 from app.admin.model_views import BaseModelView, CanDeleteModelView
+from app.vela.db.models import Campaign
 from app.vela.validators import (
     validate_campaign_earn_inc_is_tx_value,
     validate_campaign_status_change,
@@ -18,11 +20,7 @@ if TYPE_CHECKING:
     from app.vela.db.models import EarnRule, RewardRule
 
 
-class CreateDisabled:
-    pass
-
-
-class CampaignAdmin(BaseModelView):
+class CampaignAdmin(CanDeleteModelView):
     column_auto_select_related = True
     column_filters = ("retailerrewards.slug", "status")
     column_searchable_list = ("slug", "name")
@@ -35,6 +33,12 @@ class CampaignAdmin(BaseModelView):
 
     # Be careful adding "inline_models = (EarnRule,)" here - the validate_earn_rule_increment
     # validator seemed to be bypassed in that view
+
+    def delete_model(self, model: Campaign) -> bool:
+        if not model.can_delete:
+            flash("Only DRAFT campaigns can be deleted.", "error")
+            return False
+        return super().delete_model(model)
 
 
 class EarnRuleAdmin(CanDeleteModelView):
