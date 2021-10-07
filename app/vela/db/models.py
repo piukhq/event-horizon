@@ -20,6 +20,10 @@ class Campaign(Base, UpdatedAtMixin):  # type: ignore
     def __str__(self) -> str:
         return f"{self.name} - {self.status} ({self.retailerrewards.slug})"
 
+    @property
+    def can_delete(self) -> bool:
+        return self.status == "DRAFT"
+
 
 class EarnRule(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "earn_rule"
