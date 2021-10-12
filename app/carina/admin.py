@@ -1,6 +1,12 @@
 from typing import TYPE_CHECKING, Optional, Union
 
 from flask import Markup
+from retry_tasks_lib.admin.views import (
+    RetryTaskAdminBase,
+    TaskTypeAdminBase,
+    TaskTypeKeyAdminBase,
+    TaskTypeKeyValueAdminBase,
+)
 from wtforms.validators import NumberRange
 
 from app.admin.model_views import BaseModelView
@@ -56,15 +62,22 @@ class VoucherAdmin(BaseModelView):
     column_formatters = {"voucherconfig": voucher_config_format}
 
 
-class VoucherAllocationAdmin(BaseModelView):
-    column_searchable_list = ("id", "voucher.id")
-    column_exclude_list = ("response_data", "account_url")
-    column_filters = ("voucherconfig.retailer_slug", "voucherconfig.voucher_type_slug", "voucherconfig.id")
-    column_labels = {"voucherconfig": "Voucher config"}
-    column_formatters = {"voucherconfig": voucher_config_format, "voucher": voucher_format}
-
-
 class VoucherUpdateAdmin(BaseModelView):
     column_searchable_list = ("id", "voucher_id", "voucher.voucher_code")
-    column_exclude_list = ("response_data",)
     column_filters = ("voucher.retailer_slug",)
+
+
+class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
+    pass
+
+
+class TaskTypeAdmin(BaseModelView, TaskTypeAdminBase):
+    pass
+
+
+class TaskTypeKeyAdmin(BaseModelView, TaskTypeKeyAdminBase):
+    pass
+
+
+class TaskTypeKeyValueAdmin(BaseModelView, TaskTypeKeyValueAdminBase):
+    pass
