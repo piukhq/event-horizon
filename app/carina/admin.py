@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 from flask import Markup
 from retry_tasks_lib.admin.views import (
@@ -13,12 +13,10 @@ from app.admin.model_views import BaseModelView
 from app.carina.validators import validate_voucher_source
 
 if TYPE_CHECKING:
-    from app.carina.db.models import Voucher, VoucherAllocation
+    from app.carina.db.models import Voucher
 
 
-def voucher_config_format(
-    view: BaseModelView, context: dict, model: Union["Voucher", "VoucherAllocation"], name: str
-) -> str:
+def voucher_config_format(view: BaseModelView, context: dict, model: "Voucher", name: str) -> str:
     return Markup(
         (
             "<a href='/bpl/admin/voucher-config/details/?id='{0}' style='white-space: nowrap;'>"
@@ -28,13 +26,6 @@ def voucher_config_format(
             "</a>"
         ).format(model.voucherconfig.id, model.voucherconfig.voucher_type_slug, model.voucherconfig.retailer_slug)
     )
-
-
-def voucher_format(view: BaseModelView, context: dict, model: "VoucherAllocation", name: str) -> Optional[str]:
-    if model.voucher is None:
-        return None
-    else:
-        return Markup(("<a href='/bpl/admin/vouchers/details/?id={0}'>{0}</a>").format(model.voucher.id))
 
 
 class VoucherConfigAdmin(BaseModelView):
