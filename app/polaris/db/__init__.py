@@ -1,6 +1,5 @@
 from .models import (
     AccountHolder,
-    AccountHolderActivation,
     AccountHolderCampaignBalance,
     AccountHolderProfile,
     AccountHolderVoucher,
