@@ -48,7 +48,6 @@ def register_carina_admin(event_horizon_admin: "Admin") -> None:
             category=carina_menu_title,
         )
     )
-
     event_horizon_admin.add_view(
         RetryTaskAdmin(
             RetryTask,
