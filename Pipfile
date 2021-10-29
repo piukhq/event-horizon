@@ -24,7 +24,7 @@ sentry-sdk = {extras = ["flask"], version = "*"}
 gunicorn = "*"
 redis = "*"
 rq = "*"
-retry-tasks-lib = {version=">=1.7.0", index="gitlab-libraries"}
+retry-tasks-lib = {version=">=1.7.1", index="gitlab-libraries"}
 
 [dev-packages]
 mypy = "*"

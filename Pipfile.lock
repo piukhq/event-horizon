@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5f072d210fa496e6a29e800d8fdd206dcb6b1d2434ebf59ff151439db7356ec1"
+            "sha256": "f01f292c747c13253c381fec74731e71ac57d6b44da3e5218958b0e899def2d0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -571,11 +571,11 @@
         },
         "retry-tasks-lib": {
             "hashes": [
-                "sha256:1c340a603a6b6a1604756633b3574add18d61b37620a70aff32249de46fc3adb",
-                "sha256:9f368005b5d7b6481acdc8bdac43157717b3aeabbaf753720a0d934cdd0a7010"
+                "sha256:60cca199d09a699cf45f753538544cb4449126018de35dea72f9507a15e12fe6",
+                "sha256:8110e76f485c23eb85cd769fe001084d802f7c1471b5d9d3a217cbbfb1ab4c69"
             ],
             "index": "gitlab-libraries",
-            "version": "==1.7.0"
+            "version": "==1.7.1"
         },
         "rq": {
             "hashes": [
@@ -601,7 +601,7 @@
                 "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
                 "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==1.16.0"
         },
         "sqlalchemy": {
@@ -730,7 +730,7 @@
                 "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b",
                 "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"
             ],
-            "markers": "python_version > '3.4'",
+            "markers": "python_version >= '3.5'",
             "version": "==0.4.4"
         },
         "coverage": {
@@ -787,7 +787,7 @@
             "hashes": [
                 "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"
             ],
-            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==0.18.2"
         },
         "idna": {
@@ -1034,7 +1034,7 @@
                 "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
                 "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==1.16.0"
         },
         "sqlalchemy-stubs": {
@@ -1050,7 +1050,7 @@
                 "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b",
                 "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
             ],
-            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==0.10.2"
         },
         "tomli": {
