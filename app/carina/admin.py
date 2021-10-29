@@ -9,6 +9,7 @@ from retry_tasks_lib.admin.views import (
 )
 from wtforms.validators import NumberRange
 
+from app import settings
 from app.admin.model_views import BaseModelView
 from app.carina.validators import validate_voucher_source
 
@@ -59,7 +60,8 @@ class VoucherUpdateAdmin(BaseModelView):
 
 
 class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
-    pass
+    endpoint_prefix = settings.CARINA_ENDPOINT_PREFIX
+    redis = settings.redis
 
 
 class TaskTypeAdmin(BaseModelView, TaskTypeAdminBase):
