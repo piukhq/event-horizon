@@ -8,7 +8,7 @@ from app.vela.db.models import Campaign, EarnRule
 
 
 def _count_earn_rules(campaign_id: int, *, has_inc_value: bool) -> int:
-    stmt = select(func.count()).select_from(EarnRule).join(Campaign).where(Campaign.id == campaign_id)  # type: ignore
+    stmt = select(func.count()).select_from(EarnRule).join(Campaign).where(Campaign.id == campaign_id)
     if has_inc_value:
         stmt = stmt.where(EarnRule.increment.isnot(None))
     else:
