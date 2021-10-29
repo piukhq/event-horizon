@@ -8,6 +8,7 @@ from app.vela.validators import (
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
+    validate_reward_rule_change,
     validate_reward_rule_deletion,
 )
 
@@ -230,3 +231,18 @@ def test_validate_reward_rule_deletion_active_campaign(mock_campaign: mock.Magic
 
     with pytest.raises(wtforms.ValidationError):
         validate_reward_rule_deletion(1)
+
+
+@mock.patch("app.vela.validators._get_campaign_by_id")
+def test_validate_reward_rule_change_non_active_campaign(mock_campaign: mock.MagicMock) -> None:
+    mock_campaign.return_value = mock.MagicMock(status="DRAFT", earnrule_collection=[], rewardrule_collection=[1])
+
+    validate_reward_rule_change(1)
+
+
+@mock.patch("app.vela.validators._get_campaign_by_id")
+def test_validate_reward_rule_change_active_campaign(mock_campaign: mock.MagicMock) -> None:
+    mock_campaign.return_value = mock.MagicMock(status="ACTIVE", earnrule_collection=[], rewardrule_collection=[1])
+
+    with pytest.raises(wtforms.ValidationError):
+        validate_reward_rule_change(1)

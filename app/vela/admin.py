@@ -13,6 +13,7 @@ from app.vela.validators import (
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
+    validate_reward_rule_change,
     validate_reward_rule_deletion,
 )
 
@@ -121,6 +122,10 @@ class RewardRuleAdmin(CanDeleteModelView):
     def on_model_delete(self, model: "RewardRule") -> None:
         validate_reward_rule_deletion(model.campaign_id)
         return super().on_model_delete(model)
+
+    def on_model_change(self, form: wtforms.Form, model: "RewardRule", is_created: bool) -> None:
+        validate_reward_rule_change(model.campaign_id)
+        return super().on_model_change(form, model, is_created)
 
 
 class RetailerRewardsAdmin(BaseModelView):
