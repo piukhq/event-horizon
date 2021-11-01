@@ -29,10 +29,6 @@ class AccountHolderProfile(Base):  # type: ignore
         return f"{self.first_name} {self.last_name}"
 
 
-class AccountHolderActivation(Base, UpdatedAtMixin):  # type: ignore
-    __tablename__ = "account_holder_activation"
-
-
 class AccountHolderVoucher(Base):  # type: ignore
     __tablename__ = "account_holder_voucher"
 

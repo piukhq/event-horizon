@@ -4,8 +4,15 @@ import wtforms
 
 from flask import flash
 from flask_admin.model import typefmt
+from retry_tasks_lib.admin.views import (
+    RetryTaskAdminBase,
+    TaskTypeAdminBase,
+    TaskTypeKeyAdminBase,
+    TaskTypeKeyValueAdminBase,
+)
 from wtforms.validators import DataRequired
 
+from app import settings
 from app.admin.model_views import BaseModelView, CanDeleteModelView
 from app.vela.db.models import Campaign
 from app.vela.validators import (
@@ -13,6 +20,7 @@ from app.vela.validators import (
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
+    validate_reward_rule_change,
     validate_reward_rule_deletion,
 )
 
@@ -122,6 +130,10 @@ class RewardRuleAdmin(CanDeleteModelView):
         validate_reward_rule_deletion(model.campaign_id)
         return super().on_model_delete(model)
 
+    def on_model_change(self, form: wtforms.Form, model: "RewardRule", is_created: bool) -> None:
+        validate_reward_rule_change(model.campaign_id)
+        return super().on_model_change(form, model, is_created)
+
 
 class RetailerRewardsAdmin(BaseModelView):
     column_default_sort: Union[str, Tuple[str, bool]] = ("slug", False)
@@ -137,13 +149,18 @@ class ProcessedTransactionAdmin(BaseModelView):
     column_searchable_list = ("transaction_id",)
 
 
-class RewardAdjustmentAdmin(BaseModelView):
-    column_exclude_list = ("response_data",)
-    column_filters = (
-        "campaign_slug",
-        "status",
-        "processedtransaction.account_holder_uuid",
-        "processedtransaction.retailerrewards.slug",
-    )
-    column_searchable_list = ("processed_transaction_id",)
-    column_labels = dict(processedtransaction="Processed Transaction")
+class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
+    endpoint_prefix = settings.VELA_ENDPOINT_PREFIX
+    redis = settings.redis
+
+
+class TaskTypeAdmin(BaseModelView, TaskTypeAdminBase):
+    pass
+
+
+class TaskTypeKeyAdmin(BaseModelView, TaskTypeKeyAdminBase):
+    pass
+
+
+class TaskTypeKeyValueAdmin(BaseModelView, TaskTypeKeyValueAdminBase):
+    pass

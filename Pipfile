@@ -24,14 +24,13 @@ sentry-sdk = {extras = ["flask"], version = "*"}
 gunicorn = "*"
 redis = "*"
 rq = "*"
-retry-tasks-lib = {version=">=1.3.0", index="gitlab-libraries"}
+retry-tasks-lib = {version=">=1.7.1", index="gitlab-libraries"}
 
 [dev-packages]
 mypy = "*"
 black = "==21.6b0"
 isort = "*"
 flake8 = "*"
-sqlalchemy-stubs = "*"
 pytest = "*"
 pytest-cov = "*"
 xenon = "*"
