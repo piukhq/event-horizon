@@ -1,3 +1,5 @@
+from typing import Optional
+
 import wtforms
 
 from sqlalchemy import func
@@ -35,8 +37,8 @@ def validate_earn_rule_increment(form: wtforms.Form, field: wtforms.Field) -> No
         )
 
 
-def _get_campaign_by_id(campaign_id: int) -> Campaign:  # pragma: no cover
-    return db_session.execute(select(Campaign).where(Campaign.id == campaign_id)).scalars().one()
+def _get_campaign_by_id(campaign_id: int) -> Optional[Campaign]:  # pragma: no cover
+    return db_session.execute(select(Campaign).where(Campaign.id == campaign_id)).scalars().one_or_none()
 
 
 def validate_campaign_status_change(form: wtforms.Form, field: wtforms.Field) -> None:
@@ -65,5 +67,5 @@ def validate_reward_rule_deletion(campaign_id: int) -> None:
 def validate_reward_rule_change(campaign_id: int) -> None:
     campaign = _get_campaign_by_id(campaign_id)
 
-    if campaign.status == "ACTIVE":
+    if campaign and campaign.status == "ACTIVE":
         raise wtforms.ValidationError("Can not edit the reward rule of an active campaign.")
