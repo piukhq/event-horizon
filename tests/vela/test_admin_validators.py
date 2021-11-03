@@ -252,6 +252,4 @@ def test_validate_reward_rule_change_active_campaign(mock_campaign: mock.MagicMo
 
 @mock.patch("app.vela.validators._get_campaign_by_id", side_effect=NoResultFound())
 def test_validate_reward_rule_change_no_campaign(mock_campaign: mock.MagicMock) -> None:
-    mock_campaign.return_value = None
-
     validate_reward_rule_change(1)
