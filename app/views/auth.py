@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from authlib.integrations.base_client.errors import MismatchingStateError
 from flask import Blueprint, redirect, session, url_for
 
 from app.app import oauth
@@ -31,7 +32,10 @@ def logout() -> "Response":
 
 @auth_bp.route("/bpl/admin/authorize/")
 def authorize() -> "Response":
-    token = oauth.event_horizon.authorize_access_token()
+    try:
+        token = oauth.event_horizon.authorize_access_token()
+    except MismatchingStateError:
+        return redirect(url_for("auth_views.login"))
     userinfo = oauth.event_horizon.parse_id_token(token)
     session["user"] = userinfo
     return redirect(url_for("admin.index"))
