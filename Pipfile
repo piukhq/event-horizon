@@ -37,6 +37,9 @@ xenon = "*"
 types-flask = "*"
 types-pyyaml = "*"
 types-redis = "*"
+types-requests = "*"
+httpretty = "*"
+pytest-mock = "*"
 
 [requires]
 python_version = "3.9"

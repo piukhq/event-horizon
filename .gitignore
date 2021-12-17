@@ -4,3 +4,4 @@ __pycache__
 .idea
 .env
 .coverage
+.DS_Store
