@@ -64,8 +64,11 @@ class CampaignAdmin(CanDeleteModelView):
 
             else:
                 flash(resp_json["display_message"], category="error")
-        except (KeyError, ValueError) as ex:
-            msg = f"Unexpected response received: {resp_json}"
+        except Exception as ex:
+            if resp_json:
+                msg = f"Unexpected response received: {resp_json}"
+            else:
+                msg = f"Unexpected response received: {resp_json}"
             flash(msg, category="error")
             logging.exception(msg, exc_info=ex)
 
@@ -94,15 +97,21 @@ class CampaignAdmin(CanDeleteModelView):
         if different_retailers is True:
             flash("All the selected campaigns must belong to the same retailer.", category="error")
         else:
-            resp = requests.post(
-                f"{settings.VELA_BASE_URL}/bpl/rewards/{retailer_slug}/campaigns/status_change",
-                headers={"Authorization": f"token {settings.VELA_AUTH_TOKEN}"},
-                json={"requested_status": status, "campaign_slugs": campaign_slugs},
-            )
-            if 200 <= resp.status_code <= 204:
-                flash(f"Selected campaigns' status has been successfully changed to {status}")
-            else:
-                self._flash_error_response(resp.json())
+            try:
+                resp = requests.post(
+                    f"{settings.VELA_BASE_URL}/bpl/rewards/{retailer_slug}/campaigns/status_change",
+                    headers={"Authorization": f"token {settings.VELA_AUTH_TOKEN}"},
+                    json={"requested_status": status, "campaign_slugs": campaign_slugs},
+                )
+                if 200 <= resp.status_code <= 204:
+                    flash(f"Selected campaigns' status has been successfully changed to {status}")
+                else:
+                    self._flash_error_response(resp.json())
+
+            except Exception as ex:
+                msg = "Error: no response recevied."
+                flash(msg, category="error")
+                logging.exception(msg, exc_info=ex)
 
     @action(
         "activate campaigns",
