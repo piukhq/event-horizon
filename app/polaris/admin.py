@@ -1,4 +1,6 @@
-from flask import Markup
+from typing import TYPE_CHECKING, Type
+
+from flask import Markup, url_for
 from flask_admin.model.form import InlineFormAdmin
 from retry_tasks_lib.admin.views import (
     RetryTaskAdminBase,
@@ -14,6 +16,26 @@ from app.admin.model_views import BaseModelView
 from .db import AccountHolderProfile
 from .validators import validate_account_number_prefix, validate_retailer_config
 
+if TYPE_CHECKING:
+    from jinja2.runtime import Context
+
+    from app.polaris.db.models import AccountHolder
+
+
+def _account_holder_repr(v: Type[BaseModelView], c: "Context", model: "AccountHolder", p: str) -> str:
+    return Markup(
+        (
+            "<strong><a href='{}'>ID:</a></strong>&nbsp;{}<br />"
+            "<strong>Email:</strong>&nbsp;{}<br />"
+            "<strong>UUID:</strong>&nbsp;{}"
+        ).format(
+            url_for(f"{settings.POLARIS_ENDPOINT_PREFIX}/account-holders.details_view", id=model.account_holder_id),
+            model.account_holder_id,
+            model.accountholder.email,
+            model.accountholder.account_holder_uuid,
+        )
+    )
+
 
 class AccountHolderProfileForm(InlineFormAdmin):
     form_label = "Profile"
@@ -24,29 +46,23 @@ class AccountHolderAdmin(BaseModelView):
     column_filters = ("retailerconfig.slug", "retailerconfig.name", "retailerconfig.id", "status")
     column_exclude_list = ("current_balances",)
     column_labels = dict(retailerconfig="Retailer")
-    column_searchable_list = ("email", "id")
+    column_searchable_list = ("id", "email", "account_holder_uuid")
     inline_models = (AccountHolderProfileForm(AccountHolderProfile),)
     can_delete = True
 
 
 class AccountHolderProfileAdmin(BaseModelView):
-    column_searchable_list = ("accountholder.id", "accountholder.email")
+    column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
     column_labels = dict(accountholder="Account Holder")
-    column_formatters = dict(
-        accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
-        + Markup("<br />" + f"({model.accountholder.id})")
-    )
+    column_formatters = dict(accountholder=_account_holder_repr)
     column_default_sort = ("accountholder.created_at", True)
 
 
 class AccountHolderVoucherAdmin(BaseModelView):
-    column_searchable_list = ("accountholder.id", "accountholder.email")
+    column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
     column_labels = dict(accountholder="Account Holder")
     column_filters = ("accountholder.retailerconfig.slug", "status", "voucher_type_slug")
-    column_formatters = dict(
-        accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
-        + Markup("<br />" + f"({model.accountholder.id})")
-    )
+    column_formatters = dict(accountholder=_account_holder_repr)
     form_widget_args = {
         "voucher_id": {"readonly": True},
         "voucher_code": {"readonly": True},
@@ -104,13 +120,10 @@ last_name:
 
 class AccountHolderCampaignBalanceAdmin(BaseModelView):
     can_create = False
-    column_searchable_list = ("accountholder.id", "accountholder.email")
+    column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
     column_labels = dict(accountholder="Account Holder")
     column_filters = ("accountholder.retailerconfig.slug", "campaign_slug")
-    column_formatters = dict(
-        accountholder=lambda v, c, model, p: Markup.escape(model.accountholder.email)
-        + Markup("<br />" + f"({model.accountholder.id})")
-    )
+    column_formatters = dict(accountholder=_account_holder_repr)
     form_widget_args = {"accountholder": {"disabled": True}}
 
 
