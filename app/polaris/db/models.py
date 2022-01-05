@@ -19,7 +19,7 @@ class AccountHolder(Base, UpdatedAtMixin):  # type: ignore
     )
 
     def __str__(self) -> str:
-        return self.id
+        return f"{self.email} ({self.id}, {self.retailerconfig.slug})"
 
 
 class AccountHolderProfile(Base):  # type: ignore

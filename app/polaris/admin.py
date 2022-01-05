@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Type, Union
 
 from flask import Markup, url_for
 from flask_admin.model.form import InlineFormAdmin
@@ -19,10 +19,16 @@ from .validators import validate_account_number_prefix, validate_retailer_config
 if TYPE_CHECKING:
     from jinja2.runtime import Context
 
-    from app.polaris.db.models import AccountHolder
+    from .db import AccountHolderCampaignBalance, AccountHolderVoucher
 
 
-def _account_holder_repr(v: Type[BaseModelView], c: "Context", model: "AccountHolder", p: str) -> str:
+def _account_holder_repr(
+    v: Type[BaseModelView],
+    c: "Context",
+    model: Union[AccountHolderProfile, "AccountHolderVoucher", "AccountHolderCampaignBalance"],
+    p: str,
+) -> str:
+
     return Markup(
         (
             "<strong><a href='{}'>ID:</a></strong>&nbsp;{}<br />"
@@ -59,6 +65,7 @@ class AccountHolderProfileAdmin(BaseModelView):
 
 
 class AccountHolderVoucherAdmin(BaseModelView):
+    can_create = False
     column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
     column_labels = dict(accountholder="Account Holder")
     column_filters = ("accountholder.retailerconfig.slug", "status", "voucher_type_slug")
