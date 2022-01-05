@@ -109,7 +109,7 @@ class CampaignAdmin(CanDeleteModelView):
                     self._flash_error_response(resp.json())
 
             except Exception as ex:
-                msg = "Error: no response recevied."
+                msg = "Error: no response received."
                 flash(msg, category="error")
                 logging.exception(msg, exc_info=ex)
 
