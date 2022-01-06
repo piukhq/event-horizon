@@ -42,7 +42,14 @@ class CampaignAdmin(CanDeleteModelView):
         "earn_inc_is_tx_value": {"validators": [validate_campaign_earn_inc_is_tx_value]},
         "status": {"validators": [validate_campaign_status_change]},
     }
-    form_create_rules = ("retailerrewards", "name", "slug", "earn_inc_is_tx_value", "start_date", "end_date")
+    form_create_rules = form_edit_rules = (
+        "retailerrewards",
+        "name",
+        "slug",
+        "earn_inc_is_tx_value",
+        "start_date",
+        "end_date",
+    )
 
     # Be careful adding "inline_models = (EarnRule,)" here - the validate_earn_rule_increment
     # validator seemed to be bypassed in that view
