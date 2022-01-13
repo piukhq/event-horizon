@@ -1,8 +1,9 @@
 from .models import (
     AccountHolder,
     AccountHolderCampaignBalance,
+    AccountHolderMarketingPreference,
     AccountHolderProfile,
-    AccountHolderVoucher,
+    AccountHolderReward,
     RetailerConfig,
 )
 from .session import db_session
