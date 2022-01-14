@@ -7,8 +7,9 @@ from app.settings import POLARIS_ENDPOINT_PREFIX
 from .admin import (
     AccountHolderAdmin,
     AccountHolderCampaignBalanceAdmin,
+    AccountHolderMarketingPreferenceAdmin,
     AccountHolderProfileAdmin,
-    AccountHolderVoucherAdmin,
+    AccountHolderRewardAdmin,
     RetailerConfigAdmin,
     RetryTaskAdmin,
     TaskTypeAdmin,
@@ -18,8 +19,9 @@ from .admin import (
 from .db import (
     AccountHolder,
     AccountHolderCampaignBalance,
+    AccountHolderMarketingPreference,
     AccountHolderProfile,
-    AccountHolderVoucher,
+    AccountHolderReward,
     RetailerConfig,
     db_session,
 )
@@ -49,11 +51,20 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
         )
     )
     event_horizon_admin.add_view(
-        AccountHolderVoucherAdmin(
-            AccountHolderVoucher,
+        AccountHolderMarketingPreferenceAdmin(
+            AccountHolderMarketingPreference,
             db_session,
-            "Account Holder Vouchers",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-vouchers",
+            "Marketing Preferences",
+            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/marketing-preferences",
+            category=polaris_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        AccountHolderRewardAdmin(
+            AccountHolderReward,
+            db_session,
+            "Account Holder Rewards",
+            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-rewards",
             category=polaris_menu_title,
         )
     )

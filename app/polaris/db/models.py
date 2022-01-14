@@ -14,8 +14,8 @@ class AccountHolder(Base, UpdatedAtMixin):  # type: ignore
     accountholderprofile_collection = relationship(
         "AccountHolderProfile", backref="account_holder", cascade="all, delete-orphan"
     )
-    accountholdervoucher_collection = relationship(
-        "AccountHolderVoucher", backref="account_holder", cascade="all, delete-orphan"
+    accountholderreward_collection = relationship(
+        "AccountHolderReward", backref="account_holder", cascade="all, delete-orphan"
     )
 
     def __str__(self) -> str:
@@ -29,11 +29,11 @@ class AccountHolderProfile(Base):  # type: ignore
         return f"{self.first_name} {self.last_name}"
 
 
-class AccountHolderVoucher(Base):  # type: ignore
-    __tablename__ = "account_holder_voucher"
+class AccountHolderReward(Base):  # type: ignore
+    __tablename__ = "account_holder_reward"
 
     def __str__(self) -> str:
-        return self.voucher_code
+        return self.code
 
 
 class RetailerConfig(Base, UpdatedAtMixin):  # type: ignore
@@ -48,3 +48,10 @@ class AccountHolderCampaignBalance(Base, UpdatedAtMixin):  # type: ignore
 
     def __str__(self) -> str:
         return f"{self.campaign_slug}: ({self.balance})"
+
+
+class AccountHolderMarketingPreference(Base, UpdatedAtMixin):  # type: ignore
+    __tablename__ = "account_holder_marketing_preference"
+
+    def __str__(self) -> str:
+        return f"{self.key_name}: {self.value}"
