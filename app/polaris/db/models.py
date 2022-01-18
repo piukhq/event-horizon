@@ -1,3 +1,4 @@
+from sqlalchemy import Column, Text
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import MetaData
@@ -38,6 +39,8 @@ class AccountHolderReward(Base):  # type: ignore
 
 class RetailerConfig(Base, UpdatedAtMixin):  # type: ignore
     __tablename__ = "retailer_config"
+
+    marketing_preference_config = Column(Text, nullable=False, default="")
 
     def __str__(self) -> str:
         return f"{self.name} ({self.slug})"

@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 import wtforms
 
-from app.polaris.validators import validate_account_number_prefix, validate_retailer_config
+from app.polaris.validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
 
 
 @pytest.fixture
@@ -201,3 +201,98 @@ def test_validate_account_number_prefix_too_long(mock_form: mock.MagicMock, mock
         validate_account_number_prefix(mock_form, mock_config_field)
 
     assert ex_info.value.args[0] == "Account number prefix needs to be 2-4 alpha characters"
+
+
+def test_validate_marketing_config_wrong_key_name(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+    mock_config_field.data = """
+m:
+    type: boolean
+    label: random label
+"""
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_marketing_config(mock_form, mock_config_field)
+
+    assert ex_info.value.args[0] == "'key': ensure this value has at least 2 characters"
+
+
+def test_validate_marketing_config_missing_field(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+    mock_config_field.data = """
+marketing_conf:
+    label: random label
+"""
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_marketing_config(mock_form, mock_config_field)
+
+    assert ex_info.value.args[0] == "marketing_conf -> type: field required"
+
+
+def test_validate_marketing_config_wrong_type(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+    mock_config_field.data = """
+marketing_conf:
+    type: cat
+    label: random label
+"""
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_marketing_config(mock_form, mock_config_field)
+
+    assert (
+        ex_info.value.args[0] == "marketing_conf -> type: "
+        "unexpected value; permitted: 'boolean', 'integer', 'float', 'string', 'string_list', 'date', 'datetime'"
+    )
+
+
+def test_validate_marketing_config_wrong_label(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+    mock_config_field.data = """
+marketing_conf:
+    type: boolean
+    label: r
+"""
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_marketing_config(mock_form, mock_config_field)
+
+    assert ex_info.value.args[0] == "marketing_conf -> label: ensure this value has at least 2 characters"
+
+
+def test_validate_marketing_config_invalid_yaml(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+    mock_config_field.data = """
+marketing_conf:
+    boolean
+    random label
+"""
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_marketing_config(mock_form, mock_config_field)
+
+    assert ex_info.value.args[0] == "marketing_conf: value is not a valid dict"
+
+    mock_config_field.data = """
+marketing_conf
+boolean
+random label
+"""
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_marketing_config(mock_form, mock_config_field)
+
+    assert ex_info.value.args[0] == "The submitted YAML is not valid"
+
+
+def test_validate_marketing_config_valid_values(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
+    mock_config_field.data = """
+Marketing_conf :
+    type: boolean
+    label: random label
+"""
+
+    validate_marketing_config(mock_form, mock_config_field)
+    # test strip whitespace, order keys, normalise key_name
+    assert mock_config_field.data == "marketing_conf:\n  label: random label\n  type: boolean\n"
+
+    mock_config_field.data = ""
+
+    validate_marketing_config(mock_form, mock_config_field)
+    assert mock_config_field.data == ""
