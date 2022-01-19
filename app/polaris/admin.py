@@ -12,7 +12,7 @@ from wtforms.validators import DataRequired
 from app import settings
 from app.admin.model_views import BaseModelView
 
-from .validators import validate_account_number_prefix, validate_retailer_config
+from .validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
 
 if TYPE_CHECKING:
     from jinja2.runtime import Context
@@ -92,14 +92,20 @@ class RetailerConfigAdmin(BaseModelView):
 
     profile_config_placeholder = """
 email:
-    required: true
-    label: Email address
+  required: true
+  label: Email address
 first_name:
-    required: true
-    label: Forename
+  required: true
+  label: Forename
 last_name:
-    required: true
-    label: Surname
+  required: true
+  label: Surname
+""".strip()
+
+    marketing_config_placeholder = """
+marketing_pref:
+  type: boolean
+  label: Would you like to receive marketing?
 """.strip()
 
     form_args = {
@@ -114,7 +120,9 @@ last_name:
         },
         "marketing_preference_config": {
             "label": "Marketing Preferences Configuration",
-            "description": "Configuration in YAML format",
+            "validators": [validate_marketing_config],
+            "render_kw": {"placeholder": marketing_config_placeholder},
+            "description": "Optional configuration in YAML format",
         },
         "name": {"validators": [DataRequired(message="Name is required")]},
         "slug": {"validators": [DataRequired(message="Slug is required")]},
