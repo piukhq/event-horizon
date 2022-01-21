@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 def reward_config_format(view: BaseModelView, context: dict, model: "Reward", name: str) -> str:
     return Markup(
         (
-            "<a href='/bpl/admin/reward-config/details/?id='{0}' style='white-space: nowrap;'>"
+            f"<a href='{settings.ROUTE_BASE}/reward-config/details/?id='{0}' style='white-space: nowrap;'>"
             "<strong>id:</strong> {0}</br>"
             "<strong>type:</strong> {1}</br>"
             "<strong>retailer:</strong> {2}"

@@ -10,7 +10,7 @@ from retry_tasks_lib.admin.views import (
 from wtforms.validators import DataRequired
 
 from app import settings
-from app.admin.model_views import BaseModelView
+from app.admin.model_views import BaseModelView, CanDeleteModelView
 
 from .validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
 
@@ -41,8 +41,7 @@ def _account_holder_repr(
     )
 
 
-class AccountHolderAdmin(BaseModelView):
-    can_delete = True
+class AccountHolderAdmin(CanDeleteModelView):
     column_filters = ("retailerconfig.slug", "retailerconfig.name", "retailerconfig.id", "status", "opt_out_token")
     form_excluded_columns = (
         "created_at",
