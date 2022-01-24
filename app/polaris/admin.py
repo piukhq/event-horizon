@@ -84,14 +84,33 @@ class RetailerConfigAdmin(BaseModelView):
     column_filters = ("created_at",)
     column_searchable_list = ("id", "slug", "name")
     column_exclude_list = ("profile_config", "marketing_preference_config")
-    form_create_rules = ("name", "slug", "account_number_prefix", "profile_config", "marketing_preference_config")
+    form_create_rules = (
+        "name",
+        "slug",
+        "account_number_prefix",
+        "profile_config",
+        "marketing_preference_config",
+        "loyalty_name",
+        "email_header_image",
+        "welcome_email_from",
+        "welcome_email_subject",
+    )
+    column_details_list = ("created_at", "updated_at") + form_create_rules
     form_excluded_columns = ("account_holder_collection",)
     form_widget_args = {
         "account_number_length": {"disabled": True},
         "profile_config": {"rows": 20},
         "marketing_preference_config": {"rows": 10},
     }
-    form_edit_rules = ("name", "profile_config", "marketing_preference_config")
+    form_edit_rules = (
+        "name",
+        "profile_config",
+        "marketing_preference_config",
+        "loyalty_name",
+        "email_header_image",
+        "welcome_email_from",
+        "welcome_email_subject",
+    )
 
     profile_config_placeholder = """
 email:
@@ -137,7 +156,10 @@ marketing_pref:
         },
     }
     column_formatters = dict(
-        config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.config) + Markup("</pre>")
+        profile_config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.profile_config) + Markup("</pre>"),
+        marketing_preference_config=lambda v, c, model, p: Markup("<pre>")
+        + Markup.escape(model.marketing_preference_config)
+        + Markup("</pre>"),
     )
 
 
