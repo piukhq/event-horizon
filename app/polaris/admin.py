@@ -42,7 +42,8 @@ def _account_holder_repr(
 
 
 class AccountHolderAdmin(BaseModelView):
-    column_filters = ("retailerconfig.slug", "retailerconfig.name", "retailerconfig.id", "status")
+    can_delete = True
+    column_filters = ("retailerconfig.slug", "retailerconfig.name", "retailerconfig.id", "status", "opt_out_token")
     form_excluded_columns = (
         "created_at",
         "updated_at",
@@ -54,7 +55,9 @@ class AccountHolderAdmin(BaseModelView):
     )
     column_labels = dict(retailerconfig="Retailer")
     column_searchable_list = ("id", "email", "account_holder_uuid")
-    can_delete = True
+    form_widget_args = {
+        "opt_out_token": {"readonly": True},
+    }
 
 
 class AccountHolderProfileAdmin(BaseModelView):
