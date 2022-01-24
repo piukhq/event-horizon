@@ -1,3 +1,5 @@
+import logging
+
 from typing import Any, Optional
 
 import sentry_sdk
@@ -14,7 +16,7 @@ from app.carina.db.session import engine as carina_engine
 from app.polaris.db import db_session as polaris_db_session
 from app.polaris.db.models import Base as PolarisModelBase
 from app.polaris.db.session import engine as polaris_engine
-from app.settings import OAUTH_SERVER_METADATA_URL, SENTRY_DSN, SENTRY_ENV
+from app.settings import OAUTH_SERVER_METADATA_URL, QUERY_LOG_LEVEL, SENTRY_DSN, SENTRY_ENV
 from app.vela.db import db_session as vela_db_session
 from app.vela.db.models import Base as VelaModelBase
 from app.vela.db.session import engine as vela_engine
@@ -45,6 +47,13 @@ def create_app(config_name: str = "app.settings") -> Flask:
     from app.vela import register_vela_admin
     from app.views.auth import auth_bp
     from app.views.healthz import healthz_bp
+
+    query_log_level = getattr(logging, QUERY_LOG_LEVEL.upper())
+    sqla_logger = logging.getLogger("sqlalchemy.engine")
+    sqla_logger.setLevel(query_log_level)
+    sqla_handler = logging.StreamHandler()
+    sqla_handler.setLevel(level=query_log_level)
+    sqla_logger.addHandler(sqla_handler)
 
     if SENTRY_DSN is not None:
         sentry_sdk.init(
