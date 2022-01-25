@@ -202,7 +202,7 @@ class RewardRuleAdmin(CanDeleteModelView):
         "campaign.name",
         "campaign.retailerrewards",
         "reward_goal",
-        "voucher_type_slug",
+        "reward_slug",
         "created_at",
         "updated_at",
     )
@@ -214,14 +214,14 @@ class RewardRuleAdmin(CanDeleteModelView):
         "reward_goal": {
             "validators": [wtforms.validators.NumberRange(min=1)],
             "description": (
-                "Balance goal used to calculate if a voucher should be issued. "
+                "Balance goal used to calculate if a reward should be issued. "
                 "This is a money value * 100, e.g. a reward goal of £10.50 should be 1050, "
                 "and a reward goal of 8 stamps would be 800."
             ),
         },
-        "voucher_type_slug": {
+        "reward_slug": {
             "validators": [DataRequired(message="Slug is required"), wtforms.validators.Length(min=1, max=32)],
-            "description": ("Used to determine what voucher on the till the Account holder will be allocated."),
+            "description": ("Used to determine what reward on the till the Account holder will be allocated."),
         },
     }
     column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}

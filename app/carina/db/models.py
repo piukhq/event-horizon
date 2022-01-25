@@ -7,22 +7,22 @@ metadata = MetaData()
 Base: AutomapBase = automap_base(metadata=metadata)
 
 
-class VoucherConfig(Base, UpdatedAtMixin):
-    __tablename__ = "voucher_config"
+class RewardConfig(Base, UpdatedAtMixin):
+    __tablename__ = "reward_config"
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}({self.retailer_slug}, " f"{self.voucher_type_slug}, {self.validity_days})"
+        return f"{self.__class__.__name__}({self.retailer_slug}, " f"{self.reward_slug}, {self.validity_days})"
 
 
-class Voucher(Base, UpdatedAtMixin):
-    __tablename__ = "voucher"
+class Reward(Base, UpdatedAtMixin):
+    __tablename__ = "reward"
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}({self.retailer_slug}, " f"{self.voucher_code}, {self.allocated})"
+        return f"{self.__class__.__name__}({self.retailer_slug}, " f"{self.code}, {self.allocated})"
 
 
-class VoucherUpdate(Base, UpdatedAtMixin):
-    __tablename__ = "voucher_update"
+class RewardUpdate(Base, UpdatedAtMixin):
+    __tablename__ = "reward_update"
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.id})"
