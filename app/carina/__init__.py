@@ -6,12 +6,12 @@ from app.settings import CARINA_ENDPOINT_PREFIX
 
 from .admin import (
     RetryTaskAdmin,
-    TaskTypeAdmin,
-    TaskTypeKeyAdmin,
-    TaskTypeKeyValueAdmin,
     RewardAdmin,
     RewardConfigAdmin,
     RewardUpdateAdmin,
+    TaskTypeAdmin,
+    TaskTypeKeyAdmin,
+    TaskTypeKeyValueAdmin,
 )
 from .db import Reward, RewardConfig, RewardUpdate, db_session
 
