@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 def register_carina_admin(event_horizon_admin: "Admin") -> None:
-    carina_menu_title = "Reward Management"
+    carina_menu_title = "Rewards Management"
     event_horizon_admin.add_view(
         RewardConfigAdmin(
             RewardConfig,

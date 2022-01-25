@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 
 def register_vela_admin(event_horizon_admin: "Admin") -> None:
-    vela_menu_title = "Campaign Management"
+    vela_menu_title = "Retailer Campaign Management"
     event_horizon_admin.add_view(
         CampaignAdmin(
             Campaign, db_session, "Campaigns", endpoint=f"{VELA_ENDPOINT_PREFIX}/campaigns", category=vela_menu_title
