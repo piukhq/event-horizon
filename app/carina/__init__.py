@@ -6,45 +6,45 @@ from app.settings import CARINA_ENDPOINT_PREFIX
 
 from .admin import (
     RetryTaskAdmin,
+    RewardAdmin,
+    RewardConfigAdmin,
+    RewardUpdateAdmin,
     TaskTypeAdmin,
     TaskTypeKeyAdmin,
     TaskTypeKeyValueAdmin,
-    VoucherAdmin,
-    VoucherConfigAdmin,
-    VoucherUpdateAdmin,
 )
-from .db import Voucher, VoucherConfig, VoucherUpdate, db_session
+from .db import Reward, RewardConfig, RewardUpdate, db_session
 
 if TYPE_CHECKING:
     from flask_admin import Admin
 
 
 def register_carina_admin(event_horizon_admin: "Admin") -> None:
-    carina_menu_title = "Voucher Management"
+    carina_menu_title = "Rewards Management"
     event_horizon_admin.add_view(
-        VoucherConfigAdmin(
-            VoucherConfig,
+        RewardConfigAdmin(
+            RewardConfig,
             db_session,
-            "Voucher Configurations",
-            endpoint=f"{CARINA_ENDPOINT_PREFIX}/voucher-configs",
+            "Reward Configurations",
+            endpoint=f"{CARINA_ENDPOINT_PREFIX}/reward-configs",
             category=carina_menu_title,
         )
     )
     event_horizon_admin.add_view(
-        VoucherAdmin(
-            Voucher,
+        RewardAdmin(
+            Reward,
             db_session,
-            "Vouchers",
-            endpoint=f"{CARINA_ENDPOINT_PREFIX}/vouchers",
+            "Rewards",
+            endpoint=f"{CARINA_ENDPOINT_PREFIX}/rewards",
             category=carina_menu_title,
         )
     )
     event_horizon_admin.add_view(
-        VoucherUpdateAdmin(
-            VoucherUpdate,
+        RewardUpdateAdmin(
+            RewardUpdate,
             db_session,
-            "Voucher Updates",
-            endpoint=f"{CARINA_ENDPOINT_PREFIX}/voucher-updates",
+            "Reward Updates",
+            endpoint=f"{CARINA_ENDPOINT_PREFIX}/reward-updates",
             category=carina_menu_title,
         )
     )

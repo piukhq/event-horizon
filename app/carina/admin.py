@@ -11,27 +11,27 @@ from wtforms.validators import NumberRange
 
 from app import settings
 from app.admin.model_views import BaseModelView
-from app.carina.validators import validate_voucher_source
+from app.carina.validators import validate_reward_source
 
 if TYPE_CHECKING:
-    from app.carina.db.models import Voucher
+    from app.carina.db.models import Reward
 
 
-def voucher_config_format(view: BaseModelView, context: dict, model: "Voucher", name: str) -> str:
+def reward_config_format(view: BaseModelView, context: dict, model: "Reward", name: str) -> str:
     return Markup(
         (
-            "<a href='/bpl/admin/voucher-config/details/?id='{0}' style='white-space: nowrap;'>"
+            "<a href='/bpl/admin/reward-config/details/?id='{0}' style='white-space: nowrap;'>"
             "<strong>id:</strong> {0}</br>"
             "<strong>type:</strong> {1}</br>"
             "<strong>retailer:</strong> {2}"
             "</a>"
-        ).format(model.voucherconfig.id, model.voucherconfig.voucher_type_slug, model.voucherconfig.retailer_slug)
+        ).format(model.rewardconfig.id, model.rewardconfig.reward_slug, model.rewardconfig.retailer_slug)
     )
 
 
-class VoucherConfigAdmin(BaseModelView):
+class RewardConfigAdmin(BaseModelView):
     can_delete = False
-    column_filters = ("retailer_slug", "voucher_type_slug")
+    column_filters = ("retailer_slug", "reward_slug")
     form_args = {
         "validity_days": {
             "validators": [
@@ -40,23 +40,23 @@ class VoucherConfigAdmin(BaseModelView):
         }
     }
 
-    form_excluded_columns = ("voucher_collection", "voucherallocation_collection", "created_at", "updated_at")
-    form_args = {"fetch_type": {"validators": [validate_voucher_source]}}
+    form_excluded_columns = ("reward_collection", "rewardallocation_collection", "created_at", "updated_at")
+    form_args = {"fetch_type": {"validators": [validate_reward_source]}}
 
 
-class VoucherAdmin(BaseModelView):
+class RewardAdmin(BaseModelView):
     can_create = False
     can_edit = False
     can_delete = False
-    column_searchable_list = ("voucherconfig.id", "voucherconfig.voucher_type_slug", "retailer_slug")
-    column_labels = {"voucherconfig": "Voucher config"}
-    column_filters = ("retailer_slug", "voucherconfig.voucher_type_slug", "allocated")
-    column_formatters = {"voucherconfig": voucher_config_format}
+    column_searchable_list = ("rewardconfig.id", "rewardconfig.reward_slug", "retailer_slug")
+    column_labels = {"rewardconfig": "Reward config"}
+    column_filters = ("retailer_slug", "rewardconfig.reward_slug", "allocated")
+    column_formatters = {"rewardconfig": reward_config_format}
 
 
-class VoucherUpdateAdmin(BaseModelView):
-    column_searchable_list = ("id", "voucher_id", "voucher.voucher_code")
-    column_filters = ("voucher.retailer_slug",)
+class RewardUpdateAdmin(BaseModelView):
+    column_searchable_list = ("id", "reward_uuid", "reward.code")
+    column_filters = ("reward.retailer_slug",)
 
 
 class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):

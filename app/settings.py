@@ -1,6 +1,3 @@
-import logging
-
-from logging.config import dictConfig
 from os import getenv
 from typing import Any, Callable
 
@@ -54,7 +51,7 @@ CARINA_DATABASE_URI = get_env("CARINA_DATABASE_URI", "postgresql://postgres:post
 SENTRY_DSN = get_env("SENTRY_DSN")
 SENTRY_ENV = get_env("SENTRY_ENV")
 REDIS_URL = get_env("REDIS_URL", "redis://localhost:6379/0")
-QUERY_LOG_LEVEL = get_env("ROOT_LOG_LEVEL")
+QUERY_LOG_LEVEL = get_env("QUERY_LOG_LEVEL", "WARN")
 
 POLARIS_ENDPOINT_PREFIX = "polaris"
 VELA_ENDPOINT_PREFIX = "vela"
@@ -68,17 +65,4 @@ redis = Redis.from_url(
     socket_connect_timeout=3,
     socket_keepalive=True,
     retry_on_timeout=False,
-)
-
-
-dictConfig(
-    {
-        "version": 1,
-        "loggers": {
-            "sqlalchemy": {
-                "level": QUERY_LOG_LEVEL or logging.WARN,
-                "qualname": "sqlalchemy.engine",
-            },
-        },
-    }
 )
