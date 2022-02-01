@@ -58,3 +58,10 @@ class AccountHolderMarketingPreference(Base, UpdatedAtMixin):
 
     def __str__(self) -> str:
         return f"{self.key_name}: {self.value}"
+
+
+class PendingReward(Base):
+    __tablename__ = "pending_reward"
+
+    def __str__(self) -> str:
+        return f"{self.reward_slug}: {self.value}"
