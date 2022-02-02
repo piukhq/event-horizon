@@ -25,6 +25,7 @@ from app.vela.validators import (
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
+    validate_reward_rule_allocation_window,
     validate_reward_rule_change,
     validate_reward_rule_deletion,
 )
@@ -203,12 +204,14 @@ class RewardRuleAdmin(CanDeleteModelView):
         "campaign.retailerrewards",
         "reward_goal",
         "reward_slug",
+        "allocation_window",
         "created_at",
         "updated_at",
     )
     column_labels = {
         "campaign.name": "Campaign",
         "campaign.retailerrewards": "Retailer",
+        "allocation_window": "Refund Window",
     }
     form_args = {
         "reward_goal": {
@@ -222,6 +225,14 @@ class RewardRuleAdmin(CanDeleteModelView):
         "reward_slug": {
             "validators": [DataRequired(message="Slug is required"), wtforms.validators.Length(min=1, max=32)],
             "description": ("Used to determine what reward on the till the Account holder will be allocated."),
+        },
+        "allocation_window": {
+            "default": 0,
+            "validators": [validate_reward_rule_allocation_window, wtforms.validators.NumberRange(min=0)],
+            "description": (
+                "Period of time before a reward is allocated to an AccountHolder in days."
+                " Accumulator campaigns only."
+            ),
         },
     }
     column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}
