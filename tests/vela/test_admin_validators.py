@@ -10,6 +10,7 @@ from app.vela.validators import (
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
+    validate_reward_rule_allocation_window,
     validate_reward_rule_change,
     validate_reward_rule_deletion,
 )
@@ -253,3 +254,26 @@ def test_validate_reward_rule_change_active_campaign(mock_campaign: mock.MagicMo
 @mock.patch("app.vela.validators._get_campaign_by_id", side_effect=NoResultFound())
 def test_validate_reward_rule_change_no_campaign(mock_campaign: mock.MagicMock) -> None:
     validate_reward_rule_change(1)
+
+
+def test_validate_reward_rule_allocation_window_ok(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
+    mock_form.campaign = mock.Mock(data=mock.Mock(earn_inc_is_tx_value=True))
+    mock_field.data = 12
+    try:
+        validate_reward_rule_allocation_window(mock_form, mock_field)
+    except Exception:
+        pytest.fail()
+
+    mock_form.campaign = mock.Mock(data=mock.Mock(earn_inc_is_tx_value=False))
+    mock_field.data = 0
+    try:
+        validate_reward_rule_allocation_window(mock_form, mock_field)
+    except Exception:
+        pytest.fail()
+
+
+def test_validate_reward_rule_allocation_wndow_fail(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
+    mock_form.campaign = mock.Mock(data=mock.Mock(earn_inc_is_tx_value=False))
+    mock_field.data = 1
+    with pytest.raises(wtforms.ValidationError):
+        validate_reward_rule_allocation_window(mock_form, mock_field)
