@@ -36,6 +36,13 @@ def validate_earn_rule_increment(form: wtforms.Form, field: wtforms.Field) -> No
         )
 
 
+def validate_reward_rule_allocation_window(form: wtforms.Form, field: wtforms.Field) -> None:
+    if form.campaign.data.earn_inc_is_tx_value is False and field.data != 0:
+        raise wtforms.ValidationError(
+            "The campaign requires that this field is set to 0 due to campaign.earn_inc_is_tx_value setting"
+        )
+
+
 def _get_campaign_by_id(campaign_id: int) -> Campaign:  # pragma: no cover
     return db_session.execute(select(Campaign).where(Campaign.id == campaign_id)).scalars().one()
 
