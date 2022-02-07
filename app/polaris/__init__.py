@@ -10,6 +10,7 @@ from .admin import (
     AccountHolderMarketingPreferenceAdmin,
     AccountHolderProfileAdmin,
     AccountHolderRewardAdmin,
+    PendingRewardAdmin,
     RetailerConfigAdmin,
     RetryTaskAdmin,
     TaskTypeAdmin,
@@ -22,6 +23,7 @@ from .db import (
     AccountHolderMarketingPreference,
     AccountHolderProfile,
     AccountHolderReward,
+    PendingReward,
     RetailerConfig,
     db_session,
 )
@@ -65,6 +67,15 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             db_session,
             "Account Holder Rewards",
             endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-rewards",
+            category=polaris_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        PendingRewardAdmin(
+            PendingReward,
+            db_session,
+            "Account Holder Pending Rewards",
+            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/pending-rewards",
             category=polaris_menu_title,
         )
     )

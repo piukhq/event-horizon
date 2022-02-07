@@ -4,6 +4,7 @@ from .models import (
     AccountHolderMarketingPreference,
     AccountHolderProfile,
     AccountHolderReward,
+    PendingReward,
     RetailerConfig,
 )
 from .session import db_session
