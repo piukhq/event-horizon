@@ -80,6 +80,19 @@ class AccountHolderRewardAdmin(BaseModelView):
     }
 
 
+class PendingRewardAdmin(BaseModelView):
+    can_create = False
+    column_searchable_list = (
+        "accountholder.id",
+        "accountholder.email",
+        "accountholder.account_holder_uuid",
+    )
+    column_labels = dict(accountholder="Account Holder")
+    column_filters = ("accountholder.retailerconfig.slug", "campaign_slug", "created_at", "created_date")
+    column_formatters = dict(accountholder=_account_holder_repr)
+    form_widget_args = {"accountholder": {"disabled": True}}
+
+
 class RetailerConfigAdmin(BaseModelView):
     column_filters = ("created_at",)
     column_searchable_list = ("id", "slug", "name")
