@@ -180,7 +180,7 @@ class EarnRuleAdmin(CanDeleteModelView):
             ),
         },
         "threshold": {
-            "validators": [wtforms.validators.NumberRange(min=1)],
+            "validators": [wtforms.validators.NumberRange(min=0)],
             "description": (
                 "Monetary value of a transaction required to trigger an earn. Please enter money value "
                 'multiplied by 100, e.g. for £10.50, please enter "1050".'
