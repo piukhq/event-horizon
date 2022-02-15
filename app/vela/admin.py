@@ -21,7 +21,7 @@ from app import settings
 from app.admin.model_views import BaseModelView, CanDeleteModelView
 from app.vela.db.models import Campaign, RetailerRewards
 from app.vela.validators import (
-    validate_campaign_earn_inc_is_tx_value,
+    validate_campaign_loyalty_type,
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
@@ -40,14 +40,14 @@ class CampaignAdmin(CanDeleteModelView):
     column_searchable_list = ("slug", "name")
     column_labels = dict(retailerrewards="Retailer")
     form_args = {
-        "earn_inc_is_tx_value": {"validators": [validate_campaign_earn_inc_is_tx_value]},
+        "loyalty_type": {"validators": [validate_campaign_loyalty_type]},
         "status": {"validators": [validate_campaign_status_change]},
     }
     form_create_rules = form_edit_rules = (
         "retailerrewards",
         "name",
         "slug",
-        "earn_inc_is_tx_value",
+        "loyalty_type",
         "start_date",
         "end_date",
     )
@@ -152,13 +152,13 @@ class CampaignAdmin(CanDeleteModelView):
 
 class EarnRuleAdmin(CanDeleteModelView):
     column_auto_select_related = True
-    column_filters = ("campaign.name", "campaign.earn_inc_is_tx_value", "campaign.retailerrewards.slug")
+    column_filters = ("campaign.name", "campaign.loyalty_type", "campaign.retailerrewards.slug")
     column_searchable_list = ("campaign.name",)
     column_list = (
         "campaign.name",
         "campaign.retailerrewards",
         "threshold",
-        "campaign.earn_inc_is_tx_value",
+        "campaign.loyalty_type",
         "increment",
         "increment_multiplier",
         "created_at",
@@ -167,7 +167,7 @@ class EarnRuleAdmin(CanDeleteModelView):
     column_labels = {
         "campaign.name": "Campaign",
         "campaign.retailerrewards": "Retailer",
-        "campaign.earn_inc_is_tx_value": "Earn Inc. is Trans. Value?",
+        "campaign.loyalty_type": "LoyaltyType",
     }
     form_args = {
         "increment": {
