@@ -7,6 +7,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from app.vela.db import db_session
 from app.vela.db.models import Campaign, EarnRule
 
+ACCUMULATOR, STAMPS = "ACCUMULATOR", "STAMPS"
+
 
 def _count_earn_rules(campaign_id: int, *, has_inc_value: bool) -> int:
     stmt = select(func.count()).select_from(EarnRule).join(Campaign).where(Campaign.id == campaign_id)
@@ -17,29 +19,29 @@ def _count_earn_rules(campaign_id: int, *, has_inc_value: bool) -> int:
     return db_session.execute(stmt).scalar()
 
 
-def validate_campaign_earn_inc_is_tx_value(form: wtforms.Form, field: wtforms.Field) -> None:
+def validate_campaign_loyalty_type(form: wtforms.Form, field: wtforms.Field) -> None:
     if form._obj:
-        if field.data is True and _count_earn_rules(form._obj.id, has_inc_value=True):
+        if field.data == ACCUMULATOR and _count_earn_rules(form._obj.id, has_inc_value=True):
             raise wtforms.ValidationError("This field cannot be changed as there are earn rules with increment values")
-        elif field.data is False and _count_earn_rules(form._obj.id, has_inc_value=False):
+        elif field.data == STAMPS and _count_earn_rules(form._obj.id, has_inc_value=False):
             raise wtforms.ValidationError("This field cannot be changed as there are earn rules with null increments")
 
 
 def validate_earn_rule_increment(form: wtforms.Form, field: wtforms.Field) -> None:
-    if not (form.campaign.data.earn_inc_is_tx_value or field.data is not None):
+    if form.campaign.data.loyalty_type == STAMPS and field.data is None:
         raise wtforms.validators.StopValidation(
-            "The campaign requires that this field is populated due to campaign.earn_inc_is_tx_value setting"
+            "The campaign requires that this field is populated due to campaign.loyalty_type setting"
         )
-    elif form.campaign.data.earn_inc_is_tx_value and field.data:
+    elif form.campaign.data.loyalty_type == ACCUMULATOR and field.data is not None:
         raise wtforms.ValidationError(
-            "The campaign requires that this field is not populated due to campaign.earn_inc_is_tx_value setting"
+            "The campaign requires that this field is not populated due to campaign.loyalty_type setting"
         )
 
 
 def validate_reward_rule_allocation_window(form: wtforms.Form, field: wtforms.Field) -> None:
-    if form.campaign.data.earn_inc_is_tx_value is False and field.data != 0:
+    if form.campaign.data.loyalty_type == STAMPS and field.data != 0:
         raise wtforms.ValidationError(
-            "The campaign requires that this field is set to 0 due to campaign.earn_inc_is_tx_value setting"
+            "The campaign requires that this field is set to 0 due to campaign.loyalty_type setting"
         )
 
 
