@@ -40,7 +40,7 @@ class CampaignAdmin(CanDeleteModelView):
     column_searchable_list = ("slug", "name")
     column_labels = dict(retailerrewards="Retailer")
     form_args = {
-        "loyalty_type": {"validators": [validate_campaign_loyalty_type]},
+        "loyalty_type": {"validators": [DataRequired(), validate_campaign_loyalty_type]},
         "status": {"validators": [validate_campaign_status_change]},
     }
     form_create_rules = form_edit_rules = (
