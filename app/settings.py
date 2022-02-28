@@ -33,6 +33,8 @@ key_vault = KeyVault(KEY_VAULT_URI)
 
 SECRET_KEY = get_env("SECRET_KEY") or key_vault.get_secret("bpl-event-horizon-secret-key")
 
+READ_ONLY = get_env("READ_ONLY", "False", conv=to_bool)  # Use this to set ModelView.can_[create/edit/delete]
+ROUTE_BASE = "/bpl/admin-ro" if READ_ONLY else "/bpl/admin"
 
 # AAD SSO
 OAUTH_REDIRECT_URI = get_env("OAUTH_REDIRECT_URI")
@@ -40,7 +42,7 @@ AZURE_TENANT_ID = get_env("AZURE_TENANT_ID", "a6e2367a-92ea-4e5a-b565-723830bcc0
 OAUTH_SERVER_METADATA_URL = f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/v2.0/.well-known/openid-configuration"
 EVENT_HORIZON_CLIENT_ID = get_env("EVENT_HORIZON_CLIENT_ID")
 EVENT_HORIZON_CLIENT_SECRET = get_env("EVENT_HORIZON_CLIENT_SECRET") or key_vault.get_secret(
-    "bpl-event-horizon-sso-client-secret"
+    "bpl-event-horizon-{}-sso-client-secret".format("ro" if READ_ONLY else "rw")
 )
 
 DEV_PORT = get_env("DEV_PORT", "5000", conv=int)

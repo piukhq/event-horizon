@@ -4,15 +4,15 @@ from authlib.integrations.base_client.errors import MismatchingStateError
 from flask import Blueprint, redirect, session, url_for
 
 from app.app import oauth
-from app.settings import OAUTH_REDIRECT_URI
+from app.settings import OAUTH_REDIRECT_URI, ROUTE_BASE
 
 if TYPE_CHECKING:
     from werkzeug.wrappers import Response
 
-auth_bp = Blueprint("auth_views", __name__)
+auth_bp = Blueprint("auth_views", __name__, url_prefix=ROUTE_BASE)
 
 
-@auth_bp.route("/bpl/admin/login/")
+@auth_bp.route("/login/")
 def login() -> "Response":
     if OAUTH_REDIRECT_URI:
         redirect_uri = OAUTH_REDIRECT_URI
@@ -22,7 +22,7 @@ def login() -> "Response":
     return oauth.event_horizon.authorize_redirect(redirect_uri)
 
 
-@auth_bp.route("/bpl/admin/logout/")
+@auth_bp.route("/logout/")
 def logout() -> "Response":
     # session['user'] will always be set again as long
     # as your AAD session is still alive.
@@ -30,7 +30,7 @@ def logout() -> "Response":
     return redirect(url_for("admin.index"))
 
 
-@auth_bp.route("/bpl/admin/authorize/")
+@auth_bp.route("/authorize/")
 def authorize() -> "Response":
     try:
         token = oauth.event_horizon.authorize_access_token()

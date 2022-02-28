@@ -16,7 +16,7 @@ from app.carina.db.session import engine as carina_engine
 from app.polaris.db import db_session as polaris_db_session
 from app.polaris.db.models import Base as PolarisModelBase
 from app.polaris.db.session import engine as polaris_engine
-from app.settings import OAUTH_SERVER_METADATA_URL, QUERY_LOG_LEVEL, SENTRY_DSN, SENTRY_ENV
+from app.settings import OAUTH_SERVER_METADATA_URL, QUERY_LOG_LEVEL, ROUTE_BASE, SENTRY_DSN, SENTRY_ENV
 from app.vela.db import db_session as vela_db_session
 from app.vela.db.models import Base as VelaModelBase
 from app.vela.db.session import engine as vela_engine
@@ -78,7 +78,7 @@ def create_app(config_name: str = "app.settings") -> Flask:
     app.register_blueprint(auth_bp)
     app.register_blueprint(healthz_bp)
 
-    eh_bp = Blueprint("eh", __name__, static_url_path="/bpl/admin/eh/static", static_folder="static")
+    eh_bp = Blueprint("eh", __name__, static_url_path=f"{ROUTE_BASE}/eh/static", static_folder="static")
     app.register_blueprint(eh_bp)
 
     @app.teardown_appcontext

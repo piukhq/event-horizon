@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 from flask import abort, redirect, session, url_for
 from flask_admin.contrib.sqla import ModelView
 
+from app import settings
+
 if TYPE_CHECKING:
     from werkzeug.wrappers import Response  # pragma: no cover
 
@@ -34,15 +36,12 @@ class UserSessionMixin:
 # custom admin classes needed for authorisation
 class AuthorisedModelView(ModelView, UserSessionMixin):
     can_view_details = True
-    can_edit = True  # Flask admin's usual default for can_edit
-    can_create = True  # Flask admin's usual default for can_create
+    can_create = can_edit = not settings.READ_ONLY
     can_delete = False
 
     def is_accessible(self) -> bool:
         if not self.user_info:
             return False
-        self.can_create = self.can_create and bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
-        self.can_edit = self.can_edit and bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
         return not self.user_session_expired and self.user_is_authorized
 
     def inaccessible_callback(self, name: str, **kwargs: Optional[dict]) -> "Response":
@@ -50,6 +49,12 @@ class AuthorisedModelView(ModelView, UserSessionMixin):
             return abort(403)
         session.pop("user", None)
         return redirect(url_for("auth_views.login"))
+
+    def is_action_allowed(self, name: str) -> bool:
+        if name == "delete":
+            return self.can_delete
+        else:
+            return not settings.READ_ONLY
 
 
 class BaseModelView(AuthorisedModelView):
@@ -80,8 +85,4 @@ class CanDeleteModelView(BaseModelView):
     """
 
     fast_mass_delete = False
-    can_delete = True
-
-    def is_accessible(self) -> bool:
-        self.can_delete = self.can_delete and bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
-        return super().is_accessible()
+    can_delete = not settings.READ_ONLY
