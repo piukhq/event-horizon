@@ -2,9 +2,9 @@ from .models import (
     AccountHolder,
     AccountHolderCampaignBalance,
     AccountHolderMarketingPreference,
+    AccountHolderPendingReward,
     AccountHolderProfile,
     AccountHolderReward,
-    PendingReward,
     RetailerConfig,
 )
 from .session import db_session
