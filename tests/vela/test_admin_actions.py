@@ -15,7 +15,7 @@ from app.vela.admin import CampaignAdmin
 def test__campaigns_status_change(mocker: MockerFixture) -> None:
     status = "active"
     retailer_slug = "retailer_1"
-    url = f"{VELA_BASE_URL}/bpl/rewards/{retailer_slug}/campaigns/status_change"
+    url = f"{VELA_BASE_URL}/bpl/campaigns/{retailer_slug}/campaigns/status_change"
     campaign_slug_1 = "campaign_1"
     campaign_slug_2 = "campaign_2"
 
