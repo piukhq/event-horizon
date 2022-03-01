@@ -40,7 +40,7 @@ class CampaignAdmin(CanDeleteModelView):
     column_searchable_list = ("slug", "name")
     column_labels = dict(retailerrewards="Retailer")
     form_args = {
-        "loyalty_type": {"validators": [validate_campaign_loyalty_type]},
+        "loyalty_type": {"validators": [DataRequired(), validate_campaign_loyalty_type]},
         "status": {"validators": [validate_campaign_status_change]},
     }
     form_create_rules = form_edit_rules = (
@@ -56,10 +56,11 @@ class CampaignAdmin(CanDeleteModelView):
     # validator seemed to be bypassed in that view
 
     def delete_model(self, model: Campaign) -> bool:
-        if not model.can_delete:
+        if model.can_delete and self.can_delete:
+            return super().delete_model(model)
+        else:
             flash("Only DRAFT campaigns can be deleted.", "error")
             return False
-        return super().delete_model(model)
 
     def _flash_error_response(self, resp_json: Union[list, dict]) -> None:
         try:
@@ -122,7 +123,7 @@ class CampaignAdmin(CanDeleteModelView):
                 logging.exception(msg, exc_info=ex)
 
     @action(
-        "activate campaigns",
+        "activate-campaigns",
         "Activate",
         "Selected campaigns must belong to the same Retailer, "
         "be in a DRAFT status and have one rewards rule and at least one earn rule.\n"
@@ -132,7 +133,7 @@ class CampaignAdmin(CanDeleteModelView):
         self._campaigns_status_change(ids, "active")
 
     @action(
-        "cancel campaigns",
+        "cancel-campaigns",
         "Cancel",
         "Selected campaigns must belong to the same Retailer and be in a ACTIVE status.\n"
         "Are you sure you want to proceed?",
@@ -141,7 +142,7 @@ class CampaignAdmin(CanDeleteModelView):
         self._campaigns_status_change(ids, "cancelled")
 
     @action(
-        "end campaigns",
+        "end-campaigns",
         "End",
         "Selected campaigns must belong to the same Retailer and be in a ACTIVE status.\n"
         "Are you sure you want to proceed?",

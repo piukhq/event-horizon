@@ -5,6 +5,8 @@ from retry_tasks_lib.db.models import RetryTask, TaskType, TaskTypeKey, TaskType
 from app.settings import CARINA_ENDPOINT_PREFIX
 
 from .admin import (
+    FetchTypeAdmin,
+    RetailerFetchTypeAdmin,
     RetryTaskAdmin,
     RewardAdmin,
     RewardConfigAdmin,
@@ -13,7 +15,7 @@ from .admin import (
     TaskTypeKeyAdmin,
     TaskTypeKeyValueAdmin,
 )
-from .db import Reward, RewardConfig, RewardUpdate, db_session
+from .db import FetchType, RetailerFetchType, Reward, RewardConfig, RewardUpdate, db_session
 
 if TYPE_CHECKING:
     from flask_admin import Admin
@@ -21,6 +23,24 @@ if TYPE_CHECKING:
 
 def register_carina_admin(event_horizon_admin: "Admin") -> None:
     carina_menu_title = "Rewards Management"
+    event_horizon_admin.add_view(
+        FetchTypeAdmin(
+            FetchType,
+            db_session,
+            "Fetch Types",
+            endpoint=f"{CARINA_ENDPOINT_PREFIX}/fetch-types",
+            category=carina_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        RetailerFetchTypeAdmin(
+            RetailerFetchType,
+            db_session,
+            "Retailer's Fetch Types",
+            endpoint=f"{CARINA_ENDPOINT_PREFIX}/retailer-fetch-types",
+            category=carina_menu_title,
+        )
+    )
     event_horizon_admin.add_view(
         RewardConfigAdmin(
             RewardConfig,
