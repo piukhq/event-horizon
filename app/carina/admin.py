@@ -10,7 +10,7 @@ from retry_tasks_lib.admin.views import (
 from wtforms.validators import NumberRange
 
 from app import settings
-from app.admin.model_views import BaseModelView
+from app.admin.model_views import BaseModelView, CanDeleteModelView
 from app.carina.validators import validate_required_fields_values, validate_retailer_fetch_type
 
 if TYPE_CHECKING:
@@ -36,15 +36,11 @@ class FetchTypeAdmin(BaseModelView):
     column_searchable_list = ("name",)
 
 
-class RetailerFetchTypeAdmin(BaseModelView):
-    can_create = True
-    can_edit = True
-    can_delete = True
+class RetailerFetchTypeAdmin(CanDeleteModelView):
     column_searchable_list = ("retailer.slug", "fetchtype.name")
 
 
 class RewardConfigAdmin(BaseModelView):
-    can_delete = False
     column_filters = ("retailer.slug", "reward_slug")
     form_args = {
         "validity_days": {
