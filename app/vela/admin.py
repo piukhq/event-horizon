@@ -108,7 +108,7 @@ class CampaignAdmin(CanDeleteModelView):
         else:
             try:
                 resp = requests.post(
-                    f"{settings.VELA_BASE_URL}/bpl/rewards/{retailer_slug}/campaigns/status_change",
+                    f"{settings.VELA_BASE_URL}/{retailer_slug}/campaigns/status_change",
                     headers={"Authorization": f"token {settings.VELA_AUTH_TOKEN}"},
                     json={"requested_status": status, "campaign_slugs": campaign_slugs},
                 )

@@ -59,7 +59,8 @@ POLARIS_ENDPOINT_PREFIX = "polaris"
 VELA_ENDPOINT_PREFIX = "vela"
 CARINA_ENDPOINT_PREFIX = "carina"
 
-VELA_BASE_URL = getenv("VELA_BASE_URL", "http://vela-api")
+VELA_HOST = getenv("VELA_HOST", "http://vela-api")
+VELA_BASE_URL = getenv("VELA_BASE_URL", f"{VELA_HOST}/bpl/campaigns")
 VELA_AUTH_TOKEN = get_env("VELA_AUTH_TOKEN") or key_vault.get_secret("bpl-reward-mgmt-auth-token")
 
 redis = Redis.from_url(
