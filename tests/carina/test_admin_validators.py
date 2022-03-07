@@ -31,7 +31,7 @@ def test_validate_retailer_fetch_type_wrong_fetch_type(mock_form: mock.MagicMock
     with pytest.raises(wtforms.ValidationError) as ex_info:
         validate_retailer_fetch_type(mock_form, mock_field)
 
-    assert ex_info.value.args[0] == "Fetch Type not allowed for this reatiler"
+    assert ex_info.value.args[0] == "Fetch Type not allowed for this retailer"
 
 
 def test_validate_required_fields_values_ok(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:

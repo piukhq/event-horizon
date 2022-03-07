@@ -16,7 +16,7 @@ FIELD_TYPES = {
 def validate_retailer_fetch_type(form: wtforms.Form, field: wtforms.Field) -> None:
 
     if field.data not in form.retailer.data.fetch_types:
-        raise ValidationError("Fetch Type not allowed for this reatiler")
+        raise ValidationError("Fetch Type not allowed for this retailer")
 
 
 def validate_required_fields_values(form: wtforms.Form, field: wtforms.Field) -> None:
