@@ -6,7 +6,6 @@ BPL Admin Dashboard
 
 - create a `.env` file in the root directory
 - add your configurations based on the environmental variables required in `settings.py`
-- if setting any ModelView.can_create/edit/delete, ensure that settings.READ_ONLY is used/considered
 - additionally, the following environment variables need to be set in order for the Azure Active Directory OIDC authentication flow to work
 
   - EVENT_HORIZON_CLIENT_KEY

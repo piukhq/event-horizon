@@ -1,10 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 from flask import abort, redirect, session, url_for
 from flask_admin.contrib.sqla import ModelView
-
-from app import settings
 
 if TYPE_CHECKING:
     from werkzeug.wrappers import Response  # pragma: no cover
@@ -22,7 +20,7 @@ class UserSessionMixin:
     @property
     def user_session_expired(self) -> bool:
         session_exp: Optional[int] = self.user_info.get("exp")
-        return session_exp < datetime.utcnow().timestamp() if session_exp else True
+        return session_exp < datetime.now(tz=timezone.utc).timestamp() if session_exp else True
 
     @property
     def user_roles(self) -> set[str]:
@@ -36,8 +34,18 @@ class UserSessionMixin:
 # custom admin classes needed for authorisation
 class AuthorisedModelView(ModelView, UserSessionMixin):
     can_view_details = True
-    can_create = can_edit = not settings.READ_ONLY
-    can_delete = False
+
+    @property
+    def can_delete(self) -> bool:
+        return False
+
+    @property
+    def can_create(self) -> bool:
+        return bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
+
+    @property
+    def can_edit(self) -> bool:
+        return bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
 
     def is_accessible(self) -> bool:
         if not self.user_info:
@@ -54,7 +62,7 @@ class AuthorisedModelView(ModelView, UserSessionMixin):
         if name == "delete":
             return self.can_delete
         else:
-            return not settings.READ_ONLY
+            return self.can_edit
 
 
 class BaseModelView(AuthorisedModelView):
@@ -85,4 +93,7 @@ class CanDeleteModelView(BaseModelView):
     """
 
     fast_mass_delete = False
-    can_delete = not settings.READ_ONLY
+
+    @property
+    def can_delete(self) -> bool:
+        return self.can_edit
