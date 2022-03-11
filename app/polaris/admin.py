@@ -17,7 +17,7 @@ from .validators import validate_account_number_prefix, validate_marketing_confi
 if TYPE_CHECKING:
     from jinja2.runtime import Context
 
-    from .db import AccountHolderCampaignBalance, AccountHolderProfile, AccountHolderReward
+    from .db import AccountHolderCampaignBalance, AccountHolderPendingReward, AccountHolderProfile, AccountHolderReward
 
 
 def _account_holder_repr(
@@ -39,6 +39,15 @@ def _account_holder_repr(
             model.accountholder.account_holder_uuid,
         )
     )
+
+
+def _account_holder_export_repr(
+    v: Type[BaseModelView],
+    c: "Context",
+    model: Union["AccountHolderReward", "AccountHolderPendingReward"],
+    p: str,
+) -> str:
+    return model.accountholder.account_holder_uuid
 
 
 class AccountHolderAdmin(CanDeleteModelView):
@@ -77,6 +86,9 @@ class AccountHolderRewardAdmin(BaseModelView):
         "reward_code": {"readonly": True},
         "accountholder": {"disabled": True},
     }
+    column_formatters_export = dict(accountholder=_account_holder_export_repr)
+    column_export_exclude_list = ["idempotency_token", "reward_uuid", "code"]
+    can_export = True
 
 
 class PendingRewardAdmin(BaseModelView):
@@ -90,6 +102,9 @@ class PendingRewardAdmin(BaseModelView):
     column_filters = ("accountholder.retailerconfig.slug", "campaign_slug", "created_date")
     column_formatters = dict(accountholder=_account_holder_repr)
     form_widget_args = {"accountholder": {"disabled": True}}
+    column_formatters_export = dict(accountholder=_account_holder_export_repr)
+    column_export_exclude_list = ["idempotency_token"]
+    can_export = True
 
 
 class RetailerConfigAdmin(BaseModelView):
