@@ -62,25 +62,6 @@ class CampaignAdmin(CanDeleteModelView):
             flash("Only DRAFT campaigns can be deleted.", "error")
             return False
 
-    def _flash_error_response(self, resp_json: Union[list, dict]) -> None:
-        try:
-            if isinstance(resp_json, list):
-                for error in resp_json:
-                    flash(
-                        f"{error['display_message']} ::: {', '.join(error['campaigns'])}",
-                        category="error",
-                    )
-
-            else:
-                flash(resp_json["display_message"], category="error")
-        except Exception as ex:
-            if resp_json:
-                msg = f"Unexpected response received: {resp_json}"
-            else:
-                msg = f"Unexpected response received: {resp_json}"
-            flash(msg, category="error")
-            logging.exception(msg, exc_info=ex)
-
     def _campaigns_status_change(self, campaigns_ids: list[str], status: str) -> None:
         campaign_slugs: list[str] = []
         retailer_slug: Optional[str] = None

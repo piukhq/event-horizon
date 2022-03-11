@@ -18,6 +18,7 @@ jobs:
       EVENT_HORIZON_CLIENT_SECRET: "unused-for-tests"
       SECRET_KEY: "not-the-real-key"
       VELA_AUTH_TOKEN: "I-am-definetely-a-secure-token"
+      POLARIS_AUTH_TOKEN: "I-am-definetely-a-secure-token"
     services:
       postgres:
         image: postgres:latest

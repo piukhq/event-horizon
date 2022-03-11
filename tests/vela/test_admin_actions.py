@@ -27,6 +27,7 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
     mocker.patch("app.vela.admin.RetailerRewards", slug=mock.Mock())
     mocker.patch("app.vela.admin.select", slug=mock.Mock())
     mock_flash = mocker.patch("app.vela.admin.flash")
+    mock_model_views_flash = mocker.patch("app.admin.model_views.flash")
 
     httpretty.register_uri("POST", url, {}, status=202)
     session = mock.MagicMock(
@@ -58,7 +59,7 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
     httpretty.register_uri("POST", url, json.dumps(unexpected_error), status=500)
     CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
 
-    mock_flash.assert_called_with(f"Unexpected response received: {unexpected_error}", category="error")
+    mock_model_views_flash.assert_called_with(f"Unexpected response received: {unexpected_error}", category="error")
 
     list_error = [
         {
@@ -72,7 +73,7 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
 
     CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
 
-    mock_flash.assert_called_with(
+    mock_model_views_flash.assert_called_with(
         f"{list_error[0]['display_message']} ::: {', '.join(list_error[0]['campaigns'])}",
         category="error",
     )
@@ -86,4 +87,4 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
 
     CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
 
-    mock_flash.assert_called_with(dict_error["display_message"], category="error")
+    mock_model_views_flash.assert_called_with(dict_error["display_message"], category="error")
