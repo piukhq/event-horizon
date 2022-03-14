@@ -1,7 +1,9 @@
+import logging
+
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
-from flask import abort, redirect, session, url_for
+from flask import abort, flash, redirect, session, url_for
 from flask_admin.contrib.sqla import ModelView
 
 if TYPE_CHECKING:
@@ -85,6 +87,25 @@ class BaseModelView(AuthorisedModelView):
                     list_columns += [list_columns.pop(i)]
                     break
         return list_columns
+
+    def _flash_error_response(self, resp_json: Union[list, dict]) -> None:
+        try:
+            if isinstance(resp_json, list):
+                for error in resp_json:
+                    flash(
+                        f"{error['display_message']} ::: {', '.join(error['campaigns'])}",
+                        category="error",
+                    )
+
+            else:
+                flash(resp_json["display_message"], category="error")
+        except Exception as ex:
+            if resp_json:
+                msg = f"Unexpected response received: {resp_json}"
+            else:
+                msg = f"Unexpected response received: {resp_json}"
+            flash(msg, category="error")
+            logging.exception(msg, exc_info=ex)
 
 
 class CanDeleteModelView(BaseModelView):

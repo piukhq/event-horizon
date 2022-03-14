@@ -1,16 +1,23 @@
+import logging
+
 from typing import TYPE_CHECKING, Type, Union
 
-from flask import Markup, url_for
+import requests
+
+from flask import Markup, flash, url_for
+from flask_admin.actions import action
 from retry_tasks_lib.admin.views import (
     RetryTaskAdminBase,
     TaskTypeAdminBase,
     TaskTypeKeyAdminBase,
     TaskTypeKeyValueAdminBase,
 )
+from sqlalchemy.future import select
 from wtforms.validators import DataRequired
 
 from app import settings
 from app.admin.model_views import BaseModelView, CanDeleteModelView
+from app.polaris.db.models import AccountHolder, RetailerConfig
 
 from .validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
 
@@ -66,6 +73,39 @@ class AccountHolderAdmin(CanDeleteModelView):
     form_widget_args = {
         "opt_out_token": {"readonly": True},
     }
+
+    @action(
+        "anonymise-account-holder",
+        "Anonymise account holder (RTBF)",
+        "This action is not reversible. Are you sure you wish to proceed?",
+    )
+    def anonymise_user(self, account_holder_ids: list[str]) -> None:
+        if len(account_holder_ids) != 1:
+            flash("This action must be completed for account holders one at a time", category="error")
+            return
+        try:
+            res = self.session.execute(
+                select(
+                    RetailerConfig.slug,
+                    AccountHolder.account_holder_uuid,
+                )
+                .join(RetailerConfig)
+                .where(AccountHolder.id == account_holder_ids[0])
+            ).first()
+            resp = requests.patch(
+                f"{settings.POLARIS_BASE_URL}/{res[0]}/accounts/{res[1]}/status",
+                headers={"Authorization": f"token {settings.POLARIS_AUTH_TOKEN}"},
+                json={"status": "inactive"},
+            )
+            if 200 <= resp.status_code <= 204:
+                flash("Account Holder successfully changed to INACTIVE")
+            else:
+                self._flash_error_response(resp.json())
+
+        except Exception as ex:
+            msg = "Error: no response received."
+            flash(msg, category="error")
+            logging.exception(msg, exc_info=ex)
 
 
 class AccountHolderProfileAdmin(BaseModelView):
