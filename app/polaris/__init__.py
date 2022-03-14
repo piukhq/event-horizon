@@ -8,9 +8,9 @@ from .admin import (
     AccountHolderAdmin,
     AccountHolderCampaignBalanceAdmin,
     AccountHolderMarketingPreferenceAdmin,
+    AccountHolderPendingRewardAdmin,
     AccountHolderProfileAdmin,
     AccountHolderRewardAdmin,
-    PendingRewardAdmin,
     RetailerConfigAdmin,
     RetryTaskAdmin,
     TaskTypeAdmin,
@@ -71,7 +71,7 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
         )
     )
     event_horizon_admin.add_view(
-        PendingRewardAdmin(
+        AccountHolderPendingRewardAdmin(
             AccountHolderPendingReward,
             db_session,
             "Account Holder Pending Rewards",

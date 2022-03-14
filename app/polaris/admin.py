@@ -131,7 +131,7 @@ class AccountHolderRewardAdmin(BaseModelView):
     can_export = True
 
 
-class PendingRewardAdmin(BaseModelView):
+class AccountHolderPendingRewardAdmin(BaseModelView):
     can_create = False
     column_searchable_list = (
         "accountholder.id",
