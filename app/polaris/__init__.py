@@ -80,20 +80,20 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
         )
     )
     event_horizon_admin.add_view(
-        RetailerConfigAdmin(
-            RetailerConfig,
-            db_session,
-            "Retailers' Config",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/retailers-config",
-            category=polaris_menu_title,
-        )
-    )
-    event_horizon_admin.add_view(
         AccountHolderCampaignBalanceAdmin(
             AccountHolderCampaignBalance,
             db_session,
             "Account Holder Campaign Balances",
             endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-campaign-balances",
+            category=polaris_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        RetailerConfigAdmin(
+            RetailerConfig,
+            db_session,
+            "Retailers' Config",
+            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/retailers-config",
             category=polaris_menu_title,
         )
     )
