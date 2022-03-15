@@ -87,20 +87,24 @@ class AccountHolderAdmin(CanDeleteModelView):
             res = self.session.execute(
                 select(
                     RetailerConfig.slug,
-                    AccountHolder.account_holder_uuid,
+                    AccountHolder,
                 )
                 .join(RetailerConfig)
                 .where(AccountHolder.id == account_holder_ids[0])
             ).first()
-            resp = requests.patch(
-                f"{settings.POLARIS_BASE_URL}/{res[0]}/accounts/{res[1]}/status",
-                headers={"Authorization": f"token {settings.POLARIS_AUTH_TOKEN}"},
-                json={"status": "inactive"},
-            )
-            if 200 <= resp.status_code <= 204:
-                flash("Account Holder successfully changed to INACTIVE")
+            retailer_slug, account_holder = res
+            if account_holder.status == "INACTIVE":
+                flash("Account holder is INACTIVE", category="error")
             else:
-                self._flash_error_response(resp.json())
+                resp = requests.patch(
+                    f"{settings.POLARIS_BASE_URL}/{retailer_slug}/accounts/{account_holder.account_holder_uuid}/status",
+                    headers={"Authorization": f"token {settings.POLARIS_AUTH_TOKEN}"},
+                    json={"status": "inactive"},
+                )
+                if 200 <= resp.status_code <= 204:
+                    flash("Account Holder successfully changed to INACTIVE")
+                else:
+                    self._flash_error_response(resp.json())
 
         except Exception as ex:
             msg = "Error: no response received."
@@ -131,7 +135,7 @@ class AccountHolderRewardAdmin(BaseModelView):
     can_export = True
 
 
-class PendingRewardAdmin(BaseModelView):
+class AccountHolderPendingRewardAdmin(BaseModelView):
     can_create = False
     column_searchable_list = (
         "accountholder.id",

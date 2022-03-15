@@ -16,12 +16,13 @@ from app.settings import POLARIS_BASE_URL
 def test_anonymise_user(mocker: MockerFixture) -> None:
     retailer_slug = "retailer_1"
     account_holder_uuid = str(uuid.uuid4())
+    account_holder = mock.MagicMock(account_holder_uuid=account_holder_uuid)
     url = f"{POLARIS_BASE_URL}/{retailer_slug}/accounts/{account_holder_uuid}/status"
 
     def mock_init(self: Any, session: mock.MagicMock) -> None:
         self.session = session
 
-    session = mock.MagicMock(execute=lambda x: mock.MagicMock(first=lambda: (retailer_slug, account_holder_uuid)))
+    session = mock.MagicMock(execute=lambda x: mock.MagicMock(first=lambda: (retailer_slug, account_holder)))
     mocker.patch.object(AccountHolderAdmin, "__init__", mock_init)
     mocker.patch("app.polaris.admin.RetailerConfig", slug=mock.Mock())
     mocker.patch("app.polaris.admin.AccountHolder", account_holder_uuid=mock.Mock())
@@ -31,11 +32,16 @@ def test_anonymise_user(mocker: MockerFixture) -> None:
 
     httpretty.register_uri("PATCH", url, {}, status=200)
 
+    # Account holder is inactive
+    account_holder.status = "INACTIVE"
+    AccountHolderAdmin(session).anonymise_user(["1"])
+    mock_flash.assert_called_with("Account holder is INACTIVE", category="error")
+    assert httpretty.latest_requests() == []
+
     # Single account holders only
+    account_holder.status = "ACTIVE"
     AccountHolderAdmin(session).anonymise_user(["1", "2"])
-    mock_flash.assert_called_once_with(
-        "This action must be completed for account holders one at a time", category="error"
-    )
+    mock_flash.assert_called_with("This action must be completed for account holders one at a time", category="error")
     assert httpretty.latest_requests() == []
 
     AccountHolderAdmin(session).anonymise_user(["1"])
