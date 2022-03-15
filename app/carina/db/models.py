@@ -1,4 +1,5 @@
 from sqlalchemy.ext.automap import AutomapBase, automap_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import MetaData
 
 from app.db import UpdatedAtMixin
@@ -10,6 +11,11 @@ Base: AutomapBase = automap_base(metadata=metadata)
 class Retailer(Base, UpdatedAtMixin):
     __tablename__ = "retailer"
 
+    fetch_types = relationship("FetchType", back_populates="retailers", secondary="retailer_fetch_type")
+    retailerfetchtype_collection = relationship(
+        "RetailerFetchType", back_populates="retailer", overlaps="fetch_types,retailers"
+    )
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.slug})"
 
@@ -20,6 +26,16 @@ class Retailer(Base, UpdatedAtMixin):
 class FetchType(Base, UpdatedAtMixin):
     __tablename__ = "fetch_type"
 
+    retailers = relationship(
+        "Retailer",
+        back_populates="fetch_types",
+        secondary="retailer_fetch_type",
+        overlaps="retailerfetchtype_collection",
+    )
+    retailerfetchtype_collection = relationship(
+        "RetailerFetchType", back_populates="fetchtype", overlaps="fetch_types,retailers"
+    )
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name})"
 
@@ -29,6 +45,11 @@ class FetchType(Base, UpdatedAtMixin):
 
 class RetailerFetchType(Base, UpdatedAtMixin):
     __tablename__ = "retailer_fetch_type"
+
+    retailer = relationship("Retailer", back_populates="retailerfetchtype_collection", overlaps="fetch_types,retailers")
+    fetchtype = relationship(
+        "FetchType", back_populates="retailerfetchtype_collection", overlaps="fetch_types,retailers"
+    )
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.retailer.slug}, {self.fetchtype.name})"
