@@ -1,16 +1,23 @@
+import logging
+
 from typing import TYPE_CHECKING, Type, Union
 
-from flask import Markup, url_for
+import requests
+
+from flask import Markup, flash, url_for
+from flask_admin.actions import action
 from retry_tasks_lib.admin.views import (
     RetryTaskAdminBase,
     TaskTypeAdminBase,
     TaskTypeKeyAdminBase,
     TaskTypeKeyValueAdminBase,
 )
+from sqlalchemy.future import select
 from wtforms.validators import DataRequired
 
 from app import settings
 from app.admin.model_views import BaseModelView, CanDeleteModelView
+from app.polaris.db.models import AccountHolder, RetailerConfig
 
 from .validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
 
@@ -67,6 +74,43 @@ class AccountHolderAdmin(CanDeleteModelView):
         "opt_out_token": {"readonly": True},
     }
 
+    @action(
+        "anonymise-account-holder",
+        "Anonymise account holder (RTBF)",
+        "This action is not reversible. Are you sure you wish to proceed?",
+    )
+    def anonymise_user(self, account_holder_ids: list[str]) -> None:
+        if len(account_holder_ids) != 1:
+            flash("This action must be completed for account holders one at a time", category="error")
+            return
+        try:
+            res = self.session.execute(
+                select(
+                    RetailerConfig.slug,
+                    AccountHolder,
+                )
+                .join(RetailerConfig)
+                .where(AccountHolder.id == account_holder_ids[0])
+            ).first()
+            retailer_slug, account_holder = res
+            if account_holder.status == "INACTIVE":
+                flash("Account holder is INACTIVE", category="error")
+            else:
+                resp = requests.patch(
+                    f"{settings.POLARIS_BASE_URL}/{retailer_slug}/accounts/{account_holder.account_holder_uuid}/status",
+                    headers={"Authorization": f"token {settings.POLARIS_AUTH_TOKEN}"},
+                    json={"status": "inactive"},
+                )
+                if 200 <= resp.status_code <= 204:
+                    flash("Account Holder successfully changed to INACTIVE")
+                else:
+                    self._flash_error_response(resp.json())
+
+        except Exception as ex:
+            msg = "Error: no response received."
+            flash(msg, category="error")
+            logging.exception(msg, exc_info=ex)
+
 
 class AccountHolderProfileAdmin(BaseModelView):
     column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
@@ -91,19 +135,31 @@ class AccountHolderRewardAdmin(BaseModelView):
     can_export = True
 
 
-class PendingRewardAdmin(BaseModelView):
+class AccountHolderPendingRewardAdmin(BaseModelView):
     can_create = False
     column_searchable_list = (
         "accountholder.id",
         "accountholder.email",
         "accountholder.account_holder_uuid",
     )
-    column_labels = dict(accountholder="Account Holder")
+    column_labels = dict(accountholder="Account Holder", id="Pending Reward id")
     column_filters = ("accountholder.retailerconfig.slug", "campaign_slug", "created_date")
     column_formatters = dict(accountholder=_account_holder_repr)
     form_widget_args = {"accountholder": {"disabled": True}}
-    column_formatters_export = dict(accountholder=_account_holder_export_repr)
     column_export_exclude_list = ["idempotency_token"]
+    column_export_list = [
+        "accountholder.account_holder_uuid",
+        "created_at",
+        "updated_at",
+        "id",
+        "created_date",
+        "conversion_date",
+        "value",
+        "campaign_slug",
+        "reward_slug",
+        "retailer_slug",
+        "account_holder_id",
+    ]
     can_export = True
 
 

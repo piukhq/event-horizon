@@ -1,5 +1,4 @@
 from sqlalchemy.ext.automap import AutomapBase, automap_base
-from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import MetaData
 
 from app.db import UpdatedAtMixin
@@ -11,8 +10,6 @@ Base: AutomapBase = automap_base(metadata=metadata)
 class Retailer(Base, UpdatedAtMixin):
     __tablename__ = "retailer"
 
-    fetch_types = relationship("FetchType", back_populates="retailers", secondary="retailer_fetch_type")
-
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.slug})"
 
@@ -22,10 +19,6 @@ class Retailer(Base, UpdatedAtMixin):
 
 class FetchType(Base, UpdatedAtMixin):
     __tablename__ = "fetch_type"
-
-    retailers = relationship(
-        "Retailer", back_populates="fetch_types", secondary="retailer_fetch_type", overlaps="retailer_fetch_types"
-    )
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name})"
