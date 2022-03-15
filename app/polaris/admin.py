@@ -138,12 +138,24 @@ class PendingRewardAdmin(BaseModelView):
         "accountholder.email",
         "accountholder.account_holder_uuid",
     )
-    column_labels = dict(accountholder="Account Holder")
+    column_labels = dict(accountholder="Account Holder", id="Pending Reward id")
     column_filters = ("accountholder.retailerconfig.slug", "campaign_slug", "created_date")
     column_formatters = dict(accountholder=_account_holder_repr)
     form_widget_args = {"accountholder": {"disabled": True}}
-    column_formatters_export = dict(accountholder=_account_holder_export_repr)
     column_export_exclude_list = ["idempotency_token"]
+    column_export_list = [
+        "accountholder.account_holder_uuid",
+        "created_at",
+        "updated_at",
+        "id",
+        "created_date",
+        "conversion_date",
+        "value",
+        "campaign_slug",
+        "reward_slug",
+        "retailer_slug",
+        "account_holder_id",
+    ]
     can_export = True
 
 
