@@ -69,7 +69,7 @@ class RewardConfigAdmin(BaseModelView):
         "required_fields_values": {"rows": 5},
     }
     form_args = {
-        "fetchtype_collection": {
+        "fetchtype": {
             "validators": [
                 validate_retailer_fetch_type,
             ]
