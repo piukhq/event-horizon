@@ -131,7 +131,7 @@ class AccountHolderRewardAdmin(BaseModelView):
         "accountholder": {"disabled": True},
     }
     column_formatters_export = dict(accountholder=_account_holder_export_repr)
-    column_export_exclude_list = ["idempotency_token", "reward_uuid", "code"]
+    column_export_exclude_list = ["idempotency_token", "code"]
     can_export = True
 
 
@@ -158,7 +158,6 @@ class AccountHolderPendingRewardAdmin(BaseModelView):
         "campaign_slug",
         "reward_slug",
         "retailer_slug",
-        "account_holder_id",
     ]
     can_export = True
 

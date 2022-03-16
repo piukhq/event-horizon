@@ -36,6 +36,9 @@ def authorize() -> "Response":
         token = oauth.event_horizon.authorize_access_token()
     except MismatchingStateError:
         return redirect(url_for("auth_views.login"))
-    userinfo = oauth.event_horizon.parse_id_token(token)
-    session["user"] = userinfo
+
+    userinfo = token.get("userinfo")
+    if userinfo:
+        session["user"] = userinfo
+
     return redirect(url_for("admin.index"))
