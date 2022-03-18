@@ -62,6 +62,7 @@ class AccountHolderAdmin(CanDeleteModelView):
     form_excluded_columns = (
         "created_at",
         "updated_at",
+        "status",
         "accountholdercampaignbalance_collection",
         "accountholderprofile_collection",
         "accountholderreward_collection",
