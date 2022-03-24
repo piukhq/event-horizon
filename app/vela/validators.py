@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Optional
+
 import wtforms
 
 from sqlalchemy import func
@@ -56,6 +59,23 @@ def validate_campaign_status_change(form: wtforms.Form, field: wtforms.Field) ->
         len(campaign.earnrule_collection) < 1 or len(campaign.rewardrule_collection) != 1
     ):
         raise wtforms.ValidationError("To activate a campaign one reward rule and at least one earn rule are required.")
+
+
+def validate_campaign_start_date_change(
+    old_start_date: Optional[datetime], new_start_date: Optional[datetime], status: str
+) -> None:
+    if status != "DRAFT" and new_start_date != old_start_date:
+        raise wtforms.ValidationError("Can not amend the date fields of anything other than a draft campaign.")
+
+
+def validate_campaign_end_date_change(
+    old_end_date: Optional[datetime], new_end_date: Optional[datetime], start_date: Optional[datetime], status: str
+) -> None:
+    if status != "DRAFT" and new_end_date != old_end_date:
+        raise wtforms.ValidationError("Can not amend the date fields of anything other than a draft campaign.")
+
+    if new_end_date and start_date and new_end_date < start_date:
+        raise wtforms.ValidationError("Can not set end date to be earlier than start date.")
 
 
 def validate_earn_rule_deletion(campaign_id: int) -> None:
