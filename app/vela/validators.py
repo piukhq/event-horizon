@@ -64,6 +64,8 @@ def validate_campaign_status_change(form: wtforms.Form, field: wtforms.Field) ->
 def validate_campaign_start_date_change(
     old_start_date: Optional[datetime], new_start_date: Optional[datetime], status: str
 ) -> None:
+    if old_start_date:
+        old_start_date = old_start_date.replace(microsecond=0)
     if status != "DRAFT" and new_start_date != old_start_date:
         raise wtforms.ValidationError("Can not amend the start date field of anything other than a draft campaign.")
 
@@ -71,6 +73,8 @@ def validate_campaign_start_date_change(
 def validate_campaign_end_date_change(
     old_end_date: Optional[datetime], new_end_date: Optional[datetime], start_date: Optional[datetime], status: str
 ) -> None:
+    if old_end_date:
+        old_end_date = old_end_date.replace(microsecond=0)
     if status not in ("DRAFT", "ACTIVE") and new_end_date != old_end_date:
         raise wtforms.ValidationError(
             "Can not amend the end date field of anything other than a draft or active campaign."
