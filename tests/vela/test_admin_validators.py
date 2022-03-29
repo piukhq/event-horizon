@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from unittest import mock
 
 import pytest
@@ -8,7 +9,9 @@ from sqlalchemy.orm.exc import NoResultFound
 from app.vela.validators import (
     ACCUMULATOR,
     STAMPS,
+    validate_campaign_end_date_change,
     validate_campaign_loyalty_type,
+    validate_campaign_start_date_change,
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
@@ -274,8 +277,154 @@ def test_validate_reward_rule_allocation_window_ok(mock_form: mock.MagicMock, mo
         pytest.fail()
 
 
-def test_validate_reward_rule_allocation_wndow_fail(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
+def test_validate_reward_rule_allocation_window_fail(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
     mock_form.campaign = mock.Mock(data=mock.Mock(loyalty_type=STAMPS))
     mock_field.data = 1
     with pytest.raises(wtforms.ValidationError):
         validate_reward_rule_allocation_window(mock_form, mock_field)
+
+
+def test_validate_campaign_end_date_change_ok() -> None:
+    start_date = datetime.now(tz=timezone.utc)
+
+    validate_campaign_end_date_change(
+        old_end_date=start_date.replace(start_date.year + 1),
+        new_end_date=start_date.replace(start_date.year + 2),
+        status="DRAFT",
+        start_date=start_date,
+    )
+
+
+def test_validate_campaign_end_date_change_currently_empty_field() -> None:
+    start_date = datetime.now(tz=timezone.utc)
+
+    validate_campaign_end_date_change(
+        old_end_date=None,
+        new_end_date=start_date.replace(start_date.year + 2),
+        status="DRAFT",
+        start_date=start_date,
+    )
+
+
+def test_validate_campaign_end_date_change_with_empty_field() -> None:
+    start_date = datetime.now(tz=timezone.utc)
+
+    validate_campaign_end_date_change(
+        old_end_date=start_date.replace(start_date.year + 2),
+        new_end_date=None,
+        status="DRAFT",
+        start_date=start_date,
+    )
+
+
+def test_validate_campaign_end_date_change_with_empty_start_date() -> None:
+    fake_now = datetime.now(tz=timezone.utc)
+
+    validate_campaign_end_date_change(
+        old_end_date=fake_now,
+        new_end_date=fake_now.replace(fake_now.year + 1),
+        status="DRAFT",
+        start_date=None,
+    )
+
+
+def test_validate_campaign_end_date_change_bad_status() -> None:
+    fake_now = datetime.now(tz=timezone.utc)
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_campaign_end_date_change(
+            old_end_date=fake_now.replace(fake_now.year + 1),
+            new_end_date=fake_now,
+            status="CANCELLED",
+            start_date=fake_now,
+        )
+    assert (
+        ex_info.value.args[0] == "Can not amend the end date field of anything other than a draft or active campaign."
+    )
+
+
+def test_validate_campaign_end_date_change_bad_new_end_date() -> None:
+    fake_now = datetime.now(tz=timezone.utc)
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_campaign_end_date_change(
+            old_end_date=fake_now.replace(fake_now.year + 1),
+            new_end_date=fake_now.replace(fake_now.year - 1),
+            status="DRAFT",
+            start_date=fake_now,
+        )
+    assert ex_info.value.args[0] == "Can not set end date to be earlier than start date."
+
+
+def test_validate_campaign_start_date_change_ok() -> None:
+    fake_now = datetime.now(tz=timezone.utc)
+
+    validate_campaign_start_date_change(
+        old_start_date=fake_now.replace(fake_now.year - 1),
+        new_start_date=fake_now,
+        status="DRAFT",
+    )
+
+
+def test_validate_campaign_start_date_change_empty_field() -> None:
+    validate_campaign_start_date_change(
+        old_start_date=datetime.now(tz=timezone.utc),
+        new_start_date=None,
+        status="DRAFT",
+    )
+
+
+def test_validate_campaign_start_date_change_bad_status() -> None:
+    fake_now = datetime.now(tz=timezone.utc)
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_campaign_start_date_change(
+            old_start_date=fake_now.replace(fake_now.year - 1),
+            new_start_date=fake_now,
+            status="ACTIVE",
+        )
+    assert ex_info.value.args[0] == "Can not amend the start date field of anything other than a draft campaign."
+
+
+def test_validate_active_campaign_earlier_end_date() -> None:
+    fake_now = datetime.now(tz=timezone.utc)
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_campaign_end_date_change(
+            old_end_date=fake_now.replace(fake_now.year + 2),
+            new_end_date=fake_now.replace(fake_now.year + 1),
+            start_date=fake_now,
+            status="ACTIVE",
+        )
+    assert ex_info.value.args[0] == "Active campaign end dates cannot be brought forward, they can only be extended."
+
+
+def test_validate_active_campaign_extend_end_date() -> None:
+    fake_now = datetime.now(tz=timezone.utc)
+    validate_campaign_end_date_change(
+        old_end_date=fake_now.replace(fake_now.year + 1),
+        new_end_date=fake_now.replace(fake_now.year + 2),
+        start_date=fake_now,
+        status="ACTIVE",
+    )
+
+
+def test_validate_draft_campaign_extend_end_date() -> None:
+    fake_now = datetime.now(tz=timezone.utc)
+    validate_campaign_end_date_change(
+        old_end_date=fake_now.replace(fake_now.year + 1),
+        new_end_date=fake_now.replace(fake_now.year + 2),
+        start_date=fake_now,
+        status="DRAFT",
+    )
+
+
+def test_validate_draft_campaign_earlier_end_date() -> None:
+    fake_now = datetime.now(tz=timezone.utc)
+
+    validate_campaign_end_date_change(
+        old_end_date=fake_now.replace(fake_now.year + 2),
+        new_end_date=fake_now.replace(fake_now.year + 1),
+        start_date=fake_now,
+        status="DRAFT",
+    )

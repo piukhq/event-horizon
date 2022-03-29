@@ -21,7 +21,9 @@ from app import settings
 from app.admin.model_views import BaseModelView, CanDeleteModelView
 from app.vela.db.models import Campaign, RetailerRewards
 from app.vela.validators import (
+    validate_campaign_end_date_change,
     validate_campaign_loyalty_type,
+    validate_campaign_start_date_change,
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
@@ -130,6 +132,19 @@ class CampaignAdmin(CanDeleteModelView):
     )
     def action_end_campaigns(self, ids: list[str]) -> None:
         self._campaigns_status_change(ids, "ended")
+
+    def on_model_change(self, form: wtforms.Form, model: "Campaign", is_created: bool) -> None:
+        if not is_created:
+            validate_campaign_end_date_change(
+                old_end_date=form.end_date.object_data,
+                new_end_date=model.end_date,
+                status=model.status,
+                start_date=model.start_date,
+            )
+            validate_campaign_start_date_change(
+                old_start_date=form.start_date.object_data, new_start_date=model.start_date, status=model.status
+            )
+        return super().on_model_change(form, model, is_created)
 
 
 class EarnRuleAdmin(CanDeleteModelView):
