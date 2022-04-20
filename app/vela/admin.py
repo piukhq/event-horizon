@@ -27,6 +27,7 @@ from app.vela.validators import (
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
+    validate_earn_rule_max_amount,
     validate_reward_rule_allocation_window,
     validate_reward_rule_change,
     validate_reward_rule_deletion,
@@ -160,6 +161,7 @@ class EarnRuleAdmin(CanDeleteModelView):
         "increment_multiplier",
         "created_at",
         "updated_at",
+        "max_amount",
     )
     column_labels = {
         "campaign.name": "Campaign",
@@ -184,6 +186,10 @@ class EarnRuleAdmin(CanDeleteModelView):
             ),
         },
         "increment_multiplier": {"validators": [wtforms.validators.NumberRange(min=0)]},
+        "max_amount": {
+            "validators": [validate_earn_rule_max_amount, wtforms.validators.NumberRange(min=0)],
+            "description": ("Can only be set if the campaign's loyalty type is ACCUMULATOR"),
+        },
     }
     column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}
 

@@ -41,6 +41,13 @@ def validate_earn_rule_increment(form: wtforms.Form, field: wtforms.Field) -> No
         )
 
 
+def validate_earn_rule_max_amount(form: wtforms.Form, field: wtforms.Field) -> None:
+    if form.campaign.data.loyalty_type != ACCUMULATOR and field.data != 0:
+        raise wtforms.ValidationError(
+            "The campaign requires that this field is set to 0 due to campaign.loyalty_type setting"
+        )
+
+
 def validate_reward_rule_allocation_window(form: wtforms.Form, field: wtforms.Field) -> None:
     if form.campaign.data.loyalty_type == STAMPS and field.data != 0:
         raise wtforms.ValidationError(
