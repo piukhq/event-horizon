@@ -33,7 +33,7 @@ key_vault = KeyVault(KEY_VAULT_URI)
 
 SECRET_KEY = get_env("SECRET_KEY") or key_vault.get_secret("bpl-event-horizon-secret-key")
 
-ROUTE_BASE = "/bpl/admin"
+ROUTE_BASE = "/admin"
 
 # AAD SSO
 OAUTH_REDIRECT_URI = get_env("OAUTH_REDIRECT_URI")
@@ -59,11 +59,11 @@ VELA_ENDPOINT_PREFIX = "vela"
 CARINA_ENDPOINT_PREFIX = "carina"
 
 POLARIS_HOST = getenv("POLARIS_HOST", "http://polaris-api")
-POLARIS_BASE_URL = getenv("POLARIS_BASE_URL", f"{POLARIS_HOST}/bpl/loyalty")
+POLARIS_BASE_URL = getenv("POLARIS_BASE_URL", f"{POLARIS_HOST}/loyalty")
 POLARIS_AUTH_TOKEN = get_env("POLARIS_AUTH_TOKEN") or key_vault.get_secret("bpl-polaris-api-auth-token")
 
 VELA_HOST = getenv("VELA_HOST", "http://vela-api")
-VELA_BASE_URL = getenv("VELA_BASE_URL", f"{VELA_HOST}/bpl/retailers")
+VELA_BASE_URL = getenv("VELA_BASE_URL", f"{VELA_HOST}/retailers")
 VELA_AUTH_TOKEN = get_env("VELA_AUTH_TOKEN") or key_vault.get_secret("bpl-vela-api-auth-token")
 
 redis = Redis.from_url(
