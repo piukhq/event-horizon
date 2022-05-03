@@ -58,7 +58,14 @@ def _account_holder_export_repr(
 
 
 class AccountHolderAdmin(CanDeleteModelView):
-    column_filters = ("retailerconfig.slug", "retailerconfig.name", "retailerconfig.id", "status", "opt_out_token")
+    column_filters = (
+        "retailerconfig.slug",
+        "retailerconfig.name",
+        "retailerconfig.id",
+        "status",
+        "opt_out_token",
+        "created_at",
+    )
     form_excluded_columns = (
         "created_at",
         "updated_at",
@@ -70,7 +77,7 @@ class AccountHolderAdmin(CanDeleteModelView):
         "balance_adjustment_collection",
     )
     column_labels = dict(retailerconfig="Retailer")
-    column_searchable_list = ("id", "email", "account_holder_uuid")
+    column_searchable_list = ("id", "email", "account_holder_uuid", "account_number")
     form_widget_args = {
         "opt_out_token": {"readonly": True},
     }
@@ -122,9 +129,14 @@ class AccountHolderProfileAdmin(BaseModelView):
 
 class AccountHolderRewardAdmin(BaseModelView):
     can_create = False
-    column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
+    column_searchable_list = (
+        "accountholder.id",
+        "accountholder.email",
+        "accountholder.account_holder_uuid",
+        "code",
+    )
     column_labels = dict(accountholder="Account Holder")
-    column_filters = ("accountholder.retailerconfig.slug", "status", "reward_slug")
+    column_filters = ("accountholder.retailerconfig.slug", "status", "reward_slug", "issued_date")
     column_formatters = dict(accountholder=_account_holder_repr)
     form_widget_args = {
         "reward_id": {"readonly": True},
@@ -144,7 +156,7 @@ class AccountHolderPendingRewardAdmin(BaseModelView):
         "accountholder.account_holder_uuid",
     )
     column_labels = dict(accountholder="Account Holder", id="Pending Reward id")
-    column_filters = ("accountholder.retailerconfig.slug", "campaign_slug", "created_date")
+    column_filters = ("accountholder.retailerconfig.slug", "campaign_slug", "created_date", "conversion_date")
     column_formatters = dict(accountholder=_account_holder_repr)
     form_widget_args = {"accountholder": {"disabled": True}}
     column_export_exclude_list = ["idempotency_token"]

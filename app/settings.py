@@ -26,7 +26,7 @@ def to_bool(v: str) -> bool:
         return value == "true"
 
 
-FLASK_ADMIN_SWATCH = "simplex"
+FLASK_ADMIN_SWATCH = get_env("EVENT_HORIZON_THEME", "simplex")
 
 KEY_VAULT_URI = get_env("KEY_VAULT_URI", "https://bink-uksouth-dev-com.vault.azure.net/")
 key_vault = KeyVault(KEY_VAULT_URI)
