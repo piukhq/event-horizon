@@ -254,13 +254,13 @@ class RetailerRewardsAdmin(BaseModelView):
 
 
 class TransactionAdmin(BaseModelView):
-    column_filters = ("retailerrewards.slug",)
-    column_searchable_list = ("transaction_id",)
+    column_filters = ("retailerrewards.slug", "created_at", "datetime")
+    column_searchable_list = ("transaction_id", "account_holder_uuid")
 
 
 class ProcessedTransactionAdmin(BaseModelView):
-    column_filters = ("retailerrewards.slug",)
-    column_searchable_list = ("transaction_id",)
+    column_filters = ("retailerrewards.slug", "created_at", "datetime")
+    column_searchable_list = ("transaction_id", "account_holder_uuid")
 
 
 class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
