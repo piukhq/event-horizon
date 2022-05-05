@@ -16,7 +16,7 @@ from sqlalchemy.future import select
 from wtforms.validators import DataRequired
 
 from app import settings
-from app.admin.model_views import BaseModelView, CanDeleteModelView
+from app.admin.model_views import BaseModelView
 from app.polaris.db.models import AccountHolder, RetailerConfig
 
 from .validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
@@ -57,7 +57,8 @@ def _account_holder_export_repr(
     return model.accountholder.account_holder_uuid
 
 
-class AccountHolderAdmin(CanDeleteModelView):
+class AccountHolderAdmin(BaseModelView):
+    can_create = False
     column_filters = (
         "retailerconfig.slug",
         "retailerconfig.name",
@@ -121,6 +122,7 @@ class AccountHolderAdmin(CanDeleteModelView):
 
 
 class AccountHolderProfileAdmin(BaseModelView):
+    can_create = False
     column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
     column_labels = dict(accountholder="Account Holder")
     column_formatters = dict(accountholder=_account_holder_repr)
