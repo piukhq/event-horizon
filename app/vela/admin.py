@@ -260,7 +260,7 @@ class TransactionAdmin(BaseModelView):
 
 class ProcessedTransactionAdmin(BaseModelView):
     column_filters = ("retailerrewards.slug", "created_at", "datetime")
-    column_searchable_list = ("transaction_id", "account_holder_uuid")
+    column_searchable_list = ("transaction_id", "payment_transaction_id", "account_holder_uuid")
 
 
 class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
