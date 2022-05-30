@@ -41,7 +41,7 @@ class CampaignAdmin(CanDeleteModelView):
     column_auto_select_related = True
     column_filters = ("retailerrewards.slug", "status")
     column_searchable_list = ("slug", "name")
-    column_labels = dict(retailerrewards="Retailer")
+    column_labels = {"retailerrewards": "Retailer"}
     form_args = {
         "loyalty_type": {"validators": [DataRequired(), validate_campaign_loyalty_type]},
         "status": {"validators": [validate_campaign_status_change]},
@@ -251,6 +251,12 @@ class RewardRuleAdmin(CanDeleteModelView):
 
 class RetailerRewardsAdmin(BaseModelView):
     column_default_sort: Union[str, Tuple[str, bool]] = ("slug", False)
+
+
+class RetailerStoreAdmin(BaseModelView):
+    column_labels = {"retailerrewards": "Retailer"}
+    column_filters = ("retailerrewards.slug", "created_at")
+    column_searchable_list = ("store_name", "mid")
 
 
 class TransactionAdmin(BaseModelView):

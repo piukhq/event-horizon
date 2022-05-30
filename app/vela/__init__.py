@@ -9,6 +9,7 @@ from .admin import (
     EarnRuleAdmin,
     ProcessedTransactionAdmin,
     RetailerRewardsAdmin,
+    RetailerStoreAdmin,
     RetryTaskAdmin,
     RewardRuleAdmin,
     TaskTypeAdmin,
@@ -16,7 +17,16 @@ from .admin import (
     TaskTypeKeyValueAdmin,
     TransactionAdmin,
 )
-from .db import Campaign, EarnRule, ProcessedTransaction, RetailerRewards, RewardRule, Transaction, db_session
+from .db import (
+    Campaign,
+    EarnRule,
+    ProcessedTransaction,
+    RetailerRewards,
+    RetailerStore,
+    RewardRule,
+    Transaction,
+    db_session,
+)
 
 if TYPE_CHECKING:
     from flask_admin import Admin
@@ -24,6 +34,25 @@ if TYPE_CHECKING:
 
 def register_vela_admin(event_horizon_admin: "Admin") -> None:
     vela_menu_title = "Retailer Campaign Management"
+
+    event_horizon_admin.add_view(
+        RetailerRewardsAdmin(
+            RetailerRewards,
+            db_session,
+            "Retailer Rewards",
+            endpoint=f"{VELA_ENDPOINT_PREFIX}/retailer-rewards",
+            category=vela_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        RetailerStoreAdmin(
+            RetailerStore,
+            db_session,
+            "Retailer's Stores",
+            endpoint=f"{VELA_ENDPOINT_PREFIX}/retailer-stores",
+            category=vela_menu_title,
+        )
+    )
     event_horizon_admin.add_view(
         CampaignAdmin(
             Campaign, db_session, "Campaigns", endpoint=f"{VELA_ENDPOINT_PREFIX}/campaigns", category=vela_menu_title
@@ -40,15 +69,6 @@ def register_vela_admin(event_horizon_admin: "Admin") -> None:
             db_session,
             "Reward Rules",
             endpoint=f"{VELA_ENDPOINT_PREFIX}/reward-rules",
-            category=vela_menu_title,
-        )
-    )
-    event_horizon_admin.add_view(
-        RetailerRewardsAdmin(
-            RetailerRewards,
-            db_session,
-            "Retailer Rewards",
-            endpoint=f"{VELA_ENDPOINT_PREFIX}/retailer-rewards",
             category=vela_menu_title,
         )
     )
