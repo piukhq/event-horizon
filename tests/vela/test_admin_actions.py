@@ -88,3 +88,79 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
     CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
 
     mock_model_views_flash.assert_called_with(dict_error["display_message"], category="error")
+
+
+@httpretty.activate
+def test__campaigns_ended_delete_pending_rewards(mocker: MockerFixture) -> None:
+    status = "ended"
+    retailer_slug = "retailer_1"
+    url = f"{VELA_BASE_URL}/{retailer_slug}/campaigns/status_change"
+    campaign_slug_1 = "campaign_1"
+    campaign_slug_2 = "campaign_2"
+
+    def mock_init(self: Any, session: mock.MagicMock) -> None:
+        self.session = session
+
+    mocker.patch.object(CampaignAdmin, "__init__", mock_init)
+    mocker.patch("app.vela.admin.Campaign", slug=mock.Mock())
+    mocker.patch("app.vela.admin.RewardRule", allocation_window=mock.Mock())
+    mocker.patch("app.vela.admin.RetailerRewards", slug=mock.Mock())
+    mocker.patch("app.vela.admin.select", slug=mock.Mock())
+    mock_flash = mocker.patch("app.vela.admin.flash")
+
+    httpretty.register_uri("POST", url, {}, status=202)
+
+    session = mock.MagicMock(
+        execute=lambda x: mock.MagicMock(
+            all=lambda: [(campaign_slug_1, retailer_slug), (campaign_slug_2, retailer_slug)]
+        )
+    )
+
+    CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
+
+    last_request = httpretty.last_request().parsed_body
+
+    assert last_request["requested_status"] == status
+    assert set(last_request["campaign_slugs"]) == {campaign_slug_1, campaign_slug_2}
+    mock_flash.assert_called_with(
+        f"""Selected campaigns' status has been successfully changed to {status} and pending
+                            rewards were deleted"""
+    )
+
+
+@httpretty.activate
+def test__campaigns_ended_convert_pending_rewards(mocker: MockerFixture) -> None:
+    status = "ended"
+    retailer_slug = "retailer_1"
+    url = f"{VELA_BASE_URL}/{retailer_slug}/campaigns/status_change"
+    campaign_slug_1 = "campaign_1"
+    campaign_slug_2 = "campaign_2"
+
+    def mock_init(self: Any, session: mock.MagicMock) -> None:
+        self.session = session
+
+    mocker.patch.object(CampaignAdmin, "__init__", mock_init)
+    mocker.patch("app.vela.admin.Campaign", slug=mock.Mock())
+    mocker.patch("app.vela.admin.RewardRule", allocation_window=mock.Mock())
+    mocker.patch("app.vela.admin.RetailerRewards", slug=mock.Mock())
+    mocker.patch("app.vela.admin.select", slug=mock.Mock())
+    mock_flash = mocker.patch("app.vela.admin.flash")
+
+    httpretty.register_uri("POST", url, {}, status=202)
+
+    session = mock.MagicMock(
+        execute=lambda x: mock.MagicMock(
+            all=lambda: [(campaign_slug_1, retailer_slug), (campaign_slug_2, retailer_slug)]
+        )
+    )
+
+    CampaignAdmin(session)._campaigns_status_change(["1", "2"], status, issue_pending_rewards=True)
+
+    last_request = httpretty.last_request().parsed_body
+
+    assert last_request["requested_status"] == status
+    assert set(last_request["campaign_slugs"]) == {campaign_slug_1, campaign_slug_2}
+    mock_flash.assert_called_with(
+        f"""Selected campaigns' status has been successfully changed to {status} and pending
+                            rewards were converted"""
+    )

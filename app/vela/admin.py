@@ -1,6 +1,6 @@
 import logging
 
-from typing import TYPE_CHECKING, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Optional, Tuple, Union
 
 import requests
 import wtforms
@@ -19,7 +19,7 @@ from wtforms.validators import DataRequired
 
 from app import settings
 from app.admin.model_views import BaseModelView, CanDeleteModelView
-from app.vela.db.models import Campaign, RetailerRewards
+from app.vela.db.models import Campaign, RetailerRewards, RewardRule
 from app.vela.validators import (
     validate_campaign_end_date_change,
     validate_campaign_loyalty_type,
@@ -34,7 +34,7 @@ from app.vela.validators import (
 )
 
 if TYPE_CHECKING:
-    from app.vela.db.models import EarnRule, RewardRule
+    from app.vela.db.models import EarnRule
 
 
 class CampaignAdmin(CanDeleteModelView):
@@ -65,7 +65,66 @@ class CampaignAdmin(CanDeleteModelView):
             flash("Only DRAFT campaigns can be deleted.", "error")
             return False
 
-    def _campaigns_status_change(self, campaigns_ids: list[str], status: str) -> None:
+    def _check_for_refund_window(self, campaign_slug: str) -> bool:
+        allocation_window = (
+            self.session.execute(
+                select(RewardRule.allocation_window).where(
+                    Campaign.slug == campaign_slug,
+                    Campaign.retailer_id == RetailerRewards.id,
+                    RewardRule.campaign_id == Campaign.id,
+                )
+            )
+            .scalars()
+            .first()
+        )
+        return allocation_window
+
+    def _get_flash_message(self, status: str, campaign_slug: str, issue_pending_rewards: Optional[bool] = False) -> str:
+        pending_rewards_action = "deleted"
+        if issue_pending_rewards:
+            pending_rewards_action = "converted"
+
+        flash_message = f"""Selected campaigns' status has been successfully changed to {status} and pending
+                            rewards were {pending_rewards_action}"""
+
+        refund_window = self._check_for_refund_window(campaign_slug)
+        if refund_window == 0:
+            flash_message = f"""Campaign {campaign_slug} was ended but it was not configured for
+                                pending rewards"""
+        return flash_message
+
+    def _send_campaign_status_change_request(
+        self, retailer_slug: str, campaign_slugs: list[str], status: str, issue_pending_rewards: Optional[bool] = False
+    ) -> None:
+        request_body: dict[str, Any] = {"requested_status": status, "campaign_slugs": campaign_slugs}
+
+        # Change request body depending on action chosen
+        if status == "ended" and issue_pending_rewards:
+            request_body["issue_pending_rewards"] = issue_pending_rewards
+        try:
+            resp = requests.post(
+                f"{settings.VELA_BASE_URL}/{retailer_slug}/campaigns/status_change",
+                headers={"Authorization": f"token {settings.VELA_AUTH_TOKEN}"},
+                json=request_body,
+            )
+            if 200 <= resp.status_code <= 204:
+                # Change success message depending on action chose for ending campaign
+                if status == "ended":
+                    for campaign_slug in campaign_slugs:
+                        flash(self._get_flash_message(status, campaign_slug, issue_pending_rewards))
+                else:
+                    flash(f"Selected campaigns' status has been successfully changed to {status}")
+            else:
+                self._flash_error_response(resp.json())
+
+        except Exception as ex:
+            msg = "Error: no response received."
+            flash(msg, category="error")
+            logging.exception(msg, exc_info=ex)
+
+    def _campaigns_status_change(
+        self, campaigns_ids: list[str], status: str, issue_pending_rewards: Optional[bool] = False
+    ) -> None:
         campaign_slugs: list[str] = []
         retailer_slug: Optional[str] = None
         different_retailers = False
@@ -89,22 +148,10 @@ class CampaignAdmin(CanDeleteModelView):
 
         if different_retailers is True:
             flash("All the selected campaigns must belong to the same retailer.", category="error")
+        elif issue_pending_rewards:
+            self._send_campaign_status_change_request(retailer_slug, campaign_slugs, status, issue_pending_rewards)
         else:
-            try:
-                resp = requests.post(
-                    f"{settings.VELA_BASE_URL}/{retailer_slug}/campaigns/status_change",
-                    headers={"Authorization": f"token {settings.VELA_AUTH_TOKEN}"},
-                    json={"requested_status": status, "campaign_slugs": campaign_slugs},
-                )
-                if 200 <= resp.status_code <= 204:
-                    flash(f"Selected campaigns' status has been successfully changed to {status}")
-                else:
-                    self._flash_error_response(resp.json())
-
-            except Exception as ex:
-                msg = "Error: no response received."
-                flash(msg, category="error")
-                logging.exception(msg, exc_info=ex)
+            self._send_campaign_status_change_request(retailer_slug, campaign_slugs, status)
 
     @action(
         "activate-campaigns",
@@ -126,12 +173,23 @@ class CampaignAdmin(CanDeleteModelView):
         self._campaigns_status_change(ids, "cancelled")
 
     @action(
-        "end-campaigns",
-        "End",
+        "end-campaigns-convert-pending-rewards",
+        "End (and Convert pending rewards)",
         "Selected campaigns must belong to the same Retailer and be in a ACTIVE status.\n"
+        "If the campaign has a refund window and pending rewards, they will be CONVERTED.\n"
         "Are you sure you want to proceed?",
     )
-    def action_end_campaigns(self, ids: list[str]) -> None:
+    def action_end_campaigns_and_convert_pending_rewards(self, ids: list[str]) -> None:
+        self._campaigns_status_change(ids, "ended", issue_pending_rewards=True)
+
+    @action(
+        "end-campaigns-delete-pending-rewards",
+        "End (and Delete pending rewards)",
+        "Selected campaigns must belong to the same Retailer and be in a ACTIVE status.\n"
+        "If the campaign has a refund window and pending rewards, they will be DELETED.\n"
+        "Are you sure you want to proceed?",
+    )
+    def action_end_campaigns_and_delete_pending_rewards(self, ids: list[str]) -> None:
         self._campaigns_status_change(ids, "ended")
 
     def on_model_change(self, form: wtforms.Form, model: "Campaign", is_created: bool) -> None:
