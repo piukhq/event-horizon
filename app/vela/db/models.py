@@ -10,14 +10,21 @@ Base: AutomapBase = automap_base(metadata=metadata)
 class RetailerRewards(Base):
     __tablename__ = "retailer_rewards"
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return self.slug
+
+
+class RetailerStore(Base, UpdatedAtMixin):
+    __tablename__ = "retailer_store"
+
+    def __repr__(self) -> str:
+        return self.name
 
 
 class Campaign(Base, UpdatedAtMixin):
     __tablename__ = "campaign"
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f"{self.name} - {self.status} ({self.retailerrewards.slug})"
 
     @property
@@ -40,5 +47,5 @@ class Transaction(Base, UpdatedAtMixin):
 class ProcessedTransaction(Base, UpdatedAtMixin):
     __tablename__ = "processed_transaction"
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return self.transaction_id
