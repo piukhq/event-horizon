@@ -316,6 +316,15 @@ class RetailerStoreAdmin(BaseModelView):
     column_filters = ("retailerrewards.slug", "created_at")
     column_searchable_list = ("store_name", "mid")
 
+    form_args = {
+        "store_name": {
+            "validators": [DataRequired(message="Store name is required")],
+        },
+        "mid": {
+            "validators": [DataRequired(message="MID is required")],
+        },
+    }
+
 
 class TransactionAdmin(BaseModelView):
     column_filters = ("retailerrewards.slug", "created_at", "datetime")
