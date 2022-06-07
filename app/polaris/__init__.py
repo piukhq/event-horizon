@@ -11,6 +11,8 @@ from .admin import (
     AccountHolderPendingRewardAdmin,
     AccountHolderProfileAdmin,
     AccountHolderRewardAdmin,
+    EmailTemplateAdmin,
+    EmailTemplateKeyAdmin,
     RetailerConfigAdmin,
     RetryTaskAdmin,
     TaskTypeAdmin,
@@ -24,6 +26,8 @@ from .db import (
     AccountHolderPendingReward,
     AccountHolderProfile,
     AccountHolderReward,
+    EmailTemplate,
+    EmailTemplateKey,
     RetailerConfig,
     db_session,
 )
@@ -94,6 +98,24 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             db_session,
             "Retailers' Config",
             endpoint=f"{POLARIS_ENDPOINT_PREFIX}/retailers-config",
+            category=polaris_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        EmailTemplateAdmin(
+            EmailTemplate,
+            db_session,
+            "Email Templates",
+            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/email-templates",
+            category=polaris_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        EmailTemplateKeyAdmin(
+            EmailTemplateKey,
+            db_session,
+            "Email Template Keys",
+            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/email-template-keys",
             category=polaris_menu_title,
         )
     )

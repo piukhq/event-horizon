@@ -5,6 +5,8 @@ from .models import (
     AccountHolderPendingReward,
     AccountHolderProfile,
     AccountHolderReward,
+    EmailTemplate,
+    EmailTemplateKey,
     RetailerConfig,
 )
 from .session import db_session

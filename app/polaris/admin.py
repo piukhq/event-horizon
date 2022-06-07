@@ -292,3 +292,36 @@ class TaskTypeKeyAdmin(BaseModelView, TaskTypeKeyAdminBase):
 
 class TaskTypeKeyValueAdmin(BaseModelView, TaskTypeKeyValueAdminBase):
     pass
+
+
+class EmailTemplateAdmin(BaseModelView):
+    can_view_details = True
+    can_create = True
+    can_edit = True
+    can_delete = True
+
+    column_list = ("template_id", "type", "emailtemplatekey_collection")
+    column_searchable_list = ("template_id",)
+    column_filters = ("type", "emailtemplatekey_collection.name")
+    column_details_list = ("template_id", "type", "emailtemplatekey_collection")
+    form_excluded_columns = (
+        "emailtemplaterequiredkey_collection",
+        "created_at",
+        "updated_at",
+    )
+    column_labels = dict(emailtemplatekey_collection="Email Template Key", retailerconfig="Retailer")
+
+
+class EmailTemplateKeyAdmin(BaseModelView):
+    can_view_details = False
+    can_create = True
+    can_edit = True
+    can_delete = True
+    column_searchable_list = ("name",)
+    form_excluded_columns = (
+        "template",
+        "emailtemplaterequiredkey_collection",
+        "emailtemplate_collection",
+        "created_at",
+        "updated_at",
+    )
