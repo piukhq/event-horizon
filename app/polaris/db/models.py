@@ -65,3 +65,24 @@ class AccountHolderPendingReward(Base):
 
     def __str__(self) -> str:
         return f"{self.reward_slug}: {self.value}"
+
+
+class EmailTemplate(Base, UpdatedAtMixin):
+    __tablename__ = "email_template"
+
+    def __repr__(self) -> str:
+        return f"{self.retailerconfig.slug}: {self.type}"
+
+
+class EmailTemplateKey(Base, UpdatedAtMixin):
+    __tablename__ = "email_template_key"
+
+    def __repr__(self) -> str:
+        return self.name
+
+
+class EmailTemplateRequiredKey(Base):
+    __tablename__ = "email_template_required_key"
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.email_template.type}, {self.email_template_key.name})"
