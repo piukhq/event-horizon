@@ -16,7 +16,7 @@ from sqlalchemy.future import select
 from wtforms.validators import DataRequired
 
 from app import settings
-from app.admin.model_views import BaseModelView
+from app.admin.model_views import BaseModelView, CanDeleteModelView
 from app.polaris.db.models import AccountHolder, RetailerConfig
 
 from .validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
@@ -294,12 +294,7 @@ class TaskTypeKeyValueAdmin(BaseModelView, TaskTypeKeyValueAdminBase):
     pass
 
 
-class EmailTemplateAdmin(BaseModelView):
-    can_view_details = True
-    can_create = True
-    can_edit = True
-    can_delete = True
-
+class EmailTemplateAdmin(CanDeleteModelView):
     column_list = ("template_id", "type", "emailtemplatekey_collection")
     column_searchable_list = ("template_id",)
     column_filters = ("type", "emailtemplatekey_collection.name")
@@ -312,11 +307,8 @@ class EmailTemplateAdmin(BaseModelView):
     column_labels = dict(emailtemplatekey_collection="Email Template Key", retailerconfig="Retailer")
 
 
-class EmailTemplateKeyAdmin(BaseModelView):
+class EmailTemplateKeyAdmin(CanDeleteModelView):
     can_view_details = False
-    can_create = True
-    can_edit = True
-    can_delete = True
     column_searchable_list = ("name",)
     form_excluded_columns = (
         "template",
