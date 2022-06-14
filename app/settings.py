@@ -49,6 +49,7 @@ DEBUG = get_env("DEBUG", "False", conv=to_bool)
 POLARIS_DATABASE_URI = get_env("POLARIS_DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/polaris")
 VELA_DATABASE_URI = get_env("VELA_DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/vela")
 CARINA_DATABASE_URI = get_env("CARINA_DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/carina")
+HUBBLE_DATABASE_URI = get_env("HUBBLE_DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/hubble")
 SENTRY_DSN = get_env("SENTRY_DSN")
 SENTRY_ENV = get_env("SENTRY_ENV")
 REDIS_URL = get_env("REDIS_URL", "redis://localhost:6379/0")
@@ -57,6 +58,7 @@ QUERY_LOG_LEVEL = get_env("QUERY_LOG_LEVEL", "WARN")
 POLARIS_ENDPOINT_PREFIX = "polaris"
 VELA_ENDPOINT_PREFIX = "vela"
 CARINA_ENDPOINT_PREFIX = "carina"
+HUBBLE_ENDPOINT_PREFIX = "hubble"
 
 POLARIS_HOST = getenv("POLARIS_HOST", "http://polaris-api")
 POLARIS_BASE_URL = getenv("POLARIS_BASE_URL", f"{POLARIS_HOST}/loyalty")
