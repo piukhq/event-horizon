@@ -295,21 +295,30 @@ class TaskTypeKeyValueAdmin(BaseModelView, TaskTypeKeyValueAdminBase):
 
 
 class EmailTemplateAdmin(CanDeleteModelView):
-    column_list = ("template_id", "type", "emailtemplatekey_collection")
+    column_list = ("template_id", "type", "emailtemplatekey_collection", "retailerconfig", "created_at", "updated_at")
     column_searchable_list = ("template_id",)
-    column_filters = ("type", "emailtemplatekey_collection.name")
-    column_details_list = ("template_id", "type", "emailtemplatekey_collection")
+    column_filters = (
+        "type",
+        "emailtemplatekey_collection.name",
+        "retailerconfig.slug",
+        "retailerconfig.name",
+        "retailerconfig.id",
+    )
+    column_details_list = ("template_id", "type", "emailtemplatekey_collection", "retailerconfig")
     form_excluded_columns = (
         "emailtemplaterequiredkey_collection",
         "created_at",
         "updated_at",
     )
-    column_labels = dict(emailtemplatekey_collection="Email Template Key", retailerconfig="Retailer")
+    column_labels = dict(emailtemplatekey_collection="Template Key", retailerconfig="Retailer")
 
 
-class EmailTemplateKeyAdmin(CanDeleteModelView):
-    can_view_details = False
-    column_searchable_list = ("name",)
+class EmailTemplateKeyAdmin(BaseModelView):
+    can_view_details = True
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_searchable_list = ("name", "display_name", "description")
     form_excluded_columns = (
         "template",
         "emailtemplaterequiredkey_collection",
@@ -317,3 +326,4 @@ class EmailTemplateKeyAdmin(CanDeleteModelView):
         "created_at",
         "updated_at",
     )
+    column_labels = dict(display_name="Display Name")
