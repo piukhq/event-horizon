@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 
 class CampaignAdmin(CanDeleteModelView):
     column_auto_select_related = True
+    action_disallowed_list = ["delete"]
     column_filters = ("retailerrewards.slug", "status")
     column_searchable_list = ("slug", "name")
     column_labels = {"retailerrewards": "Retailer"}
@@ -55,15 +56,35 @@ class CampaignAdmin(CanDeleteModelView):
         "end_date",
     )
 
+    def is_action_allowed(self, name: str) -> bool:
+        if name == "delete":
+            return False
+        return super().is_action_allowed(name)
+
     # Be careful adding "inline_models = (EarnRule,)" here - the validate_earn_rule_increment
     # validator seemed to be bypassed in that view
 
-    def delete_model(self, model: Campaign) -> bool:
-        if model.can_delete and self.can_delete:
-            return super().delete_model(model)
+    def delete_model(self, model: Campaign) -> None:
+        if self.can_delete:
+            retailer_slug = model.retailerrewards.slug
+            campaign_slug = model.slug
+            try:
+                resp = requests.delete(
+                    f"{settings.VELA_BASE_URL}/{retailer_slug}/campaigns/{campaign_slug}",
+                    headers={"Authorization": f"token {settings.VELA_AUTH_TOKEN}"},
+                )
+                if 200 <= resp.status_code <= 204:
+                    # Change success message depending on action chose for ending campaign
+                    flash("Selected campaign has been successfully deleted.")
+                else:
+                    self._flash_error_response(resp.json())
+
+            except Exception as ex:
+                msg = "Error: no response received."
+                flash(msg, category="error")
+                logging.exception(msg, exc_info=ex)
         else:
-            flash("Only DRAFT campaigns can be deleted.", "error")
-            return False
+            flash("Only verified users can do this.", "error")
 
     def _check_for_refund_window(self, campaign_slug: str) -> bool:
         allocation_window = (
