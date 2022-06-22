@@ -11,6 +11,7 @@ from .admin import (
     AccountHolderPendingRewardAdmin,
     AccountHolderProfileAdmin,
     AccountHolderRewardAdmin,
+    AccountHolderTransactionHistoryAdmin,
     EmailTemplateAdmin,
     EmailTemplateKeyAdmin,
     RetailerConfigAdmin,
@@ -26,6 +27,7 @@ from .db import (
     AccountHolderPendingReward,
     AccountHolderProfile,
     AccountHolderReward,
+    AccountHolderTransactionHistory,
     EmailTemplate,
     EmailTemplateKey,
     RetailerConfig,
@@ -89,6 +91,15 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             db_session,
             "Account Holder Campaign Balances",
             endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-campaign-balances",
+            category=polaris_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        AccountHolderTransactionHistoryAdmin(
+            AccountHolderTransactionHistory,
+            db_session,
+            "Account Holder Transaction History",
+            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-transaction-history",
             category=polaris_menu_title,
         )
     )
