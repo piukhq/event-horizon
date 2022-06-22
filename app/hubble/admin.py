@@ -7,11 +7,6 @@ from app.admin.model_views import BaseModelView
 from app.hubble.db.models import Activity
 
 
-def _pretty_print_json(data: str) -> str:
-    parsed = json.loads(data)
-    return json.dumps(parsed, indent=2)
-
-
 class ActivityAdmin(BaseModelView):
     can_create = False
     can_edit = False
@@ -29,6 +24,6 @@ class ActivityAdmin(BaseModelView):
     )
     column_formatters = {
         "data": lambda v, c, model, p: Markup("<pre>")
-        + Markup.escape(_pretty_print_json(model.data))
+        + Markup.escape(json.dumps(model.data, indent=2))
         + Markup("</pre>"),
     }
