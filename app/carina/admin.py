@@ -19,7 +19,7 @@ from app.carina.validators import (
 if TYPE_CHECKING:
     from app.carina.db.models import Reward
 
-
+# pylint: disable=unused-argument
 def reward_config_format(view: BaseModelView, context: dict, model: "Reward", name: str) -> str:
     return Markup(
         (

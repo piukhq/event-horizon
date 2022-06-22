@@ -1,6 +1,6 @@
 import logging
 
-from typing import TYPE_CHECKING, Any, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any
 
 import requests
 import wtforms
@@ -100,7 +100,7 @@ class CampaignAdmin(CanDeleteModelView):
         )
         return allocation_window
 
-    def _get_flash_message(self, status: str, campaign_slug: str, issue_pending_rewards: Optional[bool] = False) -> str:
+    def _get_flash_message(self, status: str, campaign_slug: str, issue_pending_rewards: bool | None = False) -> str:
         pending_rewards_action = "deleted"
         if issue_pending_rewards:
             pending_rewards_action = "converted"
@@ -115,7 +115,7 @@ class CampaignAdmin(CanDeleteModelView):
         return flash_message
 
     def _send_campaign_status_change_request(
-        self, retailer_slug: str, campaign_slugs: list[str], status: str, issue_pending_rewards: Optional[bool] = False
+        self, retailer_slug: str, campaign_slugs: list[str], status: str, issue_pending_rewards: bool | None = False
     ) -> None:
         request_body: dict[str, Any] = {"requested_status": status, "campaign_slugs": campaign_slugs}
 
@@ -144,10 +144,10 @@ class CampaignAdmin(CanDeleteModelView):
             logging.exception(msg, exc_info=ex)
 
     def _campaigns_status_change(
-        self, campaigns_ids: list[str], status: str, issue_pending_rewards: Optional[bool] = False
+        self, campaigns_ids: list[str], status: str, issue_pending_rewards: bool | None = False
     ) -> None:
         campaign_slugs: list[str] = []
-        retailer_slug: Optional[str] = None
+        retailer_slug: str | None = None
         different_retailers = False
 
         for campaign_slug, campaign_retailer_slug in self.session.execute(
@@ -329,7 +329,7 @@ class RewardRuleAdmin(CanDeleteModelView):
 
 
 class RetailerRewardsAdmin(BaseModelView):
-    column_default_sort: Union[str, Tuple[str, bool]] = ("slug", False)
+    column_default_sort = ("slug", False)
 
 
 class RetailerStoreAdmin(BaseModelView):

@@ -4,6 +4,8 @@ from sqlalchemy.sql.schema import MetaData
 
 from app.db import UpdatedAtMixin
 
+from .session import engine
+
 metadata = MetaData()
 Base: AutomapBase = automap_base(metadata=metadata)
 
@@ -74,3 +76,6 @@ class RewardUpdate(Base, UpdatedAtMixin):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.id})"
+
+
+Base.prepare(engine, reflect=True)

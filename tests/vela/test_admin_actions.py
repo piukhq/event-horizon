@@ -1,3 +1,5 @@
+# pylint: disable=no-value-for-parameter,no-member
+
 import json
 
 from typing import Any
@@ -37,7 +39,7 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
     )
     CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
 
-    assert httpretty.latest_requests() == []
+    assert not httpretty.latest_requests()
     mock_flash.assert_called_once_with("All the selected campaigns must belong to the same retailer.", category="error")
 
     session = mock.MagicMock(

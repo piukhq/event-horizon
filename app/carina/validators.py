@@ -27,7 +27,7 @@ def _validate_required_fields_values(required_fields: dict, fields_to_check: dic
         anystr_strip_whitespace = True
         min_anystr_length = 2
 
-    RequiredFieldsValuesModel = pd.create_model(  # type: ignore
+    RequiredFieldsValuesModel = pd.create_model(  # type: ignore  # pylint: disable=invalid-name
         "RequiredFieldsValuesModel",
         __config__=Config,
         **{k: (FIELD_TYPES[v], ...) for k, v in required_fields.items()},
@@ -36,7 +36,7 @@ def _validate_required_fields_values(required_fields: dict, fields_to_check: dic
     try:
         return RequiredFieldsValuesModel(**fields_to_check)
     except pd.ValidationError as ex:
-        raise StopValidation(
+        raise StopValidation(  # pylint: disable=raise-missing-from
             ", ".join([f"{' -> '.join(err.get('loc'))}: {err.get('msg')}" for err in json.loads(ex.json())])
         )
 
@@ -53,14 +53,14 @@ def validate_required_fields_values_yaml(form: wtforms.Form, field: wtforms.Fiel
         else:
             field_data = yaml.safe_load(field.data)
     except (yaml.YAMLError, AttributeError):  # pragma: no cover
-        raise INVALID_YAML_ERROR
+        raise INVALID_YAML_ERROR  # pylint: disable=raise-missing-from
 
     if required_fields is None:
         if field_data == required_fields:
             field.data = ""
             return
-        else:
-            raise StopValidation("'required_fields_values' must be empty for this fetch type.")
+
+        raise StopValidation("'required_fields_values' must be empty for this fetch type.")
 
     if not isinstance(field_data, dict):
         raise INVALID_YAML_ERROR
@@ -68,17 +68,17 @@ def validate_required_fields_values_yaml(form: wtforms.Form, field: wtforms.Fiel
     field.data = yaml.dump(_validate_required_fields_values(required_fields, field_data).dict(), indent=2)
 
 
-def validate_optional_yaml(form: wtforms.Form, field: wtforms.Field) -> None:
+def validate_optional_yaml(form: wtforms.Form, field: wtforms.Field) -> None:  # pylint: disable=unused-argument
     try:
 
         if field.data in [None, ""]:
             field.data = ""
             return
-        else:
-            field_data = yaml.safe_load(field.data)
+
+        field_data = yaml.safe_load(field.data)
 
     except (yaml.YAMLError, AttributeError):  # pragma: no cover
-        raise INVALID_YAML_ERROR
+        raise INVALID_YAML_ERROR  # pylint: disable=raise-missing-from
 
     if not isinstance(field_data, dict):
         raise INVALID_YAML_ERROR

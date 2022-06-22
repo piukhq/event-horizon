@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 import wtforms
 
@@ -26,7 +25,8 @@ def validate_campaign_loyalty_type(form: wtforms.Form, field: wtforms.Field) -> 
     if form._obj:
         if field.data == ACCUMULATOR and _count_earn_rules(form._obj.id, has_inc_value=True):
             raise wtforms.ValidationError("This field cannot be changed as there are earn rules with increment values")
-        elif field.data == STAMPS and _count_earn_rules(form._obj.id, has_inc_value=False):
+
+        if field.data == STAMPS and _count_earn_rules(form._obj.id, has_inc_value=False):
             raise wtforms.ValidationError("This field cannot be changed as there are earn rules with null increments")
 
 
@@ -35,7 +35,8 @@ def validate_earn_rule_increment(form: wtforms.Form, field: wtforms.Field) -> No
         raise wtforms.validators.StopValidation(
             "The campaign requires that this field is populated due to campaign.loyalty_type setting"
         )
-    elif form.campaign.data.loyalty_type == ACCUMULATOR and field.data is not None:
+
+    if form.campaign.data.loyalty_type == ACCUMULATOR and field.data is not None:
         raise wtforms.ValidationError(
             "The campaign requires that this field is not populated due to campaign.loyalty_type setting"
         )
@@ -69,7 +70,7 @@ def validate_campaign_status_change(form: wtforms.Form, field: wtforms.Field) ->
 
 
 def validate_campaign_start_date_change(
-    old_start_date: Optional[datetime], new_start_date: Optional[datetime], status: str
+    old_start_date: datetime | None, new_start_date: datetime | None, status: str
 ) -> None:
     if old_start_date:
         old_start_date = old_start_date.replace(microsecond=0)
@@ -78,7 +79,7 @@ def validate_campaign_start_date_change(
 
 
 def validate_campaign_end_date_change(
-    old_end_date: Optional[datetime], new_end_date: Optional[datetime], start_date: Optional[datetime], status: str
+    old_end_date: datetime | None, new_end_date: datetime | None, start_date: datetime | None, status: str
 ) -> None:
     if old_end_date:
         old_end_date = old_end_date.replace(microsecond=0)

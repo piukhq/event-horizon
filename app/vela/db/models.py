@@ -3,6 +3,8 @@ from sqlalchemy.sql.schema import MetaData
 
 from app.db import UpdatedAtMixin
 
+from .session import engine
+
 metadata = MetaData()
 Base: AutomapBase = automap_base(metadata=metadata)
 
@@ -49,3 +51,6 @@ class ProcessedTransaction(Base, UpdatedAtMixin):
 
     def __repr__(self) -> str:
         return self.transaction_id
+
+
+Base.prepare(engine, reflect=True)

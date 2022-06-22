@@ -13,8 +13,8 @@ def get_env(k: str, default: str = None, *, conv: Callable = str) -> Any:
     v = getenv(k, default)
     if v is not None:
         return conv(v)
-    else:
-        return None
+
+    return None
 
 
 def to_bool(v: str) -> bool:
@@ -22,8 +22,8 @@ def to_bool(v: str) -> bool:
 
     if value not in ["true", "false"]:
         raise ValueError("Invalid value for a boolean.")
-    else:
-        return value == "true"
+
+    return value == "true"
 
 
 FLASK_ADMIN_SWATCH = get_env("EVENT_HORIZON_THEME", "simplex")

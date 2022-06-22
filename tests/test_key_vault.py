@@ -35,9 +35,9 @@ def test_get_secret(mock_client: mock.MagicMock) -> None:
     ]
 
     def secret_factory() -> Generator:
-        for i, _ in enumerate(fake_secrets):
+        for secret in fake_secrets:
             mock_secret = mock.MagicMock()
-            mock_secret.value = fake_secrets[i][0]
+            mock_secret.value = secret[0]
             yield mock_secret
 
     mock_client.get_secret.side_effect = secret_factory()

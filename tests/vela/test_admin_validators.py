@@ -81,6 +81,7 @@ def test_validate_earn_rule_increment__stamps__inc_has_blank_val(
     )
 
 
+# pylint: disable=unused-argument
 @mock.patch("app.vela.validators._count_earn_rules")
 def test_validate_campaign_loyalty_type__new_object(
     mock__count_earn_rules: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
@@ -256,6 +257,7 @@ def test_validate_reward_rule_change_active_campaign(mock_campaign: mock.MagicMo
         validate_reward_rule_change(1)
 
 
+# pylint: disable=unused-argument
 @mock.patch("app.vela.validators._get_campaign_by_id", side_effect=NoResultFound())
 def test_validate_reward_rule_change_no_campaign(mock_campaign: mock.MagicMock) -> None:
     validate_reward_rule_change(1)

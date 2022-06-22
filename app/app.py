@@ -1,6 +1,6 @@
 import logging
 
-from typing import Any, Optional
+from typing import Any
 
 import sentry_sdk
 
@@ -11,17 +11,9 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.admin import event_horizon_admin
 from app.carina.db import db_session as carina_db_session
-from app.carina.db.models import Base as CarinaModelBase
-from app.carina.db.session import engine as carina_engine
-from app.hubble.db.models import Base as HubbleModelBase
-from app.hubble.db.session import engine as hubble_engine
 from app.polaris.db import db_session as polaris_db_session
-from app.polaris.db.models import Base as PolarisModelBase
-from app.polaris.db.session import engine as polaris_engine
 from app.settings import OAUTH_SERVER_METADATA_URL, QUERY_LOG_LEVEL, ROUTE_BASE, SENTRY_DSN, SENTRY_ENV
 from app.vela.db import db_session as vela_db_session
-from app.vela.db.models import Base as VelaModelBase
-from app.vela.db.session import engine as vela_engine
 from app.version import __version__
 
 oauth = OAuth()
@@ -38,13 +30,10 @@ class RelativeLocationHeaderResponse(Response):
     autocorrect_location_header = False
 
 
+# pylint: disable=import-outside-toplevel
 def create_app(config_name: str = "app.settings") -> Flask:
-    CarinaModelBase.prepare(carina_engine, reflect=True)
-    PolarisModelBase.prepare(polaris_engine, reflect=True)
-    VelaModelBase.prepare(vela_engine, reflect=True)
-    HubbleModelBase.prepare(hubble_engine, reflect=True)
 
-    from app import events  # noqa: F401 initialise events
+    from app import events  # noqa: F401 initialise events  # pylint: disable=unused-argument,unused-import
     from app.carina import register_carina_admin
     from app.hubble import register_hubble_admin
     from app.polaris import register_polaris_admin
@@ -87,7 +76,7 @@ def create_app(config_name: str = "app.settings") -> Flask:
     app.register_blueprint(eh_bp)
 
     @app.teardown_appcontext
-    def remove_session(exception: Optional[BaseException] = None) -> Any:
+    def remove_session(exception: BaseException | None = None) -> Any:  # pylint: disable=unused-argument
         carina_db_session.remove()
         polaris_db_session.remove()
         vela_db_session.remove()

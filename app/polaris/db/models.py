@@ -5,6 +5,8 @@ from sqlalchemy.sql.schema import MetaData
 
 from app.db import UpdatedAtMixin
 
+from .session import engine
+
 metadata = MetaData()
 Base: AutomapBase = automap_base(metadata=metadata)
 
@@ -93,3 +95,6 @@ class AccountHolderTransactionHistory(Base):
 
     def __repr__(self) -> str:
         return f"AH ID: {self.account_holder_id} - TX ID: {self.transaction_id}"
+
+
+Base.prepare(engine, reflect=True)

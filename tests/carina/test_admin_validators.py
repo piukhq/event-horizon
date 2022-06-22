@@ -122,7 +122,7 @@ def test_validate_optional_yaml_ok(mock_form: mock.MagicMock, mock_field: mock.M
     assert mock_field.data == "correct: format\ntest: yaml\n"
 
 
-def test_validate_optional_yaml_None(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
+def test_validate_optional_yaml_none(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
     mock_field.data = None
     validate_optional_yaml(mock_form, mock_field)
 

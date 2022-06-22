@@ -3,6 +3,8 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.automap import AutomapBase, automap_base
 from sqlalchemy.sql.schema import MetaData
 
+from .session import engine
+
 metadata = MetaData()
 Base: AutomapBase = automap_base(metadata=metadata)
 
@@ -15,3 +17,6 @@ class Activity(Base):
 
     def __str__(self) -> str:
         return f"{self.type} {self.summary}"
+
+
+Base.prepare(engine, reflect=True)
