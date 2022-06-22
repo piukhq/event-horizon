@@ -98,7 +98,7 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
         AccountHolderTransactionHistoryAdmin(
             AccountHolderTransactionHistory,
             db_session,
-            "Account Holder Transaction History",
+            "Account Holder Trasnaction History",
             endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-transaction-history",
             category=polaris_menu_title,
         )

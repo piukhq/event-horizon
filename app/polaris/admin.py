@@ -340,7 +340,5 @@ class AccountHolderTransactionHistoryAdmin(BaseModelView):
     )
     column_filters = ("datetime", "location_name")
     column_labels = {"accountholder": "Account Holder"}
-    column_formatters = {
-        "accountholder": _account_holder_repr,
-        "earned": format_json_field,
-    }
+    column_formatters = {"accountholder": _account_holder_repr}
+    column_default_sort = None

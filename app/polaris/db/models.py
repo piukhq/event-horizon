@@ -88,7 +88,7 @@ class EmailTemplateRequiredKey(Base):
         return f"{self.__class__.__name__}({self.email_template.type}, {self.email_template_key.name})"
 
 
-class AccountHolderTransactionHistory(Base, UpdatedAtMixin):
+class AccountHolderTransactionHistory(Base):
     __tablename__ = "account_holder_transaction_history"
 
     def __repr__(self) -> str:
