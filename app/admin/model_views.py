@@ -1,7 +1,7 @@
 import logging
 
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 from flask import abort, flash, redirect, session, url_for
 from flask_admin.contrib.sqla import ModelView
@@ -21,7 +21,7 @@ class UserSessionMixin:
 
     @property
     def user_session_expired(self) -> bool:
-        session_exp: Optional[int] = self.user_info.get("exp")
+        session_exp: int | None = self.user_info.get("exp")
         return session_exp < datetime.now(tz=timezone.utc).timestamp() if session_exp else True
 
     @property
@@ -54,7 +54,7 @@ class AuthorisedModelView(ModelView, UserSessionMixin):
             return False
         return not self.user_session_expired and self.user_is_authorized
 
-    def inaccessible_callback(self, name: str, **kwargs: Optional[dict]) -> "Response":
+    def inaccessible_callback(self, name: str, **kwargs: dict | None) -> "Response":
         if self.user_info and not self.user_is_authorized:
             return abort(403)
         session.pop("user", None)
@@ -63,8 +63,8 @@ class AuthorisedModelView(ModelView, UserSessionMixin):
     def is_action_allowed(self, name: str) -> bool:
         if name == "delete":
             return self.can_delete
-        else:
-            return self.can_edit
+
+        return self.can_edit
 
 
 class BaseModelView(AuthorisedModelView):
@@ -75,10 +75,10 @@ class BaseModelView(AuthorisedModelView):
     list_template = "eh_list.html"
     edit_template = "eh_edit.html"
     create_template = "eh_create.html"
-    column_default_sort: Union[str, Tuple[str, bool]] = ("created_at", True)
-    form_excluded_columns: Tuple[str, ...] = ("created_at", "updated_at")
+    column_default_sort: None | str | tuple[str, bool] = ("created_at", True)
+    form_excluded_columns: tuple[str, ...] = ("created_at", "updated_at")
 
-    def get_list_columns(self) -> List[str]:
+    def get_list_columns(self) -> list[str]:
         # Shunt created_at and updated_at to the end of the table
         list_columns = super().get_list_columns()
         for name in ("created_at", "updated_at"):
@@ -88,7 +88,7 @@ class BaseModelView(AuthorisedModelView):
                     break
         return list_columns
 
-    def _flash_error_response(self, resp_json: Union[list, dict]) -> None:
+    def _flash_error_response(self, resp_json: list | dict) -> None:
         try:
             if isinstance(resp_json, list):
                 for error in resp_json:

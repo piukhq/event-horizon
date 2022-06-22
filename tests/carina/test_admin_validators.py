@@ -12,16 +12,6 @@ from app.carina.validators import (
 )
 
 
-@pytest.fixture
-def mock_form() -> mock.MagicMock:
-    return mock.MagicMock(spec=wtforms.Form)
-
-
-@pytest.fixture
-def mock_field() -> mock.MagicMock:
-    return mock.MagicMock(spec=wtforms.Field)
-
-
 def test_validate_retailer_fetch_type(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
     pre_loaded_fetch_type = mock.Mock(name="PRE_LOADED")
     mock_form.retailer = mock.Mock(data=mock.Mock(fetch_types=[pre_loaded_fetch_type]))
@@ -122,7 +112,7 @@ def test_validate_optional_yaml_ok(mock_form: mock.MagicMock, mock_field: mock.M
     assert mock_field.data == "correct: format\ntest: yaml\n"
 
 
-def test_validate_optional_yaml_None(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
+def test_validate_optional_yaml_none(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
     mock_field.data = None
     validate_optional_yaml(mock_form, mock_field)
 

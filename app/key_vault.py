@@ -1,18 +1,18 @@
 import json
 
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 
 
 class KeyVault:
-    def __init__(self, vault_url: Optional[str] = None, /, *, client: Optional[SecretClient] = None) -> None:
+    def __init__(self, vault_url: str | None = None, /, *, client: SecretClient | None = None) -> None:
         if not (client or vault_url):
             raise ValueError("must provide either vault_url or client")
         self.client = client or SecretClient(vault_url=cast(str, vault_url), credential=DefaultAzureCredential())
 
-    def get_secret(self, name: str, /, *, key: Optional[str] = "value") -> Any:
+    def get_secret(self, name: str, /, *, key: str | None = "value") -> Any:
         """Return the content of a secret in the vault.
 
         Secrets may be a mapping or other JSON serializable objects. Obtain
@@ -41,7 +41,7 @@ class KeyVault:
         """
         secret = self.client.get_secret(name)
         try:
-            val = json.loads(secret.value)
+            val = json.loads(secret.value)  # type: ignore [arg-type]
         except json.decoder.JSONDecodeError:
             return secret.value
         else:

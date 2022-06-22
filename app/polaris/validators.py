@@ -1,7 +1,7 @@
 import json
 import re
 
-from typing import Dict, List, Literal, Optional
+from typing import Literal, Type
 
 import pydantic
 import wtforms
@@ -14,7 +14,7 @@ from .db.models import metadata
 REQUIRED_POLARIS_JOIN_FIELDS = ["first_name", "last_name", "email"]
 
 
-def _get_optional_profile_field_names() -> List[str]:  # pragma: no cover
+def _get_optional_profile_field_names() -> list[str]:  # pragma: no cover
     return [
         str(col.name)
         for col in metadata.tables["account_holder_profile"].c
@@ -22,15 +22,16 @@ def _get_optional_profile_field_names() -> List[str]:  # pragma: no cover
     ]
 
 
+# pylint: disable=unused-argument
 def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
     class FieldOptionsConfig(BaseConfig):
         extra = pydantic.Extra.forbid
 
     class FieldOptions(BaseModel):
         required: bool
-        label: Optional[str] = None
+        label: str | None = None
 
-        Config = FieldOptionsConfig
+        Config = FieldOptionsConfig  # type: Type[BaseConfig]
 
     def ensure_required_true(options: FieldOptions) -> FieldOptions:
         if not options.required:
@@ -49,14 +50,14 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
         field for field in _get_optional_profile_field_names() if field in form_data
     ]
 
-    RetailerConfigModel = pydantic.create_model(
+    RetailerConfigModel = pydantic.create_model(  # type: ignore [call-overload]  # pylint: disable=invalid-name
         "RetailerConfigModel",
-        **{field: (FieldOptions, ...) for field in required_fields},  # type: ignore
         __config__=FieldOptionsConfig,
         __validators__={
             f"{field}_validator": validator(field, allow_reuse=True)(ensure_required_true)
             for field in REQUIRED_POLARIS_JOIN_FIELDS
         },
+        **{field: (FieldOptions, ...) for field in required_fields},
     )
 
     try:
@@ -67,6 +68,7 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
         )
 
 
+# pylint: disable=unused-argument
 def validate_marketing_config(form: wtforms.Form, field: wtforms.Field) -> None:
 
     if field.data == "":
@@ -84,10 +86,10 @@ def validate_marketing_config(form: wtforms.Form, field: wtforms.Field) -> None:
         type: Literal["boolean", "integer", "float", "string", "string_list", "date", "datetime"]
         label: LabelVal
 
-        extra = pydantic.Extra.forbid
+        extra = pydantic.Extra.forbid  # type: pydantic.Extra
 
     class MarketingPreferenceConfigVal(BaseModel):
-        __root__: Dict[KeyNameVal, FieldOptions]
+        __root__: dict[KeyNameVal, FieldOptions]
 
     try:
         form_data = yaml.safe_load(field.data)
@@ -113,6 +115,7 @@ def validate_marketing_config(form: wtforms.Form, field: wtforms.Field) -> None:
         field.data = yaml.dump(validated_data.dict(exclude_unset=True)["__root__"], sort_keys=True)
 
 
+# pylint: disable=unused-argument
 def validate_account_number_prefix(form: wtforms.Form, field: wtforms.Field) -> None:
     required = re.compile(r"^[a-zA-Z]{2,4}$")
     if not bool(required.match(field.data)):

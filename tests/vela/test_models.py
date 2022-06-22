@@ -1,4 +1,4 @@
-from app.vela.db.models import Campaign
+from app.vela.db import Campaign
 
 
 def test_campaign_can_delete() -> None:
