@@ -13,6 +13,8 @@ from app.admin import event_horizon_admin
 from app.carina.db import db_session as carina_db_session
 from app.carina.db.models import Base as CarinaModelBase
 from app.carina.db.session import engine as carina_engine
+from app.hubble.db.models import Base as HubbleModelBase
+from app.hubble.db.session import engine as hubble_engine
 from app.polaris.db import db_session as polaris_db_session
 from app.polaris.db.models import Base as PolarisModelBase
 from app.polaris.db.session import engine as polaris_engine
@@ -40,9 +42,11 @@ def create_app(config_name: str = "app.settings") -> Flask:
     CarinaModelBase.prepare(carina_engine, reflect=True)
     PolarisModelBase.prepare(polaris_engine, reflect=True)
     VelaModelBase.prepare(vela_engine, reflect=True)
+    HubbleModelBase.prepare(hubble_engine, reflect=True)
 
     from app import events  # noqa: F401 initialise events
     from app.carina import register_carina_admin
+    from app.hubble import register_hubble_admin
     from app.polaris import register_polaris_admin
     from app.vela import register_vela_admin
     from app.views.auth import auth_bp
@@ -71,6 +75,7 @@ def create_app(config_name: str = "app.settings") -> Flask:
     register_polaris_admin(event_horizon_admin)
     register_vela_admin(event_horizon_admin)
     register_carina_admin(event_horizon_admin)
+    register_hubble_admin(event_horizon_admin)
 
     event_horizon_admin.init_app(app)
     oauth.init_app(app)
