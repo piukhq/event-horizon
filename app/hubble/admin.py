@@ -1,3 +1,5 @@
+import yaml
+
 from flask import Markup
 
 from app.admin.custom_filters import StringInList, StringNotInList
@@ -22,4 +24,5 @@ class ActivityAdmin(BaseModelView):
     )
     column_formatters = {
         "type": lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.type) + Markup("</pre>"),
+        "data": lambda v, c, model, p: Markup("<pre>") + Markup.escape(yaml.dump(model.data)) + Markup("</pre>"),
     }
