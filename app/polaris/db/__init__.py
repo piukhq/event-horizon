@@ -5,6 +5,7 @@ from .models import (
     AccountHolderPendingReward,
     AccountHolderProfile,
     AccountHolderReward,
+    AccountHolderTransactionHistory,
     EmailTemplate,
     EmailTemplateKey,
     RetailerConfig,

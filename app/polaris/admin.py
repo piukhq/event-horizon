@@ -327,3 +327,16 @@ class EmailTemplateKeyAdmin(BaseModelView):
         "updated_at",
     )
     column_labels = dict(display_name="Display Name")
+
+
+class AccountHolderTransactionHistoryAdmin(BaseModelView):
+    can_create = False
+    column_searchable_list = (
+        "accountholder.id",
+        "accountholder.email",
+        "accountholder.account_holder_uuid",
+        "transaction_id",
+    )
+    column_filters = ("datetime", "location_name")
+    column_labels = {"accountholder": "Account Holder"}
+    column_formatters = {"accountholder": _account_holder_repr}
