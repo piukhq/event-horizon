@@ -1,8 +1,5 @@
-import json
-
-from flask import Markup
-
 from app.admin.custom_filters import StringInList, StringNotInList
+from app.admin.custom_formatters import format_json_field
 from app.admin.model_views import BaseModelView
 from app.hubble.db.models import Activity
 
@@ -22,8 +19,4 @@ class ActivityAdmin(BaseModelView):
         StringInList(Activity.campaigns, "Campaigns"),
         StringNotInList(Activity.campaigns, "Campaigns"),
     )
-    column_formatters = {
-        "data": lambda v, c, model, p: Markup("<pre>")
-        + Markup.escape(json.dumps(model.data, indent=2))
-        + Markup("</pre>"),
-    }
+    column_formatters = {"data": format_json_field}
