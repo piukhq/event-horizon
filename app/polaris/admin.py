@@ -16,6 +16,7 @@ from sqlalchemy.future import select
 from wtforms.validators import DataRequired
 
 from app import settings
+from app.admin.custom_formatters import format_json_field
 from app.admin.model_views import BaseModelView, CanDeleteModelView
 from app.polaris.db.models import AccountHolder, RetailerConfig
 
@@ -327,3 +328,19 @@ class EmailTemplateKeyAdmin(BaseModelView):
         "updated_at",
     )
     column_labels = dict(display_name="Display Name")
+
+
+class AccountHolderTransactionHistoryAdmin(BaseModelView):
+    can_create = False
+    column_searchable_list = (
+        "accountholder.id",
+        "accountholder.email",
+        "accountholder.account_holder_uuid",
+        "transaction_id",
+    )
+    column_filters = ("datetime", "location_name")
+    column_labels = {"accountholder": "Account Holder"}
+    column_formatters = {
+        "accountholder": _account_holder_repr,
+        "earned": format_json_field,
+    }
