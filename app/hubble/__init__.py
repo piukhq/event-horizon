@@ -15,7 +15,7 @@ def register_hubble_admin(event_horizon_admin: "Admin") -> None:
         ActivityAdmin(
             Activity,
             db_session,
-            "Actvity",
+            "Activity",
             endpoint=f"{HUBBLE_ENDPOINT_PREFIX}/activity",
             category=hubble_menu_title,
         )
