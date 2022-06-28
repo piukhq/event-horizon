@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name
+
 from typing import Generator
 from unittest import mock
 
@@ -7,12 +9,7 @@ import wtforms
 from app.polaris.validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
 
 
-@pytest.fixture
-def mock_form() -> mock.MagicMock:
-    return mock.MagicMock(spec=wtforms.Form)
-
-
-@pytest.fixture
+@pytest.fixture()
 def mock_config_field() -> mock.MagicMock:
     return mock.MagicMock(spec=wtforms.Field)
 

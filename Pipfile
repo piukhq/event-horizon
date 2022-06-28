@@ -30,7 +30,6 @@ retry-tasks-lib = {version=">=1.11.2", index="pypi-cloud"}
 mypy = "*"
 black = "*"
 isort = "*"
-flake8 = "*"
 pytest = "*"
 pytest-cov = "*"
 xenon = "*"
@@ -40,6 +39,8 @@ types-redis = "*"
 types-requests = "*"
 httpretty = "*"
 pytest-mock = "*"
+pylint = "*"
+pylint-pytest = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.10"

@@ -1,3 +1,5 @@
+# pylint: disable=no-value-for-parameter,no-member
+
 import json
 import uuid
 
@@ -36,13 +38,13 @@ def test_anonymise_user(mocker: MockerFixture) -> None:
     account_holder.status = "INACTIVE"
     AccountHolderAdmin(session).anonymise_user(["1"])
     mock_flash.assert_called_with("Account holder is INACTIVE", category="error")
-    assert httpretty.latest_requests() == []
+    assert not httpretty.latest_requests()
 
     # Single account holders only
     account_holder.status = "ACTIVE"
     AccountHolderAdmin(session).anonymise_user(["1", "2"])
     mock_flash.assert_called_with("This action must be completed for account holders one at a time", category="error")
-    assert httpretty.latest_requests() == []
+    assert not httpretty.latest_requests()
 
     AccountHolderAdmin(session).anonymise_user(["1"])
     last_request = httpretty.last_request().parsed_body
