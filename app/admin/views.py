@@ -14,4 +14,4 @@ class EventHorizonAdminIndexView(AdminIndexView, UserSessionMixin):
     def index(self) -> "Response":
         if not self.user_info or self.user_session_expired:
             return redirect(url_for("auth_views.login"))
-        return super(EventHorizonAdminIndexView, self).index()
+        return super().index()

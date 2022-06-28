@@ -1,6 +1,6 @@
 import logging
 
-from typing import TYPE_CHECKING, Type, Union
+from typing import TYPE_CHECKING, Type
 
 import requests
 
@@ -18,20 +18,19 @@ from wtforms.validators import DataRequired
 from app import settings
 from app.admin.custom_formatters import format_json_field
 from app.admin.model_views import BaseModelView, CanDeleteModelView
-from app.polaris.db.models import AccountHolder, RetailerConfig
+from app.polaris.db import AccountHolder, RetailerConfig
 
+from .db import AccountHolderCampaignBalance, AccountHolderPendingReward, AccountHolderProfile, AccountHolderReward
 from .validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
 
 if TYPE_CHECKING:
     from jinja2.runtime import Context
 
-    from .db import AccountHolderCampaignBalance, AccountHolderPendingReward, AccountHolderProfile, AccountHolderReward
-
-
+# pylint: disable=unused-argument
 def _account_holder_repr(
     v: Type[BaseModelView],
     c: "Context",
-    model: Union["AccountHolderProfile", "AccountHolderReward", "AccountHolderCampaignBalance"],
+    model: AccountHolderProfile | AccountHolderReward | AccountHolderCampaignBalance,
     p: str,
 ) -> str:
 
@@ -49,10 +48,11 @@ def _account_holder_repr(
     )
 
 
+# pylint: disable=unused-argument
 def _account_holder_export_repr(
     v: Type[BaseModelView],
     c: "Context",
-    model: Union["AccountHolderReward", "AccountHolderPendingReward"],
+    model: AccountHolderReward | AccountHolderPendingReward,
     p: str,
 ) -> str:
     return model.accountholder.account_holder_uuid

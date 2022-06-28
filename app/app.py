@@ -1,6 +1,6 @@
 import logging
 
-from typing import Any, Optional
+from typing import Any
 
 import sentry_sdk
 
@@ -38,19 +38,22 @@ class RelativeLocationHeaderResponse(Response):
     autocorrect_location_header = False
 
 
+# pylint: disable=import-outside-toplevel
 def create_app(config_name: str = "app.settings") -> Flask:
     CarinaModelBase.prepare(carina_engine, reflect=True)
     PolarisModelBase.prepare(polaris_engine, reflect=True)
     VelaModelBase.prepare(vela_engine, reflect=True)
     HubbleModelBase.prepare(hubble_engine, reflect=True)
 
-    from app import events  # noqa: F401 initialise events
     from app.carina import register_carina_admin
+    from app.events import init_events
     from app.hubble import register_hubble_admin
     from app.polaris import register_polaris_admin
     from app.vela import register_vela_admin
     from app.views.auth import auth_bp
     from app.views.healthz import healthz_bp
+
+    init_events()
 
     query_log_level = getattr(logging, QUERY_LOG_LEVEL.upper())
     sqla_logger = logging.getLogger("sqlalchemy.engine")
@@ -87,7 +90,7 @@ def create_app(config_name: str = "app.settings") -> Flask:
     app.register_blueprint(eh_bp)
 
     @app.teardown_appcontext
-    def remove_session(exception: Optional[BaseException] = None) -> Any:
+    def remove_session(exception: BaseException | None = None) -> Any:  # pylint: disable=unused-argument
         carina_db_session.remove()
         polaris_db_session.remove()
         vela_db_session.remove()

@@ -8,7 +8,7 @@ from azure.keyvault.secrets import SecretClient
 from app.key_vault import KeyVault
 
 
-@pytest.fixture
+@pytest.fixture(name="mocked_client")
 def mock_client() -> mock.MagicMock:
     return mock.MagicMock(spec=SecretClient)
 
@@ -25,7 +25,7 @@ def test_init_keyvault_no_args() -> None:
         KeyVault()
 
 
-def test_get_secret(mock_client: mock.MagicMock) -> None:
+def test_get_secret(mocked_client: mock.MagicMock) -> None:
     fake_secrets = [
         ('{"value": "secret #1"}', "value"),
         ('{"other_key": "secret #2"}', "other_key"),
@@ -35,14 +35,14 @@ def test_get_secret(mock_client: mock.MagicMock) -> None:
     ]
 
     def secret_factory() -> Generator:
-        for i, _ in enumerate(fake_secrets):
+        for secret in fake_secrets:
             mock_secret = mock.MagicMock()
-            mock_secret.value = fake_secrets[i][0]
+            mock_secret.value = secret[0]
             yield mock_secret
 
-    mock_client.get_secret.side_effect = secret_factory()
+    mocked_client.get_secret.side_effect = secret_factory()
 
-    key_vault = KeyVault(client=mock_client)
+    key_vault = KeyVault(client=mocked_client)
     results = []
     for _, key_to_retrieve in list(fake_secrets):
         results.append(key_vault.get_secret("made-up-name", key=key_to_retrieve))
@@ -56,8 +56,8 @@ def test_get_secret(mock_client: mock.MagicMock) -> None:
     ]
 
 
-def test_get_secret_no_key_in_secret(mock_client: mock.MagicMock) -> None:
-    mock_client.get_secret.return_value.value = '{"value": "shhh! secret"}'
-    key_vault = KeyVault(client=mock_client)
+def test_get_secret_no_key_in_secret(mocked_client: mock.MagicMock) -> None:
+    mocked_client.get_secret.return_value.value = '{"value": "shhh! secret"}'
+    key_vault = KeyVault(client=mocked_client)
     with pytest.raises(KeyError):
         key_vault.get_secret("made-up-name", key="no-key-with-this-name")

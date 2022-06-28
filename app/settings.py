@@ -1,3 +1,5 @@
+import sys
+
 from os import getenv
 from typing import Any, Callable
 
@@ -13,8 +15,8 @@ def get_env(k: str, default: str = None, *, conv: Callable = str) -> Any:
     v = getenv(k, default)
     if v is not None:
         return conv(v)
-    else:
-        return None
+
+    return None
 
 
 def to_bool(v: str) -> bool:
@@ -22,11 +24,22 @@ def to_bool(v: str) -> bool:
 
     if value not in ["true", "false"]:
         raise ValueError("Invalid value for a boolean.")
-    else:
-        return value == "true"
+
+    return value == "true"
+
+
+def is_test(v: str) -> bool:
+    command = sys.argv[0]
+    args = sys.argv[1:] if len(sys.argv) > 1 else []
+
+    if "pytest" in command or any("test" in arg for arg in args):
+        return True
+
+    return to_bool(v)
 
 
 FLASK_ADMIN_SWATCH = get_env("EVENT_HORIZON_THEME", "simplex")
+TESTING = get_env("TESTING", "False", conv=is_test)
 
 KEY_VAULT_URI = get_env("KEY_VAULT_URI", "https://bink-uksouth-dev-com.vault.azure.net/")
 key_vault = KeyVault(KEY_VAULT_URI)
@@ -68,6 +81,7 @@ POLARIS_AUTH_TOKEN = get_env("POLARIS_AUTH_TOKEN") or key_vault.get_secret("bpl-
 VELA_HOST = getenv("VELA_HOST", "http://vela-api")
 VELA_BASE_URL = getenv("VELA_BASE_URL", f"{VELA_HOST}/retailers")
 VELA_AUTH_TOKEN = get_env("VELA_AUTH_TOKEN") or key_vault.get_secret("bpl-vela-api-auth-token")
+
 
 redis = Redis.from_url(
     REDIS_URL,

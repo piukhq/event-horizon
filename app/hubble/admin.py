@@ -1,7 +1,7 @@
 from app.admin.custom_filters import StringInList, StringNotInList
 from app.admin.custom_formatters import format_json_field
 from app.admin.model_views import BaseModelView
-from app.hubble.db.models import Activity
+from app.hubble.db import Activity
 
 
 class ActivityAdmin(BaseModelView):
