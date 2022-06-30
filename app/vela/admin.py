@@ -77,7 +77,7 @@ class CampaignAdmin(CanDeleteModelView):
                     # Change success message depending on action chose for ending campaign
                     flash("Selected campaign has been successfully deleted.")
                 else:
-                    self._flash_error_response(resp.json())
+                    flash("Could not complete this action. Please try again", category="error")
 
             except Exception as ex:
                 msg = "Error: no response received."
