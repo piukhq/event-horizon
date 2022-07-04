@@ -332,6 +332,7 @@ class EmailTemplateKeyAdmin(BaseModelView):
 
 class AccountHolderTransactionHistoryAdmin(BaseModelView):
     can_create = False
+    can_edit = False
     column_searchable_list = (
         "accountholder.id",
         "accountholder.email",
