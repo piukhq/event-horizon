@@ -4,8 +4,6 @@ from unittest import mock
 import pytest
 import wtforms
 
-from sqlalchemy.orm.exc import NoResultFound
-
 from app.vela.validators import (
     ACCUMULATOR,
     STAMPS,
@@ -232,25 +230,30 @@ def test_validate_reward_rule_deletion_active_campaign(mock_campaign: mock.Magic
         validate_reward_rule_deletion(1)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
-def test_validate_reward_rule_change_non_active_campaign(mock_campaign: mock.MagicMock) -> None:
-    mock_campaign.return_value = mock.MagicMock(status="DRAFT", earnrule_collection=[], rewardrule_collection=[1])
+def test_validate_reward_rule_change_non_active_campaign() -> None:
+    mock_campaign = mock.MagicMock(status="DRAFT", earnrule_collection=[], rewardrule_collection=[1])
 
-    validate_reward_rule_change(1)
+    validate_reward_rule_change(campaign=mock_campaign, is_created=False)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
-def test_validate_reward_rule_change_active_campaign(mock_campaign: mock.MagicMock) -> None:
-    mock_campaign.return_value = mock.MagicMock(status="ACTIVE", earnrule_collection=[], rewardrule_collection=[1])
+def test_validate_reward_rule_change_active_campaign() -> None:
+    mock_campaign = mock.MagicMock(status="ACTIVE", earnrule_collection=[], rewardrule_collection=[1])
 
     with pytest.raises(wtforms.ValidationError):
-        validate_reward_rule_change(1)
+        validate_reward_rule_change(campaign=mock_campaign, is_created=False)
 
 
-# pylint: disable=unused-argument
-@mock.patch("app.vela.validators._get_campaign_by_id", side_effect=NoResultFound())
-def test_validate_reward_rule_change_no_campaign(mock_campaign: mock.MagicMock) -> None:
-    validate_reward_rule_change(1)
+def test_validate_reward_rule_change_created_campaign_has_no_rewardrules() -> None:
+    mock_campaign = mock.MagicMock(status="ACTIVE", earnrule_collection=[], rewardrule_collection=[])
+
+    validate_reward_rule_change(campaign=mock_campaign, is_created=True)
+
+
+def test_validate_reward_rule_change_created_campaign_has_rewardrules() -> None:
+    mock_campaign = mock.MagicMock(status="ACTIVE", earnrule_collection=[], rewardrule_collection=[1])
+
+    with pytest.raises(wtforms.ValidationError):
+        validate_reward_rule_change(campaign=mock_campaign, is_created=True)
 
 
 def test_validate_reward_rule_allocation_window_ok(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
