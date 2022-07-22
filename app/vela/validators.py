@@ -4,7 +4,6 @@ import wtforms
 
 from sqlalchemy import func
 from sqlalchemy.future import select
-from sqlalchemy.orm.exc import NoResultFound
 
 from app.vela.db import Campaign, EarnRule, db_session
 
@@ -110,11 +109,9 @@ def validate_reward_rule_deletion(campaign_id: int) -> None:
         raise wtforms.ValidationError("Can not delete the reward rule of an active campaign.")
 
 
-def validate_reward_rule_change(campaign_id: int) -> None:
-    try:
-        campaign = _get_campaign_by_id(campaign_id)
-    except NoResultFound:
-        return
-    else:
-        if campaign.status == "ACTIVE":
-            raise wtforms.ValidationError("Can not edit the reward rule of an active campaign.")
+def validate_reward_rule_change(campaign: Campaign, is_created: bool) -> None:
+    if campaign.rewardrule_collection and is_created:
+        raise wtforms.ValidationError("There is already a reward rule in place for this campaign.")
+
+    if campaign.status == "ACTIVE" and not is_created:
+        raise wtforms.ValidationError("Can not edit the reward rule of an active campaign.")

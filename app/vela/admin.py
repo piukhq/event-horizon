@@ -324,7 +324,7 @@ class RewardRuleAdmin(CanDeleteModelView):
         return super().on_model_delete(model)
 
     def on_model_change(self, form: wtforms.Form, model: "RewardRule", is_created: bool) -> None:
-        validate_reward_rule_change(model.campaign_id)
+        validate_reward_rule_change(model.campaign, is_created)
         return super().on_model_change(form, model, is_created)
 
 
