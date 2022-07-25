@@ -13,6 +13,7 @@ from app.admin import event_horizon_admin
 from app.carina.db import db_session as carina_db_session
 from app.carina.db.models import Base as CarinaModelBase
 from app.carina.db.session import engine as carina_engine
+from app.hubble.db import db_session as hubble_db_session
 from app.hubble.db.models import Base as HubbleModelBase
 from app.hubble.db.session import engine as hubble_engine
 from app.polaris.db import db_session as polaris_db_session
@@ -94,5 +95,6 @@ def create_app(config_name: str = "app.settings") -> Flask:
         carina_db_session.remove()
         polaris_db_session.remove()
         vela_db_session.remove()
+        hubble_db_session.remove()
 
     return app
