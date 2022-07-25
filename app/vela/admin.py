@@ -28,6 +28,7 @@ from app.vela.validators import (
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
     validate_earn_rule_max_amount,
+    validate_increment_multiplier,
     validate_reward_rule_allocation_window,
     validate_reward_rule_change,
     validate_reward_rule_deletion,
@@ -264,7 +265,7 @@ class EarnRuleAdmin(CanDeleteModelView):
                 'multiplied by 100, e.g. for £10.50, please enter "1050".'
             ),
         },
-        "increment_multiplier": {"validators": [wtforms.validators.NumberRange(min=0)]},
+        "increment_multiplier": {"validators": [validate_increment_multiplier, wtforms.validators.NumberRange(min=0)]},
         "max_amount": {
             "validators": [validate_earn_rule_max_amount, wtforms.validators.NumberRange(min=0)],
             "description": ("Can only be set if the campaign's loyalty type is ACCUMULATOR"),
