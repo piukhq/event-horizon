@@ -110,7 +110,7 @@ def validate_reward_rule_deletion(campaign_id: int) -> None:
 
 
 def validate_reward_rule_change(campaign: Campaign, is_created: bool) -> None:
-    if campaign.rewardrule_collection and is_created:
+    if len(campaign.rewardrule_collection) > 1 and is_created:
         raise wtforms.ValidationError("There is already a reward rule in place for this campaign.")
 
     if campaign.status == "ACTIVE" and not is_created:

@@ -244,13 +244,13 @@ def test_validate_reward_rule_change_active_campaign() -> None:
 
 
 def test_validate_reward_rule_change_created_campaign_has_no_rewardrules() -> None:
-    mock_campaign = mock.MagicMock(status="ACTIVE", earnrule_collection=[], rewardrule_collection=[])
+    mock_campaign = mock.MagicMock(status="ACTIVE", earnrule_collection=[], rewardrule_collection=[1])
 
     validate_reward_rule_change(campaign=mock_campaign, is_created=True)
 
 
 def test_validate_reward_rule_change_created_campaign_has_rewardrules() -> None:
-    mock_campaign = mock.MagicMock(status="ACTIVE", earnrule_collection=[], rewardrule_collection=[1])
+    mock_campaign = mock.MagicMock(status="ACTIVE", earnrule_collection=[], rewardrule_collection=[1, 2])
 
     with pytest.raises(wtforms.ValidationError):
         validate_reward_rule_change(campaign=mock_campaign, is_created=True)
