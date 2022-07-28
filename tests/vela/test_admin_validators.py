@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from unittest import mock
 
 import pytest
@@ -13,6 +14,7 @@ from app.vela.validators import (
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
+    validate_increment_multiplier,
     validate_reward_rule_allocation_window,
     validate_reward_rule_change,
     validate_reward_rule_deletion,
@@ -31,6 +33,57 @@ def test_validate_earn_rule_increment__accumulator__inc_has_val(
         ex_info.value.args[0]
         == "The campaign requires that this field is not populated due to campaign.loyalty_type setting"
     )
+
+
+def test_validate_increment_multiplier__stamp__inc_has_decimal(
+    mock_form: mock.MagicMock, mock_field: mock.MagicMock
+) -> None:
+    mock_form.campaign = mock.Mock(data=mock.Mock(loyalty_type=STAMPS))
+    mock_field.data = Decimal("1.25")
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_increment_multiplier(mock_form, mock_field)
+    assert ex_info.value.args[0] == "All stamp campaigns must have an integer for this field."
+
+
+def test_validate_increment_multiplier__stamp__inc_has_float(
+    mock_form: mock.MagicMock, mock_field: mock.MagicMock
+) -> None:
+    """
+    It's possible "numeric" types can be floats if using the asdecimal=False flag.
+    This test is to cover the unlikely case that we alter the increment_multiplier numeric
+    model field to asdecimal=False.
+    """
+    mock_form.campaign = mock.Mock(data=mock.Mock(loyalty_type=STAMPS))
+    mock_field.data = 1.25
+
+    with pytest.raises(wtforms.ValidationError) as ex_info:
+        validate_increment_multiplier(mock_form, mock_field)
+    assert ex_info.value.args[0] == "All stamp campaigns must have an integer for this field."
+
+
+def test_validate_increment_multiplier__stamp__inc_has_no_decimal(
+    mock_form: mock.MagicMock, mock_field: mock.MagicMock
+) -> None:
+    mock_form.campaign = mock.Mock(data=mock.Mock(loyalty_type=STAMPS))
+    mock_field.data = Decimal("1")
+
+    try:
+        validate_increment_multiplier(mock_form, mock_field)
+    except Exception:
+        pytest.fail()
+
+
+def test_validate_increment_multiplier__accumulator__inc_has_decimal(
+    mock_form: mock.MagicMock, mock_field: mock.MagicMock
+) -> None:
+    mock_form.campaign = mock.Mock(data=mock.Mock(loyalty_type=ACCUMULATOR))
+    mock_field.data = Decimal("1.25")
+
+    try:
+        validate_increment_multiplier(mock_form, mock_field)
+    except Exception:
+        pytest.fail()
 
 
 def test_validate_earn_rule_increment__accumulator__inc_has_blank_val(

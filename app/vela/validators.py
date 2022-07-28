@@ -67,6 +67,11 @@ def validate_campaign_status_change(form: wtforms.Form, field: wtforms.Field) ->
         raise wtforms.ValidationError("To activate a campaign one reward rule and at least one earn rule are required.")
 
 
+def validate_increment_multiplier(form: wtforms.Form, field: wtforms.Field) -> None:
+    if form.campaign.data.loyalty_type == STAMPS and not str(field.data).isnumeric():
+        raise wtforms.ValidationError("All stamp campaigns must have an integer for this field.")
+
+
 def validate_campaign_start_date_change(
     old_start_date: datetime | None, new_start_date: datetime | None, status: str
 ) -> None:
