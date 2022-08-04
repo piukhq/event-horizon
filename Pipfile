@@ -25,6 +25,7 @@ gunicorn = "*"
 redis = "*"
 rq = "*"
 retry-tasks-lib = {version=">=1.14.2", index="pypi-cloud"}
+flask-wtf = "*"
 
 [dev-packages]
 mypy = "*"
@@ -41,6 +42,7 @@ httpretty = "*"
 pytest-mock = "*"
 pylint = "*"
 pylint-pytest = "*"
+ipython = "*"
 
 [requires]
 python_version = "3.10"

@@ -6,6 +6,7 @@ import sentry_sdk
 
 from authlib.integrations.flask_client import OAuth
 from flask import Blueprint, Flask, Response
+from flask_wtf.csrf import CSRFProtect
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
@@ -83,6 +84,7 @@ def create_app(config_name: str = "app.settings") -> Flask:
 
     event_horizon_admin.init_app(app)
     oauth.init_app(app)
+    CSRFProtect(app)
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(healthz_bp)
