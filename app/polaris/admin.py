@@ -189,9 +189,6 @@ class RetailerConfigAdmin(BaseModelView):
         "profile_config",
         "marketing_preference_config",
         "loyalty_name",
-        "email_header_image",
-        "welcome_email_from",
-        "welcome_email_subject",
     )
     column_details_list = ("created_at", "updated_at") + form_create_rules
     form_excluded_columns = ("account_holder_collection",)
@@ -205,9 +202,6 @@ class RetailerConfigAdmin(BaseModelView):
         "profile_config",
         "marketing_preference_config",
         "loyalty_name",
-        "email_header_image",
-        "welcome_email_from",
-        "welcome_email_subject",
     )
 
     profile_config_placeholder = """
