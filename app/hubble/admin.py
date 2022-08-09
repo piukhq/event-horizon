@@ -8,6 +8,33 @@ class ActivityAdmin(BaseModelView):
     can_create = False
     can_edit = False
     can_delete = False
+    column_list = (
+        "type",
+        "summary",
+        "user_id",
+        "retailer",
+        "reasons",
+        "activity_identifier",
+        "associated_value",
+        "datetime",
+        "underlying_datetime",
+        "campaigns",
+        "created_at",
+    )
+    column_details_list = (
+        "type",
+        "summary",
+        "user_id",
+        "retailer",
+        "reasons",
+        "activity_identifier",
+        "associated_value",
+        "datetime",
+        "underlying_datetime",
+        "campaigns",
+        "data",
+        "created_at",
+    )
     column_searchable_list = ("user_id",)
     column_filters = (
         "underlying_datetime",
