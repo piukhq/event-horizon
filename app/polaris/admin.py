@@ -181,6 +181,7 @@ class AccountHolderPendingRewardAdmin(BaseModelView):
 class RetailerConfigAdmin(BaseModelView):
     column_filters = ("created_at",)
     column_searchable_list = ("id", "slug", "name")
+    column_labels = {"profile_config": "Enrolment Config"}
     column_exclude_list = ("profile_config", "marketing_preference_config")
     form_create_rules = (
         "name",
