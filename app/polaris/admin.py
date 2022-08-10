@@ -225,7 +225,7 @@ marketing_pref:
 
     form_args = {
         "profile_config": {
-            "label": "Profile Field Configuration",
+            "label": "Enrolment Field Configuration",
             "validators": [
                 DataRequired(message="Configuration is required"),
                 validate_retailer_config,
