@@ -29,10 +29,13 @@ def validate_campaign_loyalty_type(form: wtforms.Form, field: wtforms.Field) -> 
 
 
 def validate_earn_rule_increment(form: wtforms.Form, field: wtforms.Field) -> None:
-    if form.campaign.data.loyalty_type == STAMPS and field.data is None:
-        raise wtforms.validators.StopValidation(
-            "The campaign requires that this field is populated due to campaign.loyalty_type setting"
-        )
+    if form.campaign.data.loyalty_type == STAMPS:
+        if field.data is None:
+            raise wtforms.validators.StopValidation(
+                "The campaign requires that this field is populated due to campaign.loyalty_type setting"
+            )
+        if field.data % 100:
+            raise wtforms.validators.StopValidation("This field must be a multiple of 100")
 
     if form.campaign.data.loyalty_type == ACCUMULATOR and field.data is not None:
         raise wtforms.ValidationError(
