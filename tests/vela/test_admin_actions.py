@@ -37,7 +37,7 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
             all=lambda: [(campaign_slug_1, retailer_slug), (campaign_slug_2, "OTHER RETAILER")]
         )
     )
-    CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
+    CampaignAdmin(session)._campaigns_status_change([1, 2], status)
 
     assert not httpretty.latest_requests()
     mock_flash.assert_called_once_with("All the selected campaigns must belong to the same retailer.", category="error")
@@ -48,7 +48,7 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
         )
     )
 
-    CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
+    CampaignAdmin(session)._campaigns_status_change([1, 2], status)
 
     last_request = httpretty.last_request().parsed_body
 
@@ -59,7 +59,7 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
     unexpected_error = {"what": "noooo"}
     httpretty.reset()
     httpretty.register_uri("POST", url, json.dumps(unexpected_error), status=500)
-    CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
+    CampaignAdmin(session)._campaigns_status_change([1, 2], status)
 
     mock_model_views_flash.assert_called_with(f"Unexpected response received: {unexpected_error}", category="error")
 
@@ -73,7 +73,7 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
     httpretty.reset()
     httpretty.register_uri("POST", url, json.dumps(list_error), status=404)
 
-    CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
+    CampaignAdmin(session)._campaigns_status_change([1, 2], status)
 
     mock_model_views_flash.assert_called_with(
         f"{list_error[0]['display_message']} ::: {', '.join(list_error[0]['campaigns'])}",
@@ -87,7 +87,7 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
     httpretty.reset()
     httpretty.register_uri("POST", url, json.dumps(dict_error), status=403)
 
-    CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
+    CampaignAdmin(session)._campaigns_status_change([1, 2], status)
 
     mock_model_views_flash.assert_called_with(dict_error["display_message"], category="error")
 
@@ -118,7 +118,7 @@ def test__campaigns_ended_delete_pending_rewards(mocker: MockerFixture) -> None:
         )
     )
 
-    CampaignAdmin(session)._campaigns_status_change(["1", "2"], status)
+    CampaignAdmin(session)._campaigns_status_change([1, 2], status)
 
     last_request = httpretty.last_request().parsed_body
 
@@ -156,7 +156,7 @@ def test__campaigns_ended_convert_pending_rewards(mocker: MockerFixture) -> None
         )
     )
 
-    CampaignAdmin(session)._campaigns_status_change(["1", "2"], status, issue_pending_rewards=True)
+    CampaignAdmin(session)._campaigns_status_change([1, 2], status, issue_pending_rewards=True)
 
     last_request = httpretty.last_request().parsed_body
 

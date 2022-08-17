@@ -1,11 +1,14 @@
 import logging
 
+from dataclasses import dataclass
+from random import getrandbits
 from typing import TYPE_CHECKING, Any
 
 import requests
 import wtforms
 
-from flask import flash
+from flask import flash, redirect, request, session, url_for
+from flask_admin import expose
 from flask_admin.actions import action
 from flask_admin.model import typefmt
 from retry_tasks_lib.admin.views import (
@@ -19,6 +22,7 @@ from wtforms.validators import DataRequired
 
 from app import settings
 from app.admin.model_views import BaseModelView, CanDeleteModelView
+from app.vela.custom_actions import CampaignEndAction
 from app.vela.db import Campaign, RetailerRewards, RewardRule
 from app.vela.validators import (
     validate_campaign_end_date_change,
@@ -35,7 +39,16 @@ from app.vela.validators import (
 )
 
 if TYPE_CHECKING:
+    from sqlalchemy.engine import Row
+    from werkzeug import Response
+
     from app.vela.db.models import EarnRule
+
+
+@dataclass
+class EasterEgg:
+    greet: str
+    content: str
 
 
 class CampaignAdmin(CanDeleteModelView):
@@ -57,13 +70,86 @@ class CampaignAdmin(CanDeleteModelView):
         "end_date",
     )
 
+    # Be careful adding "inline_models = (EarnRule,)" here - the validate_earn_rule_increment
+    # validator seemed to be bypassed in that view
+
     def is_action_allowed(self, name: str) -> bool:
         if name == "delete":
             return False
         return super().is_action_allowed(name)
 
-    # Be careful adding "inline_models = (EarnRule,)" here - the validate_earn_rule_increment
-    # validator seemed to be bypassed in that view
+    def get_easter_egg(self) -> EasterEgg | None:
+        try:
+            user_name, *_ = self.user_info["name"].split(" ")
+        except Exception:
+            return None
+
+        greet_msg = f"Hello there {user_name}"
+        kitten_msg = "<img src='http://placekitten.com/200/300' alt='🐈 🐈‍⬛'>"
+        profanities_msg = (
+            "here's a list of profanities: "
+            "<a href='https://en.wikipedia.org/wiki/Category:English_profanity'>profanities</a>"
+        )
+
+        match user_name.lower():
+            case "francesco" | "susanne":
+                return EasterEgg(greet_msg, kitten_msg)
+            case "jess":
+                return EasterEgg(greet_msg, profanities_msg)
+            case "alyson":
+                return EasterEgg(greet_msg, kitten_msg if getrandbits(1) else profanities_msg)
+            case _:
+                return EasterEgg(
+                    greet_msg,
+                    "<p>This is an internal tool with very little input validation.</p>"
+                    "<p>¯\\_(ツ)_/¯</p>"
+                    "<p>Please do try not to destroy everything.</p>",
+                )
+
+    @expose("/custom-actions/end-campaigns", methods=["GET", "POST"])
+    def end_campaigns(self) -> "Response":
+
+        if not self.user_info or self.user_session_expired:
+            return redirect(url_for("auth_views.login"))
+
+        campaigns_index_uri = url_for("vela/campaigns.index_view")
+        if not self.can_edit:
+            return redirect(campaigns_index_uri)
+
+        cmp_end_action = CampaignEndAction(self.session)
+
+        if "form_dynamic_val" in session and request.method == "POST":
+            form_dynamic_val = session["form_dynamic_val"]
+
+        else:
+            selected_campaigns_ids: list[str] = request.args.to_dict(flat=False).get("ids", [])
+            if not selected_campaigns_ids:
+                flash("no campaign selected.", category="error")
+                redirect(campaigns_index_uri)
+
+            try:
+                cmp_end_action.validate_selected_campaigns(selected_campaigns_ids)
+            except ValueError:
+                return redirect(campaigns_index_uri)
+
+            form_dynamic_val = cmp_end_action.session_form_data.to_base64_str()
+            session["form_dynamic_val"] = form_dynamic_val
+
+        cmp_end_action.update_form(form_dynamic_val)
+
+        if cmp_end_action.form.validate_on_submit():
+            del session["form_dynamic_val"]
+            cmp_end_action.end_campaigns(self._campaigns_status_change)
+            return redirect(campaigns_index_uri)
+
+        return self.render(
+            "eh_end_campaign_action.html",
+            active_campaigns=cmp_end_action.session_form_data.active_campaigns,
+            draft_campaign=cmp_end_action.session_form_data.draft_campaign,
+            same_type_active_campaigns=cmp_end_action.session_form_data.transfer_balance_from_choices,
+            form=cmp_end_action.form,
+            easter_egg=self.get_easter_egg(),
+        )
 
     def delete_model(self, model: Campaign) -> None:
         if self.can_delete:
@@ -117,7 +203,7 @@ class CampaignAdmin(CanDeleteModelView):
 
     def _send_campaign_status_change_request(
         self, retailer_slug: str, campaign_slugs: list[str], status: str, issue_pending_rewards: bool | None = False
-    ) -> None:
+    ) -> bool:
         request_body: dict[str, Any] = {"requested_status": status, "campaign_slugs": campaign_slugs}
 
         # Change request body depending on action chosen
@@ -136,24 +222,28 @@ class CampaignAdmin(CanDeleteModelView):
                         flash(self._get_flash_message(status, campaign_slug, issue_pending_rewards))
                 else:
                     flash(f"Selected campaigns' status has been successfully changed to {status}")
-            else:
-                self._flash_error_response(resp.json())
+
+                return True
+
+            self._flash_error_response(resp.json())
 
         except Exception as ex:
             msg = "Error: no response received."
             flash(msg, category="error")
             logging.exception(msg, exc_info=ex)
 
+        return False
+
     def _campaigns_status_change(
-        self, campaigns_ids: list[str], status: str, issue_pending_rewards: bool | None = False
-    ) -> None:
+        self, campaigns_ids: list[int], status: str, issue_pending_rewards: bool | None = False
+    ) -> bool:
         campaign_slugs: list[str] = []
         retailer_slug: str | None = None
         different_retailers = False
 
         for campaign_slug, campaign_retailer_slug in self.session.execute(
             select(Campaign.slug, RetailerRewards.slug).where(
-                Campaign.id.in_([int(campaigns_id) for campaigns_id in campaigns_ids]),
+                Campaign.id.in_(campaigns_ids),
                 Campaign.retailer_id == RetailerRewards.id,
             )
         ).all():
@@ -170,10 +260,9 @@ class CampaignAdmin(CanDeleteModelView):
 
         if different_retailers is True:
             flash("All the selected campaigns must belong to the same retailer.", category="error")
-        elif issue_pending_rewards:
-            self._send_campaign_status_change_request(retailer_slug, campaign_slugs, status, issue_pending_rewards)
-        else:
-            self._send_campaign_status_change_request(retailer_slug, campaign_slugs, status)
+            return False
+
+        return self._send_campaign_status_change_request(retailer_slug, campaign_slugs, status, issue_pending_rewards)
 
     @action(
         "activate-campaigns",
@@ -183,7 +272,7 @@ class CampaignAdmin(CanDeleteModelView):
         "Are you sure you want to proceed?",
     )
     def action_activate_campaigns(self, ids: list[str]) -> None:
-        self._campaigns_status_change(ids, "active")
+        self._campaigns_status_change([int(v) for v in ids], "active")
 
     @action(
         "cancel-campaigns",
@@ -192,27 +281,7 @@ class CampaignAdmin(CanDeleteModelView):
         "Are you sure you want to proceed?",
     )
     def action_cancel_campaigns(self, ids: list[str]) -> None:
-        self._campaigns_status_change(ids, "cancelled")
-
-    @action(
-        "end-campaigns-convert-pending-rewards",
-        "End (and Convert pending rewards)",
-        "Selected campaigns must belong to the same Retailer and be in a ACTIVE status.\n"
-        "If the campaign has a refund window and pending rewards, they will be CONVERTED.\n"
-        "Are you sure you want to proceed?",
-    )
-    def action_end_campaigns_and_convert_pending_rewards(self, ids: list[str]) -> None:
-        self._campaigns_status_change(ids, "ended", issue_pending_rewards=True)
-
-    @action(
-        "end-campaigns-delete-pending-rewards",
-        "End (and Delete pending rewards)",
-        "Selected campaigns must belong to the same Retailer and be in a ACTIVE status.\n"
-        "If the campaign has a refund window and pending rewards, they will be DELETED.\n"
-        "Are you sure you want to proceed?",
-    )
-    def action_end_campaigns_and_delete_pending_rewards(self, ids: list[str]) -> None:
-        self._campaigns_status_change(ids, "ended")
+        self._campaigns_status_change([int(v) for v in ids], "cancelled")
 
     def on_model_change(self, form: wtforms.Form, model: "Campaign", is_created: bool) -> None:
         if not is_created:
@@ -226,6 +295,18 @@ class CampaignAdmin(CanDeleteModelView):
                 old_start_date=form.start_date.object_data, new_start_date=model.start_date, status=model.status
             )
         return super().on_model_change(form, model, is_created)
+
+    @action(
+        "end-campaigns",
+        "End",
+        "Selected campaigns must belong to the same Retailer and be in a ACTIVE status.\n"
+        "An optional DRAFT campaign from the same retailer can be also selected, "
+        "this will automatically activate it and enable the balance transfer configuration.\n"
+        "You will be redirected to an action configuration page.\n"
+        "Are you sure you want to proceed?",
+    )
+    def end_campaigns_action(self, ids: list[str]) -> "Response":
+        return redirect(url_for("vela/campaigns.end_campaigns", ids=ids))
 
 
 class EarnRuleAdmin(CanDeleteModelView):
