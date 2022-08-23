@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
+from random import randint
 from unittest import mock
 
 import pytest
@@ -15,6 +16,7 @@ from app.vela.validators import (
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
     validate_increment_multiplier,
+    validate_reward_cap_for_loyalty_type,
     validate_reward_rule_allocation_window,
     validate_reward_rule_change,
     validate_reward_rule_deletion,
@@ -476,3 +478,19 @@ def test_validate_draft_campaign_earlier_end_date() -> None:
         start_date=fake_now,
         status="DRAFT",
     )
+
+
+def test_validate_reward_cap_for_loyalty_type_stamps(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:
+    mock_form.campaign = mock.Mock(data=mock.Mock(loyalty_type=STAMPS))
+    mock_field.data = randint(1, 10)
+    with pytest.raises(wtforms.ValidationError):
+        validate_reward_cap_for_loyalty_type(mock_form, mock_field)
+
+
+def test_validate_reward_cap_for_loyalty_type_accumulator(
+    mock_form: mock.MagicMock, mock_field: mock.MagicMock
+) -> None:
+    mock_form.campaign = mock.Mock(data=mock.Mock(loyalty_type=ACCUMULATOR))
+    mock_field.data = randint(1, 10)
+
+    validate_reward_cap_for_loyalty_type(mock_form, mock_field)

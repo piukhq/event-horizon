@@ -120,3 +120,8 @@ def validate_reward_rule_change(campaign: Campaign, is_created: bool) -> None:
 
     if campaign.status == "ACTIVE" and not is_created:
         raise wtforms.ValidationError("Can not edit the reward rule of an active campaign.")
+
+
+def validate_reward_cap_for_loyalty_type(form: wtforms.Form, field: wtforms.Field) -> None:
+    if form.campaign.data.loyalty_type != ACCUMULATOR and field.data is not None:
+        raise wtforms.ValidationError("Reward cap can only be set for accumulator campaigns")
