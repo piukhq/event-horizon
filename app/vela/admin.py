@@ -33,6 +33,7 @@ from app.vela.validators import (
     validate_earn_rule_increment,
     validate_earn_rule_max_amount,
     validate_increment_multiplier,
+    validate_reward_cap_for_loyalty_type,
     validate_reward_rule_allocation_window,
     validate_reward_rule_change,
     validate_reward_rule_deletion,
@@ -369,6 +370,7 @@ class RewardRuleAdmin(CanDeleteModelView):
         "reward_goal",
         "reward_slug",
         "allocation_window",
+        "reward_cap",
         "created_at",
         "updated_at",
     )
@@ -397,6 +399,12 @@ class RewardRuleAdmin(CanDeleteModelView):
                 "Period of time before a reward is allocated to an AccountHolder in days."
                 " Accumulator campaigns only."
             ),
+        },
+        "reward_cap": {
+            "default": None,
+            "validators": [validate_reward_cap_for_loyalty_type],
+            "blank_text": "None",
+            "description": ("Transaction reward cap. Accumulator campaigns only."),
         },
     }
     column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}
