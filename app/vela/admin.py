@@ -160,6 +160,7 @@ class CampaignAdmin(CanDeleteModelView):
                 resp = requests.delete(
                     f"{settings.VELA_BASE_URL}/{retailer_slug}/campaigns/{campaign_slug}",
                     headers={"Authorization": f"token {settings.VELA_AUTH_TOKEN}"},
+                    timeout=settings.REQUEST_TIMEOUT,
                 )
                 if 200 <= resp.status_code <= 204:
                     # Change success message depending on action chose for ending campaign
@@ -215,6 +216,7 @@ class CampaignAdmin(CanDeleteModelView):
                 f"{settings.VELA_BASE_URL}/{retailer_slug}/campaigns/status_change",
                 headers={"Authorization": f"token {settings.VELA_AUTH_TOKEN}"},
                 json=request_body,
+                timeout=settings.REQUEST_TIMEOUT,
             )
             if 200 <= resp.status_code <= 204:
                 # Change success message depending on action chose for ending campaign
