@@ -81,6 +81,7 @@ POLARIS_AUTH_TOKEN = get_env("POLARIS_AUTH_TOKEN") or key_vault.get_secret("bpl-
 VELA_HOST = getenv("VELA_HOST", "http://vela-api")
 VELA_BASE_URL = getenv("VELA_BASE_URL", f"{VELA_HOST}/retailers")
 VELA_AUTH_TOKEN = get_env("VELA_AUTH_TOKEN") or key_vault.get_secret("bpl-vela-api-auth-token")
+REQUEST_TIMEOUT = 2
 
 
 redis = Redis.from_url(

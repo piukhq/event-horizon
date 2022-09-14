@@ -110,6 +110,7 @@ class AccountHolderAdmin(BaseModelView):
                     f"{settings.POLARIS_BASE_URL}/{retailer_slug}/accounts/{account_holder.account_holder_uuid}/status",
                     headers={"Authorization": f"token {settings.POLARIS_AUTH_TOKEN}"},
                     json={"status": "inactive"},
+                    timeout=settings.REQUEST_TIMEOUT,
                 )
                 if 200 <= resp.status_code <= 204:
                     flash("Account Holder successfully changed to INACTIVE")

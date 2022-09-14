@@ -30,7 +30,7 @@ class AccountHolderProfile(Base):
         return f"{self.first_name} {self.last_name}"
 
 
-class AccountHolderReward(Base):
+class AccountHolderReward(Base, UpdatedAtMixin):
     __tablename__ = "account_holder_reward"
 
     def __str__(self) -> str:
@@ -60,7 +60,7 @@ class AccountHolderMarketingPreference(Base, UpdatedAtMixin):
         return f"{self.key_name}: {self.value}"
 
 
-class AccountHolderPendingReward(Base):
+class AccountHolderPendingReward(Base, UpdatedAtMixin):
     __tablename__ = "account_holder_pending_reward"
 
     def __str__(self) -> str:
