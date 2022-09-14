@@ -18,6 +18,7 @@ from wtforms.validators import DataRequired
 from app import settings
 from app.admin.custom_formatters import format_json_field
 from app.admin.model_views import BaseModelView, CanDeleteModelView
+from app.hubble.account_activity_rtbf import anonymise_account_activities
 from app.polaris.db import AccountHolder, RetailerConfig
 
 from .db import AccountHolderCampaignBalance, AccountHolderPendingReward, AccountHolderProfile, AccountHolderReward
@@ -114,6 +115,11 @@ class AccountHolderAdmin(BaseModelView):
                 )
                 if 200 <= resp.status_code <= 204:
                     flash("Account Holder successfully changed to INACTIVE")
+                    anonymise_account_activities(
+                        retailer_slug=retailer_slug,
+                        account_holder_uuid=account_holder.account_holder_uuid,
+                        account_holder_email=account_holder.email,
+                    )
                 else:
                     self._flash_error_response(resp.json())
 
