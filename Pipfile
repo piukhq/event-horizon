@@ -26,6 +26,7 @@ redis = "*"
 rq = "*"
 retry-tasks-lib = {version=">=1.14.2", index="pypi-cloud"}
 flask-wtf = "*"
+cosmos-message-lib = {version=">=1.2.0", index="pypi-cloud"}
 
 [dev-packages]
 mypy = "*"

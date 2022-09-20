@@ -10,7 +10,10 @@ class KeyVault:
     def __init__(self, vault_url: str | None = None, /, *, client: SecretClient | None = None) -> None:
         if not (client or vault_url):
             raise ValueError("must provide either vault_url or client")
-        self.client = client or SecretClient(vault_url=cast(str, vault_url), credential=DefaultAzureCredential())
+        self.client = client or SecretClient(
+            vault_url=cast(str, vault_url),
+            credential=DefaultAzureCredential(additionally_allowed_tenants=["a6e2367a-92ea-4e5a-b565-723830bcc095"]),
+        )
 
     def get_secret(self, name: str, /, *, key: str | None = "value") -> Any:
         """Return the content of a secret in the vault.
