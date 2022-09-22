@@ -14,11 +14,12 @@ from app.polaris.admin import AccountHolderAdmin
 from app.settings import POLARIS_BASE_URL
 
 
+@mock.patch("app.polaris.admin.anonymise_account_activities")
 @httpretty.activate
-def test_anonymise_user(mocker: MockerFixture) -> None:
+def test_anonymise_user(mock_activity_call: mock.MagicMock, mocker: MockerFixture) -> None:
     retailer_slug = "retailer_1"
     account_holder_uuid = str(uuid.uuid4())
-    account_holder = mock.MagicMock(account_holder_uuid=account_holder_uuid)
+    account_holder = mock.MagicMock(account_holder_uuid=account_holder_uuid, email="test@email.com")
     url = f"{POLARIS_BASE_URL}/{retailer_slug}/accounts/{account_holder_uuid}/status"
 
     def mock_init(self: Any, session: mock.MagicMock) -> None:
@@ -50,6 +51,13 @@ def test_anonymise_user(mocker: MockerFixture) -> None:
     last_request = httpretty.last_request().parsed_body
     assert last_request == {"status": "inactive"}
     mock_flash.assert_called_with("Account Holder successfully changed to INACTIVE")
+
+    # Annonymise account activity
+    mock_activity_call.assert_called_once_with(
+        retailer_slug=retailer_slug,
+        account_holder_uuid=account_holder.account_holder_uuid,
+        account_holder_email=account_holder.email,
+    )
 
     unexpected_error = {"what": "noooo"}
     httpretty.reset()
