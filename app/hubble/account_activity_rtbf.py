@@ -107,8 +107,7 @@ def _get_all_account_activities(
                 select(Activity)
                 .where(Activity.retailer == retailer_slug, Activity.type == activity_type.value)
                 .filter(
-                    (Activity.associated_value == account_holder_email.capitalize())
-                    | (Activity.user_id == account_holder_uuid)
+                    (Activity.associated_value.ilike(account_holder_email)) | (Activity.user_id == account_holder_uuid)
                 )
             )
             .scalars()
