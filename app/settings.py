@@ -41,8 +41,10 @@ def is_test(v: str) -> bool:
 FLASK_ADMIN_SWATCH = get_env("EVENT_HORIZON_THEME", "simplex")
 TESTING = get_env("TESTING", "False", conv=is_test)
 
+IGNORE_AZURE_CREDS_CACHE = get_env("IGNORE_AZURE_CREDS_CACHE")
+AZURE_TENANT_ID = get_env("AZURE_TENANT_ID", "a6e2367a-92ea-4e5a-b565-723830bcc095")
 KEY_VAULT_URI = get_env("KEY_VAULT_URI", "https://bink-uksouth-dev-com.vault.azure.net/")
-key_vault = KeyVault(KEY_VAULT_URI)
+key_vault = KeyVault(AZURE_TENANT_ID, KEY_VAULT_URI, ignore_cache=IGNORE_AZURE_CREDS_CACHE)
 
 SECRET_KEY = get_env("SECRET_KEY") or key_vault.get_secret("bpl-event-horizon-secret-key")
 
@@ -52,7 +54,6 @@ PROJECT_NAME = "event-horizon"
 
 # AAD SSO
 OAUTH_REDIRECT_URI = get_env("OAUTH_REDIRECT_URI")
-AZURE_TENANT_ID = get_env("AZURE_TENANT_ID", "a6e2367a-92ea-4e5a-b565-723830bcc095")
 OAUTH_SERVER_METADATA_URL = f"https://login.microsoftonline.com/{AZURE_TENANT_ID}/v2.0/.well-known/openid-configuration"
 EVENT_HORIZON_CLIENT_ID = get_env("EVENT_HORIZON_CLIENT_ID")
 EVENT_HORIZON_CLIENT_SECRET = get_env("EVENT_HORIZON_CLIENT_SECRET") or key_vault.get_secret(

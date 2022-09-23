@@ -7,6 +7,8 @@ from azure.keyvault.secrets import SecretClient
 
 from app.key_vault import KeyVault
 
+MOCK_TENANT_ID = "foo"
+
 
 @pytest.fixture(name="mocked_client")
 def mock_client() -> mock.MagicMock:
@@ -15,14 +17,14 @@ def mock_client() -> mock.MagicMock:
 
 def test_init_keyvault() -> None:
     try:
-        KeyVault("http://vault")
+        KeyVault(MOCK_TENANT_ID, "http://vault")
     except Exception:
         pytest.fail("Could not init KeyVault instance")
 
 
 def test_init_keyvault_no_args() -> None:
     with pytest.raises(ValueError):
-        KeyVault()
+        KeyVault(MOCK_TENANT_ID)
 
 
 def test_get_secret(mocked_client: mock.MagicMock) -> None:
@@ -42,7 +44,7 @@ def test_get_secret(mocked_client: mock.MagicMock) -> None:
 
     mocked_client.get_secret.side_effect = secret_factory()
 
-    key_vault = KeyVault(client=mocked_client)
+    key_vault = KeyVault(MOCK_TENANT_ID, client=mocked_client)
     results = []
     for _, key_to_retrieve in list(fake_secrets):
         results.append(key_vault.get_secret("made-up-name", key=key_to_retrieve))
@@ -58,6 +60,6 @@ def test_get_secret(mocked_client: mock.MagicMock) -> None:
 
 def test_get_secret_no_key_in_secret(mocked_client: mock.MagicMock) -> None:
     mocked_client.get_secret.return_value.value = '{"value": "shhh! secret"}'
-    key_vault = KeyVault(client=mocked_client)
+    key_vault = KeyVault(MOCK_TENANT_ID, client=mocked_client)
     with pytest.raises(KeyError):
         key_vault.get_secret("made-up-name", key="no-key-with-this-name")

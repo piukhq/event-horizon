@@ -7,12 +7,23 @@ from azure.keyvault.secrets import SecretClient
 
 
 class KeyVault:
-    def __init__(self, vault_url: str | None = None, /, *, client: SecretClient | None = None) -> None:
+    def __init__(
+        self,
+        azure_tenant_id: str,
+        vault_url: str | None = None,
+        /,
+        *,
+        client: SecretClient | None = None,
+        ignore_cache: bool | None = False,
+    ) -> None:
         if not (client or vault_url):
             raise ValueError("must provide either vault_url or client")
         self.client = client or SecretClient(
             vault_url=cast(str, vault_url),
-            credential=DefaultAzureCredential(additionally_allowed_tenants=["a6e2367a-92ea-4e5a-b565-723830bcc095"]),
+            credential=DefaultAzureCredential(
+                additionally_allowed_tenants=[azure_tenant_id],
+                exclude_shared_token_cache_credential=ignore_cache,
+            ),
         )
 
     def get_secret(self, name: str, /, *, key: str | None = "value") -> Any:
