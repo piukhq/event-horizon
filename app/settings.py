@@ -83,10 +83,10 @@ POLARIS_AUTH_TOKEN = get_env("POLARIS_AUTH_TOKEN") or key_vault.get_secret("bpl-
 VELA_HOST = getenv("VELA_HOST", "http://vela-api")
 VELA_BASE_URL = getenv("VELA_BASE_URL", f"{VELA_HOST}/retailers")
 VELA_AUTH_TOKEN = get_env("VELA_AUTH_TOKEN") or key_vault.get_secret("bpl-vela-api-auth-token")
-REQUEST_TIMEOUT = 2
+REQUEST_TIMEOUT = get_env("REQUEST_TIMEOUT", "2", conv=int)
 
-RABBITMQ_DSN: str = "amqp://guest:guest@localhost:5672//"
-MESSAGE_EXCHANGE_NAME: str = "hubble-activities"
+RABBITMQ_DSN: str = get_env("RABBITMQ_DSN", "amqp://guest:guest@localhost:5672//")
+MESSAGE_EXCHANGE_NAME: str = get_env("MESSAGE_EXCHANGE_NAME", "hubble-activities")
 
 
 redis = Redis.from_url(

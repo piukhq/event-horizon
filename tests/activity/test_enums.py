@@ -46,10 +46,11 @@ def test_get_campaign_created_activity_data(mocker: MockFixture) -> None:
             "campaign": {
                 "new_values": {
                     "name": campaign_name,
+                    "slug": campaign_slug,
                     "status": "draft",
                     "loyalty_type": loyalty_type.title(),
-                    "start_date": start_date.strftime("%m-%d-%Y %H:%M:%S"),
-                    "end_date": end_date.strftime("%m-%d-%Y %H:%M:%S"),
+                    "start_date": start_date.strftime("%Y-%m-%d %H:%M:%S"),
+                    "end_date": end_date.strftime("%Y-%m-%d %H:%M:%S"),
                 }
             }
         },
