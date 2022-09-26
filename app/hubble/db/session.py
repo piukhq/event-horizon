@@ -5,4 +5,5 @@ from sqlalchemy.pool import NullPool
 from app.settings import HUBBLE_DATABASE_URI
 
 engine = create_engine(HUBBLE_DATABASE_URI, poolclass=NullPool)
-db_session = scoped_session(sessionmaker(bind=engine))
+SyncSessionMaker = sessionmaker(bind=engine, future=True, expire_on_commit=False)
+db_session = scoped_session(SyncSessionMaker)

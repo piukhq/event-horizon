@@ -1,6 +1,7 @@
 import logging
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from random import getrandbits
 from typing import TYPE_CHECKING, Any
 
@@ -21,6 +22,8 @@ from sqlalchemy.future import select
 from wtforms.validators import DataRequired
 
 from app import settings
+from app.activity_utils.enums import ActivityType
+from app.activity_utils.tasks import sync_send_activity
 from app.admin.model_views import BaseModelView, CanDeleteModelView
 from app.vela.custom_actions import CampaignEndAction
 from app.vela.db import Campaign, RetailerRewards, RewardRule
@@ -40,7 +43,6 @@ from app.vela.validators import (
 )
 
 if TYPE_CHECKING:
-    from sqlalchemy.engine import Row
     from werkzeug import Response
 
     from app.vela.db.models import EarnRule
@@ -297,7 +299,28 @@ class CampaignAdmin(CanDeleteModelView):
             validate_campaign_start_date_change(
                 old_start_date=form.start_date.object_data, new_start_date=model.start_date, status=model.status
             )
+
         return super().on_model_change(form, model, is_created)
+
+    def after_model_change(self, form: wtforms.Form, model: "Campaign", is_created: bool) -> None:
+        if is_created:
+            # Synchronously send activity for campaign creation after successfull campaign creation
+            user_name, *_ = self.user_info["name"].split(" ")
+            sync_send_activity(
+                ActivityType.get_campaign_created_activity_data(
+                    retailer_slug=model.retailerrewards.slug,
+                    campaign_name=model.name,
+                    sso_username=user_name,
+                    activity_datetime=datetime.now(tz=timezone.utc),
+                    campaign_slug=model.slug,
+                    loyalty_type=model.loyalty_type,
+                    start_date=model.start_date,
+                    end_date=model.end_date,
+                ),
+                routing_key=ActivityType.CAMPAIGN_CHANGE.value,
+            )
+
+        return super().after_model_change(form, model, is_created)
 
     @action(
         "end-campaigns",

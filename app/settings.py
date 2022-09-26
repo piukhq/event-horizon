@@ -48,6 +48,8 @@ SECRET_KEY = get_env("SECRET_KEY") or key_vault.get_secret("bpl-event-horizon-se
 
 ROUTE_BASE = "/admin"
 
+PROJECT_NAME = "event-horizon"
+
 # AAD SSO
 OAUTH_REDIRECT_URI = get_env("OAUTH_REDIRECT_URI")
 AZURE_TENANT_ID = get_env("AZURE_TENANT_ID", "a6e2367a-92ea-4e5a-b565-723830bcc095")
@@ -81,7 +83,10 @@ POLARIS_AUTH_TOKEN = get_env("POLARIS_AUTH_TOKEN") or key_vault.get_secret("bpl-
 VELA_HOST = getenv("VELA_HOST", "http://vela-api")
 VELA_BASE_URL = getenv("VELA_BASE_URL", f"{VELA_HOST}/retailers")
 VELA_AUTH_TOKEN = get_env("VELA_AUTH_TOKEN") or key_vault.get_secret("bpl-vela-api-auth-token")
-REQUEST_TIMEOUT = 2
+REQUEST_TIMEOUT = get_env("REQUEST_TIMEOUT", "2", conv=int)
+
+RABBITMQ_DSN: str = get_env("RABBITMQ_DSN", "amqp://guest:guest@localhost:5672//")
+MESSAGE_EXCHANGE_NAME: str = get_env("MESSAGE_EXCHANGE_NAME", "hubble-activities")
 
 
 redis = Redis.from_url(
