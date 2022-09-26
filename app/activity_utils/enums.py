@@ -7,10 +7,6 @@ from app.activity_utils.schemas import CampaignDataSchema, CampaignDataValuesSch
 from app.settings import PROJECT_NAME
 
 
-def _format_datetime(date: utc_datetime) -> str:
-    return date.strftime("%m-%d-%Y %H:%M:%S")
-
-
 class ActivityType(Enum):
     CAMPAIGN_CHANGE = f"activity.{PROJECT_NAME}.campaign.change"
 
@@ -43,10 +39,11 @@ class ActivityType(Enum):
                 "campaign": CampaignDataSchema(
                     new_values=CampaignDataValuesSchema(
                         name=campaign_name,
+                        slug=campaign_slug,
                         status="draft",
                         loyalty_type=loyalty_type.title(),
-                        start_date=_format_datetime(start_date) if start_date else None,
-                        end_date=_format_datetime(end_date) if end_date else None,
+                        start_date=start_date,
+                        end_date=end_date,
                     )
                 ).dict(exclude_unset=True),
             },
