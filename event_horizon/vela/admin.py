@@ -303,9 +303,10 @@ class CampaignAdmin(CanDeleteModelView):
         return super().on_model_change(form, model, is_created)
 
     def after_model_change(self, form: wtforms.Form, model: "Campaign", is_created: bool) -> None:
+        user_name, *_ = self.user_info["name"].split(" ")
+
         if is_created:
             # Synchronously send activity for campaign creation after successfull campaign creation
-            user_name, *_ = self.user_info["name"].split(" ")
             sync_send_activity(
                 ActivityType.get_campaign_created_activity_data(
                     retailer_slug=model.retailerrewards.slug,
@@ -320,7 +321,31 @@ class CampaignAdmin(CanDeleteModelView):
                 routing_key=ActivityType.CAMPAIGN_CHANGE.value,
             )
 
-        return super().after_model_change(form, model, is_created)
+        else:
+            # Synchronously send activity for campaign update after successfull campaign update
+            new_values: dict = {}
+            original_values: dict = {}
+
+            for field in form:
+                # the campaign's retailer should not be editable but for now it is.
+                # field.name != "retailerrewards" can be removed once BPL-744 is implemented.
+                if field.name != "retailerrewards" and (new_val := getattr(model, field.name)) != field.object_data:
+                    new_values[field.name] = new_val
+                    original_values[field.name] = field.object_data
+
+            if new_values:
+                sync_send_activity(
+                    ActivityType.get_campaign_updated_activity_data(
+                        retailer_slug=model.retailerrewards.slug,
+                        campaign_name=model.name,
+                        sso_username=user_name,
+                        activity_datetime=datetime.now(tz=timezone.utc),
+                        campaign_slug=model.slug,
+                        new_values=new_values,
+                        original_values=original_values,
+                    ),
+                    routing_key=ActivityType.CAMPAIGN_CHANGE.value,
+                )
 
     @action(
         "end-campaigns",
