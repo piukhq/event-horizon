@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 import wtforms
 
-from app.vela.validators import (
+from event_horizon.vela.validators import (
     ACCUMULATOR,
     STAMPS,
     validate_campaign_end_date_change,
@@ -133,7 +133,7 @@ def test_validate_earn_rule_increment__stamps__inc_has_blank_val(
 
 
 # pylint: disable=unused-argument
-@mock.patch("app.vela.validators._count_earn_rules")
+@mock.patch("event_horizon.vela.validators._count_earn_rules")
 def test_validate_campaign_loyalty_type__new_object(
     mock__count_earn_rules: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
@@ -144,7 +144,7 @@ def test_validate_campaign_loyalty_type__new_object(
         pytest.fail()
 
 
-@mock.patch("app.vela.validators._count_earn_rules")
+@mock.patch("event_horizon.vela.validators._count_earn_rules")
 def test_validate_campaign_loyalty_type__accumulator__earn_rules_with_inc_val(
     mock__count_earn_rules: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
@@ -157,7 +157,7 @@ def test_validate_campaign_loyalty_type__accumulator__earn_rules_with_inc_val(
     mock__count_earn_rules.assert_called_with(1, has_inc_value=True)
 
 
-@mock.patch("app.vela.validators._count_earn_rules")
+@mock.patch("event_horizon.vela.validators._count_earn_rules")
 def test_validate_campaign_loyalty_type__stamps__earn_rules_with_inc_val(
     mock__count_earn_rules: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
@@ -170,7 +170,7 @@ def test_validate_campaign_loyalty_type__stamps__earn_rules_with_inc_val(
     mock__count_earn_rules.assert_called_with(1, has_inc_value=False)
 
 
-@mock.patch("app.vela.validators._count_earn_rules")
+@mock.patch("event_horizon.vela.validators._count_earn_rules")
 def test_validate_campaign_loyalty_type__stamps__zero_earn_rules_with_inc_val(
     mock__count_earn_rules: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
@@ -184,7 +184,7 @@ def test_validate_campaign_loyalty_type__stamps__zero_earn_rules_with_inc_val(
     mock__count_earn_rules.assert_called_with(1, has_inc_value=False)
 
 
-@mock.patch("app.vela.validators._count_earn_rules")
+@mock.patch("event_horizon.vela.validators._count_earn_rules")
 def test_validate_campaign_loyalty_type__accumulator__zero_earn_rules_with_inc_val(
     mock__count_earn_rules: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
@@ -198,7 +198,7 @@ def test_validate_campaign_loyalty_type__accumulator__zero_earn_rules_with_inc_v
     mock__count_earn_rules.assert_called_with(1, has_inc_value=True)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
+@mock.patch("event_horizon.vela.validators._get_campaign_by_id")
 def test_validate_campaign_status_change_all_good(
     mock_campaign: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
@@ -209,7 +209,7 @@ def test_validate_campaign_status_change_all_good(
     validate_campaign_status_change(mock_form, mock_field)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
+@mock.patch("event_horizon.vela.validators._get_campaign_by_id")
 def test_validate_campaign_status_change_no_rules(
     mock_campaign: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
@@ -221,7 +221,7 @@ def test_validate_campaign_status_change_no_rules(
         validate_campaign_status_change(mock_form, mock_field)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
+@mock.patch("event_horizon.vela.validators._get_campaign_by_id")
 def test_validate_campaign_status_change_no_earn_rules(
     mock_campaign: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
@@ -233,7 +233,7 @@ def test_validate_campaign_status_change_no_earn_rules(
         validate_campaign_status_change(mock_form, mock_field)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
+@mock.patch("event_horizon.vela.validators._get_campaign_by_id")
 def test_validate_campaign_status_change_no_reward_rule(
     mock_campaign: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
@@ -245,7 +245,7 @@ def test_validate_campaign_status_change_no_reward_rule(
         validate_campaign_status_change(mock_form, mock_field)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
+@mock.patch("event_horizon.vela.validators._get_campaign_by_id")
 def test_validate_campaign_status_change_already_active(
     mock_campaign: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
@@ -256,14 +256,14 @@ def test_validate_campaign_status_change_already_active(
     validate_campaign_status_change(mock_form, mock_field)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
+@mock.patch("event_horizon.vela.validators._get_campaign_by_id")
 def test_validate_earn_rule_deletion_active_campaign_not_last_rule(mock_campaign: mock.MagicMock) -> None:
     mock_campaign.return_value = mock.MagicMock(status="ACTIVE", earnrule_collection=[1, 2], rewardrule_collection=[])
 
     validate_earn_rule_deletion(1)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
+@mock.patch("event_horizon.vela.validators._get_campaign_by_id")
 def test_validate_earn_rule_deletion_active_campaign_last_rule(mock_campaign: mock.MagicMock) -> None:
     mock_campaign.return_value = mock.MagicMock(status="ACTIVE", earnrule_collection=[1], rewardrule_collection=[])
 
@@ -271,21 +271,21 @@ def test_validate_earn_rule_deletion_active_campaign_last_rule(mock_campaign: mo
         validate_earn_rule_deletion(1)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
+@mock.patch("event_horizon.vela.validators._get_campaign_by_id")
 def test_validate_earn_rule_deletion_non_active_campaign(mock_campaign: mock.MagicMock) -> None:
     mock_campaign.return_value = mock.MagicMock(status="DRAFT", earnrule_collection=[1], rewardrule_collection=[])
 
     validate_earn_rule_deletion(1)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
+@mock.patch("event_horizon.vela.validators._get_campaign_by_id")
 def test_validate_reward_rule_deletion_non_active_campaign(mock_campaign: mock.MagicMock) -> None:
     mock_campaign.return_value = mock.MagicMock(status="DRAFT", earnrule_collection=[], rewardrule_collection=[1])
 
     validate_reward_rule_deletion(1)
 
 
-@mock.patch("app.vela.validators._get_campaign_by_id")
+@mock.patch("event_horizon.vela.validators._get_campaign_by_id")
 def test_validate_reward_rule_deletion_active_campaign(mock_campaign: mock.MagicMock) -> None:
     mock_campaign.return_value = mock.MagicMock(status="ACTIVE", earnrule_collection=[], rewardrule_collection=[1])
 

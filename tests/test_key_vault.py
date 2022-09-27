@@ -5,7 +5,7 @@ import pytest
 
 from azure.keyvault.secrets import SecretClient
 
-from app.key_vault import KeyVault
+from event_horizon.key_vault import KeyVault
 
 
 @pytest.fixture(name="mocked_client")
