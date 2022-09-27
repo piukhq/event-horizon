@@ -2,12 +2,12 @@ from datetime import datetime, timedelta, timezone
 
 from pytest_mock import MockFixture
 
-from app.activity_utils.enums import ActivityType
+from event_horizon.activity_utils.enums import ActivityType
 
 
 def test_get_campaign_created_activity_data(mocker: MockFixture) -> None:
 
-    mock_datetime = mocker.patch("app.activity_utils.enums.datetime")
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
     fake_now = datetime.now(tz=timezone.utc)
     mock_datetime.now.return_value = fake_now
 

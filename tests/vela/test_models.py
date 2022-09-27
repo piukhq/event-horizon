@@ -1,4 +1,4 @@
-from app.vela.db import Campaign
+from event_horizon.vela.db import Campaign
 
 
 def test_campaign_can_delete() -> None:

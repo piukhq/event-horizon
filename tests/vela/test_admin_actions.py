@@ -9,8 +9,8 @@ import httpretty
 
 from pytest_mock import MockerFixture
 
-from app.settings import VELA_BASE_URL
-from app.vela.admin import CampaignAdmin
+from event_horizon.settings import VELA_BASE_URL
+from event_horizon.vela.admin import CampaignAdmin
 
 
 @httpretty.activate
@@ -25,11 +25,11 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
         self.session = session
 
     mocker.patch.object(CampaignAdmin, "__init__", mock_init)
-    mocker.patch("app.vela.admin.Campaign", slug=mock.Mock())
-    mocker.patch("app.vela.admin.RetailerRewards", slug=mock.Mock())
-    mocker.patch("app.vela.admin.select", slug=mock.Mock())
-    mock_flash = mocker.patch("app.vela.admin.flash")
-    mock_model_views_flash = mocker.patch("app.admin.model_views.flash")
+    mocker.patch("event_horizon.vela.admin.Campaign", slug=mock.Mock())
+    mocker.patch("event_horizon.vela.admin.RetailerRewards", slug=mock.Mock())
+    mocker.patch("event_horizon.vela.admin.select", slug=mock.Mock())
+    mock_flash = mocker.patch("event_horizon.vela.admin.flash")
+    mock_model_views_flash = mocker.patch("event_horizon.admin.model_views.flash")
 
     httpretty.register_uri("POST", url, {}, status=202)
     session = mock.MagicMock(
@@ -104,11 +104,11 @@ def test__campaigns_ended_delete_pending_rewards(mocker: MockerFixture) -> None:
         self.session = session
 
     mocker.patch.object(CampaignAdmin, "__init__", mock_init)
-    mocker.patch("app.vela.admin.Campaign", slug=mock.Mock())
-    mocker.patch("app.vela.admin.RewardRule", allocation_window=mock.Mock())
-    mocker.patch("app.vela.admin.RetailerRewards", slug=mock.Mock())
-    mocker.patch("app.vela.admin.select", slug=mock.Mock())
-    mock_flash = mocker.patch("app.vela.admin.flash")
+    mocker.patch("event_horizon.vela.admin.Campaign", slug=mock.Mock())
+    mocker.patch("event_horizon.vela.admin.RewardRule", allocation_window=mock.Mock())
+    mocker.patch("event_horizon.vela.admin.RetailerRewards", slug=mock.Mock())
+    mocker.patch("event_horizon.vela.admin.select", slug=mock.Mock())
+    mock_flash = mocker.patch("event_horizon.vela.admin.flash")
 
     httpretty.register_uri("POST", url, {}, status=202)
 
@@ -142,11 +142,11 @@ def test__campaigns_ended_convert_pending_rewards(mocker: MockerFixture) -> None
         self.session = session
 
     mocker.patch.object(CampaignAdmin, "__init__", mock_init)
-    mocker.patch("app.vela.admin.Campaign", slug=mock.Mock())
-    mocker.patch("app.vela.admin.RewardRule", allocation_window=mock.Mock())
-    mocker.patch("app.vela.admin.RetailerRewards", slug=mock.Mock())
-    mocker.patch("app.vela.admin.select", slug=mock.Mock())
-    mock_flash = mocker.patch("app.vela.admin.flash")
+    mocker.patch("event_horizon.vela.admin.Campaign", slug=mock.Mock())
+    mocker.patch("event_horizon.vela.admin.RewardRule", allocation_window=mock.Mock())
+    mocker.patch("event_horizon.vela.admin.RetailerRewards", slug=mock.Mock())
+    mocker.patch("event_horizon.vela.admin.select", slug=mock.Mock())
+    mock_flash = mocker.patch("event_horizon.vela.admin.flash")
 
     httpretty.register_uri("POST", url, {}, status=202)
 

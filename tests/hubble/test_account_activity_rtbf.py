@@ -4,12 +4,12 @@ from uuid import uuid4
 
 from pytest_mock import MockerFixture
 
-from app.hubble.account_activity_rtbf import (
+from event_horizon.hubble.account_activity_rtbf import (
     _anonymise_account_request_activity,
     _anonymise_generic_account_activity,
     anonymise_account_activities,
 )
-from app.hubble.enums import AccountActivities
+from event_horizon.hubble.enums import AccountActivities
 
 ACCOUNT_REQUEST_MOCK_DATA = {
     "fields": [
@@ -26,7 +26,7 @@ ACCOUNT_REQUEST_MOCK_DATA = {
 
 
 def test_anonymise_all_account_activities_request(mocker: MockerFixture) -> None:
-    mock_activities = mocker.patch("app.hubble.account_activity_rtbf._get_all_account_activities")
+    mock_activities = mocker.patch("event_horizon.hubble.account_activity_rtbf._get_all_account_activities")
 
     retailer_slug = "test-retailer"
     account_holder = mocker.MagicMock()

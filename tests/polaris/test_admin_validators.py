@@ -6,7 +6,11 @@ from unittest import mock
 import pytest
 import wtforms
 
-from app.polaris.validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
+from event_horizon.polaris.validators import (
+    validate_account_number_prefix,
+    validate_marketing_config,
+    validate_retailer_config,
+)
 
 
 @pytest.fixture()
@@ -16,7 +20,7 @@ def mock_config_field() -> mock.MagicMock:
 
 @pytest.fixture(scope="module", autouse=True)
 def patched_optional_profile_field_names() -> Generator:
-    with mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"]):
+    with mock.patch("event_horizon.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"]):
         yield
 
 
@@ -151,7 +155,7 @@ worse:
     )
 
 
-@mock.patch("app.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone", "city"])
+@mock.patch("event_horizon.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone", "city"])
 def test_validate_retailer_config_optional3(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
     mock_config_field.data = """
 email:

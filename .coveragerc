@@ -1,12 +1,12 @@
 [run]
 omit = *test*
-       */app/app.py
-       */app/version.py
-       */app/*/db/*
-       */app/*/admin.py
-       */app/*/__init__.py
-       */app/admin/*
-       */app/events.py
+       */event_horizon/app.py
+       */event_horizon/version.py
+       */event_horizon/*/db/*
+       */event_horizon/*/admin.py
+       */event_horizon/*/__init__.py
+       */event_horizon/admin/*
+       */event_horizon/events.py
 branch = True
 [report]
 fail_under = 85
