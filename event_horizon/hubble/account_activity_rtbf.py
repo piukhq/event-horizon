@@ -98,10 +98,14 @@ def _encode_field_values_in_data(
 
 
 def _get_all_account_activities(
-    db_session: "Session", retailer_slug: str, account_holder_uuid: str, account_holder_email: str
+    db_session: "Session",
+    retailer_slug: str,
+    account_holder_uuid: str,
+    account_holder_email: str,
+    activities_to_check: list[AccountActivities],
 ) -> list[Activity]:
     activities_to_update = []
-    for activity_type in AccountActivities:
+    for activity_type in activities_to_check:
         res = (
             db_session.execute(
                 select(Activity)
@@ -117,11 +121,6 @@ def _get_all_account_activities(
     return activities_to_update
 
 
-def _anonymise_generic_account_activity(activity: Activity, account_holder_uuid: str) -> list:
-    activity.user_id = _encode_value(account_holder_uuid, value=None)
-    return activity.id
-
-
 def _anonymise_account_request_activity(activity: Activity, account_holder_uuid: str) -> list:
     activity.summary = _encode_email_in_string(account_holder_uuid, activity.summary)
     activity.associated_value = _encode_value(account_holder_uuid, activity.associated_value)
@@ -132,27 +131,35 @@ def _anonymise_account_request_activity(activity: Activity, account_holder_uuid:
 
 def anonymise_account_activities(retailer_slug: str, account_holder_uuid: str, account_holder_email: str) -> None:
     with SyncSessionMaker() as db_session:
-        activities_all_types = _get_all_account_activities(
-            db_session, retailer_slug, account_holder_uuid, account_holder_email
+        # At the time of writing (28/09/2022). ACCOUNT_REQUEST is the only activity which contains information
+        # needing to be hashed
+        activities_to_check = [AccountActivities.ACCOUNT_REQUEST]
+        all_activities_for_account = _get_all_account_activities(
+            db_session, retailer_slug, account_holder_uuid, account_holder_email, activities_to_check
         )
         activities_updated = []
-        for activities in activities_all_types:
+        for activities in all_activities_for_account:
             for activity in activities:
                 if activity.type == AccountActivities.ACCOUNT_REQUEST.value:
                     updated_activity_id = _anonymise_account_request_activity(activity, account_holder_uuid)
-                else:
-                    updated_activity_id = _anonymise_generic_account_activity(activity, account_holder_uuid)
 
                 activities_updated.append(updated_activity_id)
 
         if activities_updated:
             try:
                 db_session.commit()
-                logging.info("Successfully applied updates to the following activities: %s", activities_updated)
+                logging.info(
+                    "Successfully applied updates to the following activities: %s for account_holder_uuid: %s",
+                    activities_updated,
+                    account_holder_uuid,
+                )
             except Exception as ex:
                 db_session.rollback()
                 logging.exception(
-                    "Failed to annonymise activity for account_holder_uuid: %s", account_holder_uuid, exc_info=ex
+                    "Failed to annonymise activities: %s for account_holder_uuid: %s",
+                    activities_updated,
+                    account_holder_uuid,
+                    exc_info=ex,
                 )
         else:
             logging.info("No activities to update")
