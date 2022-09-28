@@ -5,7 +5,7 @@ import wtforms
 
 from wtforms.validators import StopValidation
 
-from app.carina.validators import (
+from event_horizon.carina.validators import (
     validate_optional_yaml,
     validate_required_fields_values_yaml,
     validate_retailer_fetch_type,

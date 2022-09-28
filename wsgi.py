@@ -1,5 +1,5 @@
-from app.app import create_app
-from app.settings import DEBUG, DEV_PORT
+from event_horizon.app import create_app
+from event_horizon.settings import DEBUG, DEV_PORT
 
 app = create_app()
 

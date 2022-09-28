@@ -11,11 +11,11 @@ from flask import Flask
 from pytest_mock import MockerFixture
 from sqlalchemy.orm import Session
 
-from app.vela.custom_actions import CampaignEndAction, CampaignRow, SessionFormData
+from event_horizon.vela.custom_actions import CampaignEndAction, CampaignRow, SessionFormData
 
 
 @dataclass
-class TestSessionFormData:
+class SessionFormTestData:
     value: SessionFormData
     b64str: str
 
@@ -29,7 +29,7 @@ class EndActionMockedCalls:
 
 
 @pytest.fixture
-def test_session_form_data() -> TestSessionFormData:
+def test_session_form_data() -> SessionFormTestData:
     session_form_data = SessionFormData(
         active_campaigns=[
             CampaignRow(id=1, slug="test-active-1", type="STAMPS"),
@@ -44,21 +44,21 @@ def test_session_form_data() -> TestSessionFormData:
         optional_fields_needed=True,
     )
 
-    return TestSessionFormData(
+    return SessionFormTestData(
         value=session_form_data,
         b64str=base64.b64encode(pickle.dumps(session_form_data)).decode(),
     )
 
 
 @pytest.fixture
-def test_session_form_data_no_draft() -> TestSessionFormData:
+def test_session_form_data_no_draft() -> SessionFormTestData:
     session_form_data = SessionFormData(
         active_campaigns=[CampaignRow(id=1, slug="test", type="STAMPS")],
         draft_campaign=None,
         transfer_balance_from_choices=[],
         optional_fields_needed=False,
     )
-    return TestSessionFormData(
+    return SessionFormTestData(
         value=session_form_data,
         b64str=base64.b64encode(pickle.dumps(session_form_data)).decode(),
     )
@@ -75,7 +75,7 @@ def end_action() -> Generator[CampaignEndAction, None, None]:
 @pytest.fixture
 def end_action_mocks(mocker: MockerFixture, end_action: CampaignEndAction) -> EndActionMockedCalls:
     mocks = EndActionMockedCalls(
-        balance_transfer=mocker.patch("app.vela.custom_actions.balance_transfer"),
+        balance_transfer=mocker.patch("event_horizon.vela.custom_actions.balance_transfer"),
         update_end_date=mocker.patch.object(end_action, "_update_from_campaign_end_date"),
         slug_and_goal=mocker.patch.object(end_action, "_get_from_campaign_slug_and_goal"),
         status_change_fn=MagicMock(),
@@ -86,13 +86,13 @@ def end_action_mocks(mocker: MockerFixture, end_action: CampaignEndAction) -> En
     return mocks
 
 
-def test_session_form_data_methods(test_session_form_data: TestSessionFormData) -> None:
+def test_session_form_data_methods(test_session_form_data: SessionFormTestData) -> None:
     assert test_session_form_data.value.to_base64_str() == test_session_form_data.b64str
     assert SessionFormData.from_base64_str(test_session_form_data.b64str) == test_session_form_data.value
 
 
 def test_campaign_end_action_session_form_data(
-    end_action: CampaignEndAction, test_session_form_data: TestSessionFormData
+    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData
 ) -> None:
 
     with pytest.raises(ValueError) as ex_info:
@@ -107,7 +107,7 @@ def test_campaign_end_action_session_form_data(
 
 
 def test_campaign_end_action_update_form_ok(
-    end_action: CampaignEndAction, test_session_form_data: TestSessionFormData
+    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData
 ) -> None:
 
     end_action.update_form(test_session_form_data.b64str)
@@ -118,7 +118,7 @@ def test_campaign_end_action_update_form_ok(
 
 
 def test_campaign_end_action_update_form_session_form_data_already_set(
-    end_action: CampaignEndAction, test_session_form_data: TestSessionFormData, mocker: MockerFixture
+    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, mocker: MockerFixture
 ) -> None:
     mock_load_from_str = mocker.patch.object(SessionFormData, "from_base64_str")
     end_action._session_form_data = test_session_form_data.value
@@ -127,7 +127,7 @@ def test_campaign_end_action_update_form_session_form_data_already_set(
 
 
 def test_campaign_end_action_update_form_no_draft_ok(
-    end_action: CampaignEndAction, test_session_form_data_no_draft: TestSessionFormData
+    end_action: CampaignEndAction, test_session_form_data_no_draft: SessionFormTestData
 ) -> None:
     end_action.update_form(test_session_form_data_no_draft.b64str)
     assert end_action.session_form_data == test_session_form_data_no_draft.value
@@ -154,7 +154,7 @@ def test_campaign_end_action_update_form_invalid_content(end_action: CampaignEnd
 
 
 def test_campaign_end_action_validate_selected_campaigns_ok(
-    end_action: CampaignEndAction, test_session_form_data: TestSessionFormData, mocker: MockerFixture
+    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, mocker: MockerFixture
 ) -> None:
     mock_campaigns_rows = [
         MagicMock(id=1, slug="test-active-1", loyalty_type="STAMPS", status="ACTIVE", retailer_id=1),
@@ -177,7 +177,7 @@ def test_campaign_end_action_validate_selected_campaigns_no_campaign_found(
     mock_campaigns_rows: list = []
     mock_get_campaigns_rows = mocker.patch.object(end_action, "_get_campaign_rows", return_value=mock_campaigns_rows)
     selected_campaigns = ["these", "values", "are", "ignored", "because", "of", "mock"]
-    mock_flash = mocker.patch("app.vela.custom_actions.flash")
+    mock_flash = mocker.patch("event_horizon.vela.custom_actions.flash")
 
     with pytest.raises(ValueError) as ex_info:
         end_action.validate_selected_campaigns(selected_campaigns)
@@ -202,7 +202,7 @@ def test_campaign_end_action_validate_selected_campaigns_too_many_draft(
     ]
     mock_get_campaigns_rows = mocker.patch.object(end_action, "_get_campaign_rows", return_value=mock_campaigns_rows)
     selected_campaigns = ["these", "values", "are", "ignored", "because", "of", "mock"]
-    mock_flash = mocker.patch("app.vela.custom_actions.flash")
+    mock_flash = mocker.patch("event_horizon.vela.custom_actions.flash")
 
     with pytest.raises(ValueError) as ex_info:
         end_action.validate_selected_campaigns(selected_campaigns)
@@ -221,7 +221,7 @@ def test_campaign_end_action_validate_selected_campaigns_different_retailer(
     ]
     mock_get_campaigns_rows = mocker.patch.object(end_action, "_get_campaign_rows", return_value=mock_campaigns_rows)
     selected_campaigns = ["these", "values", "are", "ignored", "because", "of", "mock"]
-    mock_flash = mocker.patch("app.vela.custom_actions.flash")
+    mock_flash = mocker.patch("event_horizon.vela.custom_actions.flash")
 
     with pytest.raises(ValueError) as ex_info:
         end_action.validate_selected_campaigns(selected_campaigns)
@@ -240,7 +240,7 @@ def test_campaign_end_action_validate_selected_campaigns_wrong_status(
     ]
     mock_get_campaigns_rows = mocker.patch.object(end_action, "_get_campaign_rows", return_value=mock_campaigns_rows)
     selected_campaigns = ["these", "values", "are", "ignored", "because", "of", "mock"]
-    mock_flash = mocker.patch("app.vela.custom_actions.flash")
+    mock_flash = mocker.patch("event_horizon.vela.custom_actions.flash")
 
     with pytest.raises(ValueError) as ex_info:
         end_action.validate_selected_campaigns(selected_campaigns)
@@ -251,7 +251,7 @@ def test_campaign_end_action_validate_selected_campaigns_wrong_status(
 
 
 def test_campaign_end_action_end_campaigns_ok(
-    end_action: CampaignEndAction, test_session_form_data: TestSessionFormData, end_action_mocks: EndActionMockedCalls
+    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, end_action_mocks: EndActionMockedCalls
 ) -> None:
     assert test_session_form_data.value.draft_campaign, "using wrong fixture"
 
@@ -293,7 +293,7 @@ def test_campaign_end_action_end_campaigns_ok(
 
 def test_campaign_end_action_end_campaigns_no_draft_ok(
     end_action: CampaignEndAction,
-    test_session_form_data_no_draft: TestSessionFormData,
+    test_session_form_data_no_draft: SessionFormTestData,
     end_action_mocks: EndActionMockedCalls,
 ) -> None:
 
@@ -317,7 +317,7 @@ def test_campaign_end_action_end_campaigns_no_draft_ok(
 
 
 def test_campaign_end_action_end_campaigns_no_transfer_ok(
-    end_action: CampaignEndAction, test_session_form_data: TestSessionFormData, end_action_mocks: EndActionMockedCalls
+    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, end_action_mocks: EndActionMockedCalls
 ) -> None:
     assert test_session_form_data.value.draft_campaign, "using wrong fixture"
 
@@ -350,7 +350,7 @@ def test_campaign_end_action_end_campaigns_no_transfer_ok(
 
 
 def test_campaign_end_action_end_campaigns_transfer_balance_but_no_transfer_from_error(
-    end_action: CampaignEndAction, test_session_form_data: TestSessionFormData, end_action_mocks: EndActionMockedCalls
+    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, end_action_mocks: EndActionMockedCalls
 ) -> None:
 
     end_action._session_form_data = test_session_form_data.value
@@ -374,7 +374,7 @@ def test_campaign_end_action_end_campaigns_transfer_balance_but_no_transfer_from
 
 
 def test_campaign_end_action_end_campaigns_cant_fetch_from_campaign_error(
-    end_action: CampaignEndAction, test_session_form_data: TestSessionFormData, end_action_mocks: EndActionMockedCalls
+    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, end_action_mocks: EndActionMockedCalls
 ) -> None:
     assert test_session_form_data.value.draft_campaign, "using wrong fixture"
 
@@ -409,7 +409,7 @@ def test_campaign_end_action_end_campaigns_cant_fetch_from_campaign_error(
 
 
 def test_campaign_end_action_end_campaigns_failed_status_change_error(
-    end_action: CampaignEndAction, test_session_form_data: TestSessionFormData, end_action_mocks: EndActionMockedCalls
+    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, end_action_mocks: EndActionMockedCalls
 ) -> None:
     assert test_session_form_data.value.draft_campaign, "using wrong fixture"
 

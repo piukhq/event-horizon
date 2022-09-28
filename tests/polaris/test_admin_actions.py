@@ -10,11 +10,11 @@ import httpretty
 
 from pytest_mock import MockerFixture
 
-from app.polaris.admin import AccountHolderAdmin
-from app.settings import POLARIS_BASE_URL
+from event_horizon.polaris.admin import AccountHolderAdmin
+from event_horizon.settings import POLARIS_BASE_URL
 
 
-@mock.patch("app.polaris.admin.anonymise_account_activities")
+@mock.patch("event_horizon.polaris.admin.anonymise_account_activities")
 @httpretty.activate
 def test_anonymise_user(mock_activity_call: mock.MagicMock, mocker: MockerFixture) -> None:
     retailer_slug = "retailer_1"
@@ -27,11 +27,11 @@ def test_anonymise_user(mock_activity_call: mock.MagicMock, mocker: MockerFixtur
 
     session = mock.MagicMock(execute=lambda x: mock.MagicMock(first=lambda: (retailer_slug, account_holder)))
     mocker.patch.object(AccountHolderAdmin, "__init__", mock_init)
-    mocker.patch("app.polaris.admin.RetailerConfig", slug=mock.Mock())
-    mocker.patch("app.polaris.admin.AccountHolder", account_holder_uuid=mock.Mock())
-    mocker.patch("app.polaris.admin.select", slug=mock.Mock())
-    mock_flash = mocker.patch("app.polaris.admin.flash")
-    mock_model_views_flash = mocker.patch("app.admin.model_views.flash")
+    mocker.patch("event_horizon.polaris.admin.RetailerConfig", slug=mock.Mock())
+    mocker.patch("event_horizon.polaris.admin.AccountHolder", account_holder_uuid=mock.Mock())
+    mocker.patch("event_horizon.polaris.admin.select", slug=mock.Mock())
+    mock_flash = mocker.patch("event_horizon.polaris.admin.flash")
+    mock_model_views_flash = mocker.patch("event_horizon.admin.model_views.flash")
 
     httpretty.register_uri("PATCH", url, {}, status=200)
 

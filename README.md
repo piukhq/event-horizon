@@ -15,9 +15,9 @@ BPL Admin Dashboard
 
 ## Running
 
-- `pipenv install --dev`
-- `pipenv run python wsgi.py`
+- `poetry install`
+- `poetry run python wsgi.py`
 
 ## Testing
 
-- `pipenv run pytest tests`
+- `poetry run pytest tests`
