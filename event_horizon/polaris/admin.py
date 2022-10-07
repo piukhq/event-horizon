@@ -146,7 +146,7 @@ class AccountHolderRewardAdmin(BaseModelView):
         "code",
     )
     column_labels = dict(accountholder="Account Holder")
-    column_filters = ("accountholder.retailerconfig.slug", "status", "reward_slug", "issued_date")
+    column_filters = ("accountholder.retailerconfig.slug", "status", "reward_slug", "campaign_slug", "issued_date")
     column_formatters = dict(accountholder=_account_holder_repr)
     form_widget_args = {
         "reward_id": {"readonly": True},
