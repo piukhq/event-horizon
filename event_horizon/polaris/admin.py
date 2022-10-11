@@ -181,6 +181,8 @@ class AccountHolderPendingRewardAdmin(BaseModelView):
         "campaign_slug",
         "reward_slug",
         "retailer_slug",
+        "total_cost_to_user",
+        "count",
     ]
     can_export = True
 
