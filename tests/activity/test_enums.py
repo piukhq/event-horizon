@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 from pytest_mock import MockFixture
 
@@ -142,6 +143,55 @@ def test_get_campaign_updated_activity_data_ignored_field(mocker: MockFixture) -
             "campaign": {
                 "new_values": {},
                 "original_values": {},
+            }
+        },
+    }
+
+
+def test_get_earn_rule_created_activity_data(mocker: MockFixture) -> None:
+
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    campaign_name = "Test Campaign"
+    campaign_slug = "test-campaign"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    threshold = 500
+    increment = 1
+    increment_multiplier = Decimal(2)
+
+    payload = ActivityType.get_earn_rule_created_activity_data(
+        retailer_slug=retailer_slug,
+        campaign_name=campaign_name,
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        campaign_slug=campaign_slug,
+        threshold=threshold,
+        increment=increment,
+        increment_multiplier=increment_multiplier,
+    )
+
+    assert payload == {
+        "type": ActivityType.EARN_RULE_CHANGE.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{campaign_name} Earn Rule created",
+        "reasons": [],
+        "activity_identifier": campaign_slug,
+        "user_id": user_name,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [campaign_slug],
+        "data": {
+            "earn_rule": {
+                "new_values": {
+                    "threshold": threshold,
+                    "increment": increment,
+                    "increment_multiplier": increment_multiplier,
+                }
             }
         },
     }
