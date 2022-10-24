@@ -1,14 +1,20 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from enum import Enum
 
 from cosmos_message_lib.schemas import utc_datetime
 
-from event_horizon.activity_utils.schemas import CampaignCreatedActivitySchema, CampaignUpdatedActivitySchema
+from event_horizon.activity_utils.schemas import (
+    CampaignCreatedActivitySchema,
+    CampaignUpdatedActivitySchema,
+    EarnRuleCreatedActivitySchema,
+)
 from event_horizon.settings import PROJECT_NAME
 
 
 class ActivityType(Enum):
     CAMPAIGN_CHANGE = f"activity.{PROJECT_NAME}.campaign.change"
+    EARN_RULE_CHANGE = f"activity.{PROJECT_NAME}.earn_rule.change"
 
     @classmethod
     def get_campaign_created_activity_data(
@@ -82,4 +88,41 @@ class ActivityType(Enum):
             ).dict(exclude_unset=True),
         }
 
+        return payload
+
+    @classmethod
+    def get_earn_rule_created_activity_data(
+        cls,
+        *,
+        retailer_slug: str,
+        campaign_name: str,
+        sso_username: str,
+        activity_datetime: datetime,
+        campaign_slug: str,
+        threshold: int,
+        increment: int,
+        increment_multiplier: Decimal,
+    ) -> dict:
+
+        payload = {
+            "type": cls.EARN_RULE_CHANGE.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": f"{campaign_name} Earn Rule created",
+            "reasons": [],
+            "activity_identifier": campaign_slug,
+            "user_id": sso_username,
+            "associated_value": "N/A",
+            "retailer": retailer_slug,
+            "campaigns": [campaign_slug],
+            "data": EarnRuleCreatedActivitySchema(
+                earn_rule={
+                    "new_values": {
+                        "threshold": threshold,
+                        "increment": increment,
+                        "increment_multiplier": increment_multiplier,
+                    }
+                }
+            ).dict(exclude_unset=True),
+        }
         return payload

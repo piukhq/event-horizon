@@ -38,3 +38,17 @@ class _CampaignCreatedDataSchema(BaseModel):
 
 class CampaignCreatedActivitySchema(BaseModel):
     campaign: _CampaignCreatedDataSchema
+
+
+class _EarnRuleCreatedValuesSchema(BaseModel):
+    threshold: int
+    increment: int
+    increment_multiplier: int
+
+
+class _EarnRuleCreatedDataSchema(BaseModel):
+    new_values: _EarnRuleCreatedValuesSchema
+
+
+class EarnRuleCreatedActivitySchema(BaseModel):
+    earn_rule: _EarnRuleCreatedDataSchema
