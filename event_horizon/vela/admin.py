@@ -407,6 +407,23 @@ class EarnRuleAdmin(CanDeleteModelView):
 
     def on_model_delete(self, model: "EarnRule") -> None:
         validate_earn_rule_deletion(model.campaign_id)
+
+        user_name, *_ = self.user_info["name"].split(" ")
+        # Synchronously send activity for an earn rule deletion after successful deletion
+        sync_send_activity(
+            ActivityType.get_earn_rule_deleted_activity_data(
+                retailer_slug=model.campaign.retailerrewards.slug,
+                campaign_name=model.campaign.name,
+                sso_username=user_name,
+                activity_datetime=datetime.now(tz=timezone.utc),
+                campaign_slug=model.campaign.slug,
+                threshold=model.threshold,
+                increment=model.increment,
+                increment_multiplier=model.increment_multiplier,
+            ),
+            routing_key=ActivityType.EARN_RULE_CHANGE.value,
+        )
+
         return super().on_model_delete(model)
 
     def after_model_change(self, form: wtforms.Form, model: "EarnRule", is_created: bool) -> None:
@@ -427,6 +444,31 @@ class EarnRuleAdmin(CanDeleteModelView):
                 ),
                 routing_key=ActivityType.EARN_RULE_CHANGE.value,
             )
+        else:
+            # Synchronously send activity for an earn rule update after successful update
+            new_values: dict = {}
+            original_values: dict = {}
+
+            for field in form:
+                # the campaign's retailer should not be editable but for now it is.
+                # field.name != "retailerrewards" can be removed once BPL-744 is implemented.
+                if field.name != "retailerrewards" and (new_val := getattr(model, field.name)) != field.object_data:
+                    new_values[field.name] = new_val
+                    original_values[field.name] = field.object_data
+
+            if new_values:
+                sync_send_activity(
+                    ActivityType.get_earn_rule_updated_activity_data(
+                        retailer_slug=model.campaign.retailerrewards.slug,
+                        campaign_name=model.campaign.name,
+                        sso_username=user_name,
+                        activity_datetime=datetime.now(tz=timezone.utc),
+                        campaign_slug=model.campaign.slug,
+                        new_values=new_values,
+                        original_values=original_values,
+                    ),
+                    routing_key=ActivityType.EARN_RULE_CHANGE.value,
+                )
 
 
 class RewardRuleAdmin(CanDeleteModelView):
