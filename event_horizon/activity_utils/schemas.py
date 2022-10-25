@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from cosmos_message_lib.schemas import utc_datetime
 from pydantic import BaseModel, validator
 
@@ -40,10 +42,24 @@ class CampaignCreatedActivitySchema(BaseModel):
     campaign: _CampaignCreatedDataSchema
 
 
-class _EarnRuleCreatedValuesSchema(BaseModel):
+class _EarnRuleUpdatedValuesSchema(BaseModel):
+    threshold: int | None
+    increment: int | None
+    increment_multiplier: Decimal | None
+
+
+class _EarnRuleUpdatedDataSchema(BaseModel):
+    new_values: _EarnRuleUpdatedValuesSchema
+    original_values: _EarnRuleUpdatedValuesSchema
+
+
+class EarnRuleUpdatedActivitySchema(BaseModel):
+    earn_rule: _EarnRuleUpdatedDataSchema
+
+
+class _EarnRuleCreatedValuesSchema(_EarnRuleUpdatedValuesSchema):
     threshold: int
-    increment: int
-    increment_multiplier: int
+    increment_multiplier: Decimal
 
 
 class _EarnRuleCreatedDataSchema(BaseModel):
@@ -52,3 +68,15 @@ class _EarnRuleCreatedDataSchema(BaseModel):
 
 class EarnRuleCreatedActivitySchema(BaseModel):
     earn_rule: _EarnRuleCreatedDataSchema
+
+
+class _EarnRuleDeletedValuesSchema(_EarnRuleCreatedValuesSchema):
+    pass
+
+
+class _EarnRuleDeletedDataSchema(BaseModel):
+    new_values: _EarnRuleDeletedValuesSchema
+
+
+class EarnRuleDeletedActivitySchema(BaseModel):
+    earn_rule: _EarnRuleDeletedDataSchema
