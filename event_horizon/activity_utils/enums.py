@@ -16,7 +16,7 @@ from event_horizon.settings import PROJECT_NAME
 
 class ActivityType(Enum):
     CAMPAIGN_CHANGE = f"activity.{PROJECT_NAME}.campaign.change"
-    EARN_RULE_CHANGE = f"activity.{PROJECT_NAME}.earn_rule.change"
+    EARN_RULE = f"activity.{PROJECT_NAME}.earn_rule.change"
 
     @classmethod
     def get_campaign_created_activity_data(
@@ -107,7 +107,7 @@ class ActivityType(Enum):
     ) -> dict:
 
         payload = {
-            "type": cls.EARN_RULE_CHANGE.name,
+            "type": cls.EARN_RULE.name,
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{campaign_name} Earn Rule created",
@@ -143,7 +143,7 @@ class ActivityType(Enum):
     ) -> dict:
 
         payload = {
-            "type": cls.EARN_RULE_CHANGE.name,
+            "type": cls.EARN_RULE.name,
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{campaign_name} Earn Rule changed",
@@ -178,7 +178,7 @@ class ActivityType(Enum):
     ) -> dict:
 
         payload = {
-            "type": cls.EARN_RULE_CHANGE.name,
+            "type": cls.EARN_RULE.name,
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{campaign_name} Earn Rule removed",

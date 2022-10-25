@@ -171,7 +171,7 @@ def test_get_earn_rule_created_activity_data(mocker: MockFixture) -> None:
     )
 
     assert payload == {
-        "type": ActivityType.EARN_RULE_CHANGE.name,
+        "type": ActivityType.EARN_RULE.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} Earn Rule created",
@@ -225,7 +225,7 @@ def test_get_earn_rule_updated_activity_data(mocker: MockFixture) -> None:
     )
 
     assert payload == {
-        "type": ActivityType.EARN_RULE_CHANGE.name,
+        "type": ActivityType.EARN_RULE.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} Earn Rule changed",
@@ -280,7 +280,7 @@ def test_get_earn_rule_updated_activity_partial_data(mocker: MockFixture) -> Non
     )
 
     assert payload == {
-        "type": ActivityType.EARN_RULE_CHANGE.name,
+        "type": ActivityType.EARN_RULE.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} Earn Rule changed",
@@ -328,7 +328,7 @@ def test_get_earn_rule_updated_activity_data_ignored_field(mocker: MockFixture) 
     )
 
     assert payload == {
-        "type": ActivityType.EARN_RULE_CHANGE.name,
+        "type": ActivityType.EARN_RULE.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} Earn Rule changed",
@@ -373,7 +373,7 @@ def test_get_earn_rule_deleted_activity_data(mocker: MockFixture) -> None:
     )
 
     assert payload == {
-        "type": ActivityType.EARN_RULE_CHANGE.name,
+        "type": ActivityType.EARN_RULE.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} Earn Rule removed",
