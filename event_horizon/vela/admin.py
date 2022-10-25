@@ -421,7 +421,7 @@ class EarnRuleAdmin(CanDeleteModelView):
                 increment=model.increment,
                 increment_multiplier=model.increment_multiplier,
             ),
-            routing_key=ActivityType.EARN_RULE_CHANGE.value,
+            routing_key=ActivityType.EARN_RULE.value,
         )
 
         return super().on_model_delete(model)
@@ -436,13 +436,13 @@ class EarnRuleAdmin(CanDeleteModelView):
                     retailer_slug=model.campaign.retailerrewards.slug,
                     campaign_name=model.campaign.name,
                     sso_username=user_name,
-                    activity_datetime=datetime.now(tz=timezone.utc),
+                    activity_datetime=model.created_at,
                     campaign_slug=model.campaign.slug,
                     threshold=model.threshold,
                     increment=model.increment,
                     increment_multiplier=model.increment_multiplier,
                 ),
-                routing_key=ActivityType.EARN_RULE_CHANGE.value,
+                routing_key=ActivityType.EARN_RULE.value,
             )
         else:
             # Synchronously send activity for an earn rule update after successful update
@@ -462,12 +462,12 @@ class EarnRuleAdmin(CanDeleteModelView):
                         retailer_slug=model.campaign.retailerrewards.slug,
                         campaign_name=model.campaign.name,
                         sso_username=user_name,
-                        activity_datetime=datetime.now(tz=timezone.utc),
+                        activity_datetime=model.updated_at,
                         campaign_slug=model.campaign.slug,
                         new_values=new_values,
                         original_values=original_values,
                     ),
-                    routing_key=ActivityType.EARN_RULE_CHANGE.value,
+                    routing_key=ActivityType.EARN_RULE.value,
                 )
 
 
