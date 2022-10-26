@@ -36,9 +36,9 @@
                 <span>
                     <strong>active:</strong>
                     <ul class="list-group">
-                        {% for cmp in active_campaigns %}
-                        <li class="list-group-item">{{ cmp.slug }} (id: {{ cmp.id }}) {{ cmp.type }}</li>
-                        {% endfor %}
+                        <li class="list-group-item">
+                            {{ active_campaign.slug }} (id: {{ active_campaign.id }}) {{ active_campaign.type }}
+                        </li>
                     </ul>
                 </span>
                 {% if draft_campaign %}
@@ -47,11 +47,6 @@
                     <ul class="list-group">
                         <li class="list-group-item">
                             {{ draft_campaign.slug }} (id: {{ draft_campaign.id }}) {{ draft_campaign.type }}
-                            {% if not same_type_active_campaigns %}
-                            IGNORED
-                            </br>
-                            <small>no active campaign of the same type provided.</small>
-                            {% endif %}
                         </li>
                     </ul>
                 </div>

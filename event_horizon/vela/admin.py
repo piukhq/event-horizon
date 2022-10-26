@@ -147,9 +147,8 @@ class CampaignAdmin(CanDeleteModelView):
 
         return self.render(
             "eh_end_campaign_action.html",
-            active_campaigns=cmp_end_action.session_form_data.active_campaigns,
+            active_campaign=cmp_end_action.session_form_data.active_campaign,
             draft_campaign=cmp_end_action.session_form_data.draft_campaign,
-            same_type_active_campaigns=cmp_end_action.session_form_data.transfer_balance_from_choices,
             form=cmp_end_action.form,
             easter_egg=self.get_easter_egg(),
         )
@@ -350,9 +349,9 @@ class CampaignAdmin(CanDeleteModelView):
     @action(
         "end-campaigns",
         "End",
-        "Selected campaigns must belong to the same Retailer and be in a ACTIVE status.\n"
-        "An optional DRAFT campaign from the same retailer can be also selected, "
-        "this will automatically activate it and enable the balance transfer configuration.\n"
+        "The selected campaign must be in an ACTIVE state.\n"
+        "An optional DRAFT campaign from the same retailer can be selected, "
+        "this will automatically activate it and enable the transfer configuration for balances and pending rewards.\n"
         "You will be redirected to an action configuration page.\n"
         "Are you sure you want to proceed?",
     )

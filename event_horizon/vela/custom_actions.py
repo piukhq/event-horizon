@@ -3,18 +3,20 @@ import pickle
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, cast
 
 from flask import flash
 from sqlalchemy.future import select
 
-from event_horizon.polaris.utils import balance_transfer
+from event_horizon.polaris.db import db_session as polaris_db_session
+from event_horizon.polaris.utils import transfer_balance, transfer_pending_rewards
 from event_horizon.vela.db.models import Campaign, RewardRule
+from event_horizon.vela.enums import PendingRewardChoices
 from event_horizon.vela.forms import EndCampaignActionForm
 
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.engine import Row
-    from sqlalchemy.orm import Session
+    from sqlalchemy.orm import Session, SessionTransaction
 
 
 @dataclass
@@ -22,13 +24,14 @@ class CampaignRow:
     id: int  # pylint: disable=invalid-name
     slug: str
     type: str
+    reward_goal: int
+    reward_slug: str
 
 
 @dataclass
 class SessionFormData:
-    active_campaigns: list[CampaignRow]
+    active_campaign: CampaignRow
     draft_campaign: CampaignRow | None
-    transfer_balance_from_choices: list[tuple[int, str]]
     optional_fields_needed: bool
 
     def to_base64_str(self) -> str:
@@ -48,10 +51,10 @@ class SessionFormData:
 
 
 class CampaignEndAction:
-    form_optional_fields = ["transfer_balance", "transfer_balance_from", "convert_rate", "qualify_threshold"]
+    form_optional_fields = ["transfer_balance", "convert_rate", "qualify_threshold"]
 
     def __init__(self, db_session: "Session") -> None:
-        self.db_session = db_session
+        self.vela_db_session = db_session
         self.form = EndCampaignActionForm()
         self._session_form_data: SessionFormData | None = None
 
@@ -65,26 +68,36 @@ class CampaignEndAction:
         return self._session_form_data
 
     @staticmethod
-    def _get_and_validate_campaigns(campaign_rows: list) -> tuple[list[CampaignRow], CampaignRow | None, list[str]]:
+    def _get_and_validate_campaigns(campaign_rows: list) -> tuple[CampaignRow | None, CampaignRow | None, list[str]]:
+
         errors: list[str] = []
-        active_campaigns = [
-            CampaignRow(cmp.id, cmp.slug, cmp.loyalty_type) for cmp in campaign_rows if cmp.status == "ACTIVE"
-        ]
         try:
-            draft_campaign, *extra = [
-                CampaignRow(cmp.id, cmp.slug, cmp.loyalty_type) for cmp in campaign_rows if cmp.status == "DRAFT"
+            active_campaign, *extra_active = [
+                CampaignRow(cmp.id, cmp.slug, cmp.loyalty_type, cmp.reward_goal, cmp.reward_slug)
+                for cmp in campaign_rows
+                if cmp.status == "ACTIVE"
+            ]
+        except ValueError:
+            active_campaign = None
+            extra_active = []
+
+        try:
+            draft_campaign, *extra_draft = [
+                CampaignRow(cmp.id, cmp.slug, cmp.loyalty_type, cmp.reward_goal, cmp.reward_slug)
+                for cmp in campaign_rows
+                if cmp.status == "DRAFT"
             ]
         except ValueError:
             draft_campaign = None
-            extra = []
+            extra_draft = []
 
-        if not active_campaigns:
-            errors.append("At least one ACTIVE campaign must be provided.")
+        if not active_campaign:
+            errors.append("One ACTIVE campaign must be provided.")
 
-        if extra:
-            errors.append("Only up to one DRAFT campaign allowed.")
+        if extra_active or extra_draft:
+            errors.append("Only up to one DRAFT and one ACTIVE campaign allowed.")
 
-        return active_campaigns, draft_campaign, errors
+        return active_campaign, draft_campaign, errors
 
     @staticmethod
     def _check_retailer_and_status(campaign_rows: list["Row"]) -> list[str]:
@@ -93,18 +106,32 @@ class CampaignEndAction:
         if not campaign_rows:
             errors.append("No campaign found.")
 
-        if not all(cmp.retailer_id == campaign_rows[0].retailer_id for cmp in campaign_rows):
-            errors.append("Selected campaigns must belong to the same retailer")
-
         if any(cmp.status not in ["ACTIVE", "DRAFT"] for cmp in campaign_rows):
             errors.append("Only ACTIVE or DRAFT campaigns allowed for this action.")
+
+        if not all(cmp.retailer_id == campaign_rows[0].retailer_id for cmp in campaign_rows):
+            errors.append("Selected campaigns must belong to the same retailer.")
+
+        if not all(cmp.loyalty_type == campaign_rows[0].loyalty_type for cmp in campaign_rows):
+            errors.append("Selected campaigns must have the same loyalty type.")
 
         return errors
 
     # this is a separate method to allow for easy mocking
     def _get_campaign_rows(self, selected_campaigns_ids: list[str]) -> list["Row"]:  # pragma: no cover
-        return self.db_session.execute(
-            select(Campaign.id, Campaign.slug, Campaign.loyalty_type, Campaign.status, Campaign.retailer_id).where(
+        return self.vela_db_session.execute(
+            select(
+                Campaign.id,
+                Campaign.slug,
+                Campaign.loyalty_type,
+                Campaign.status,
+                Campaign.retailer_id,
+                RewardRule.reward_goal,
+                RewardRule.reward_slug,
+            )
+            .select_from(RewardRule)
+            .join(Campaign)
+            .where(
                 Campaign.id.in_([int(campaigns_id) for campaigns_id in selected_campaigns_ids]),
             )
         ).all()
@@ -112,96 +139,113 @@ class CampaignEndAction:
     def validate_selected_campaigns(self, selected_campaigns_ids: list[str]) -> None:
         campaign_rows = self._get_campaign_rows(selected_campaigns_ids)
         errors = self._check_retailer_and_status(campaign_rows)
-        active_campaigns, draft_campaign, other_errors = self._get_and_validate_campaigns(campaign_rows)
-
+        active_campaign, draft_campaign, other_errors = self._get_and_validate_campaigns(campaign_rows)
         errors += other_errors
-        if errors:
+
+        if errors or active_campaign is None:
             for error in errors:
                 flash(error, category="error")
 
             raise ValueError("failed validation")
 
-        transfer_balance_from_choices = [
-            (cmp.id, cmp.slug) for cmp in active_campaigns if draft_campaign and cmp.type == draft_campaign.type
-        ]
         self._session_form_data = SessionFormData(
-            active_campaigns=active_campaigns,
+            active_campaign=active_campaign,
             draft_campaign=draft_campaign,
-            transfer_balance_from_choices=transfer_balance_from_choices,
-            optional_fields_needed=bool(draft_campaign and transfer_balance_from_choices),
+            optional_fields_needed=draft_campaign is not None,
         )
 
     def update_form(self, form_dynamic_values: str) -> None:
         if not self._session_form_data:
             self._session_form_data = SessionFormData.from_base64_str(form_dynamic_values)
 
-        self.form.transfer_balance_from.choices = self._session_form_data.transfer_balance_from_choices
+        self.form.handle_pending_rewards.choices = PendingRewardChoices.get_choices(
+            self._session_form_data.optional_fields_needed
+        )
         if not self._session_form_data.optional_fields_needed:
+
             for field_name in self.form_optional_fields:
                 delattr(self.form, field_name)
 
-    # this is a separate method to allow for easy mocking
-    def _get_from_campaign_slug_and_goal(self, from_campaign_id: int) -> tuple[str, int] | None:  # pragma: no cover
-        return self.db_session.execute(
-            select(Campaign.slug, RewardRule.reward_goal)
-            .select_from(RewardRule)
-            .join(Campaign)
-            .where(Campaign.id == from_campaign_id)
-        ).first()
-
-    def _transfer_balance(
-        self, from_campaign_id: int, to_campaign: CampaignRow, rate_percent: int, threshold: int
+    def _transfer_balance_and_pending_rewards(
+        self,
+        *,
+        from_campaign: CampaignRow,
+        to_campaign: CampaignRow,
+        rate_percent: int,
+        threshold: int,
+        transfer_balance_requested: bool,
+        transfer_pending_rewards_requested: bool,
     ) -> None:
-        res = self._get_from_campaign_slug_and_goal(from_campaign_id)
-        if not res:
-            raise ValueError(
-                f"Could not find Campaign.slug and RewardRule.reward_goal for campaign of id: {from_campaign_id}"
-            )
 
-        from_campaign_slug, goal = res
-        min_balance = int((goal / 100) * threshold)
-        balance_transfer(
-            from_campaign_slug=from_campaign_slug,
-            to_campaign_slug=to_campaign.slug,
-            min_balance=min_balance,
-            rate_percent=rate_percent,
-            loyalty_type=to_campaign.type,
-        )
-        flash(
-            f"Balance transferred from campaign '{from_campaign_slug}' to campaign '{to_campaign.slug}' "
-            f"with a {rate_percent}% rate for balances of at least {min_balance}"
-        )
+        msg = f"Transfer from campaign '{from_campaign.slug}' to campaign '{to_campaign.slug}'."
+
+        # start a session savepoint to ensure all polaris changes are either successful or rolled back.
+        savepoint: "SessionTransaction"
+        with polaris_db_session.begin_nested() as savepoint:
+
+            if transfer_pending_rewards_requested:
+                msg += "\n Pending Rewards transferred."
+                transfer_pending_rewards(
+                    polaris_db_session,
+                    from_campaign_slug=from_campaign.slug,
+                    to_campaign_slug=to_campaign.slug,
+                    to_campaign_reward_slug=to_campaign.reward_slug,
+                )
+
+            if transfer_balance_requested:
+                min_balance = int((from_campaign.reward_goal / 100) * threshold)
+                msg += f"\n Balance transferred with a {rate_percent}% rate for balances of at least {min_balance}."
+                transfer_balance(
+                    polaris_db_session,
+                    from_campaign_slug=from_campaign.slug,
+                    to_campaign_slug=to_campaign.slug,
+                    min_balance=min_balance,
+                    rate_percent=rate_percent,
+                    loyalty_type=to_campaign.type,
+                )
+
+            savepoint.commit()
+
+        polaris_db_session.commit()
+        flash(msg)
 
     # this is a separate method to allow for easy mocking
     def _update_from_campaign_end_date(self) -> None:  # pragma: no cover
-        self.db_session.execute(
+        self.vela_db_session.execute(
             Campaign.__table__.update()
             .values(end_date=datetime.now(tz=timezone.utc))
-            .where(Campaign.id == self.form.transfer_balance_from.data)
+            .where(Campaign.id == self.session_form_data.active_campaign.id)
         )
-        self.db_session.commit()
+        self.vela_db_session.commit()
 
     def end_campaigns(self, status_change_fn: Callable) -> None:
         success = True
         transfer_balance_requested = self.form.transfer_balance and self.form.transfer_balance.data
+        transfer_pending_rewards_requested, issue_pending_rewards = cast(
+            PendingRewardChoices, self.form.handle_pending_rewards.data
+        ).get_strategy()
+        transfer_requested = transfer_balance_requested or transfer_pending_rewards_requested
 
-        if transfer_balance_requested and not self.session_form_data.draft_campaign:
+        if not self.session_form_data.draft_campaign and transfer_requested:
             raise ValueError("unexpected: no draft campaign found")
 
         if self.session_form_data.draft_campaign:
             success = status_change_fn([self.session_form_data.draft_campaign.id], "active")
-            if success and transfer_balance_requested:
+
+            if success and transfer_requested:
                 self._update_from_campaign_end_date()
-                self._transfer_balance(
-                    from_campaign_id=self.form.transfer_balance_from.data,
+                self._transfer_balance_and_pending_rewards(
+                    from_campaign=self.session_form_data.active_campaign,
                     to_campaign=self.session_form_data.draft_campaign,
                     rate_percent=self.form.convert_rate.data,
                     threshold=self.form.qualify_threshold.data,
+                    transfer_balance_requested=transfer_balance_requested,
+                    transfer_pending_rewards_requested=transfer_pending_rewards_requested,
                 )
 
         if success:
             status_change_fn(
-                [cmp.id for cmp in self.session_form_data.active_campaigns],
+                [self.session_form_data.active_campaign.id],
                 "ended",
-                issue_pending_rewards=self.form.convert_pending_rewards.data,
+                issue_pending_rewards=issue_pending_rewards,
             )
