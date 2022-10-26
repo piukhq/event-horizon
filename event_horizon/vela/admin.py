@@ -528,6 +528,25 @@ class RewardRuleAdmin(CanDeleteModelView):
         validate_reward_rule_change(model.campaign, is_created)
         return super().on_model_change(form, model, is_created)
 
+    def after_model_change(self, form: wtforms.Form, model: "RewardRule", is_created: bool) -> None:
+        user_name, *_ = self.user_info["name"].split(" ")
+
+        if is_created:
+            # Synchronously send activity for reward rule creation after successful creation
+            sync_send_activity(
+                ActivityType.get_reward_rule_created_activity_data(
+                    retailer_slug=model.campaign.retailerrewards.slug,
+                    campaign_name=model.campaign.name,
+                    sso_username=user_name,
+                    activity_datetime=model.created_at,
+                    campaign_slug=model.campaign.slug,
+                    reward_goal=model.reward_goal,
+                    refund_window=model.allocation_window,
+                    reward_slug=model.reward_slug,
+                ),
+                routing_key=ActivityType.REWARD_RULE.value,
+            )
+
 
 class RetailerRewardsAdmin(BaseModelView):
     column_default_sort = ("slug", False)
