@@ -75,7 +75,7 @@ class _EarnRuleDeletedValuesSchema(_EarnRuleCreatedValuesSchema):
 
 
 class _EarnRuleDeletedDataSchema(BaseModel):
-    new_values: _EarnRuleDeletedValuesSchema
+    original_values: _EarnRuleDeletedValuesSchema
 
 
 class EarnRuleDeletedActivitySchema(BaseModel):

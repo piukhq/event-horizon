@@ -385,7 +385,7 @@ def test_get_earn_rule_deleted_activity_data(mocker: MockFixture) -> None:
         "campaigns": [campaign_slug],
         "data": {
             "earn_rule": {
-                "new_values": {
+                "original_values": {
                     "threshold": threshold,
                     "increment": increment,
                     "increment_multiplier": increment_multiplier,

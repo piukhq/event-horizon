@@ -190,7 +190,7 @@ class ActivityType(Enum):
             "campaigns": [campaign_slug],
             "data": EarnRuleDeletedActivitySchema(
                 earn_rule={
-                    "new_values": {
+                    "original_values": {
                         "threshold": threshold,
                         "increment": increment,
                         "increment_multiplier": increment_multiplier,
