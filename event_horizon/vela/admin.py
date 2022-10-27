@@ -276,7 +276,9 @@ class CampaignAdmin(CanDeleteModelView):
         "Are you sure you want to proceed?",
     )
     def action_activate_campaigns(self, ids: list[str]) -> None:
-        self._campaigns_status_change([int(v) for v in ids], "active")
+        if not len(ids) > 1:
+            self._campaigns_status_change([int(v) for v in ids], "active")
+        flash("Cannot activate more than one campaign at once", category="error")
 
     @action(
         "cancel-campaigns",
@@ -285,7 +287,9 @@ class CampaignAdmin(CanDeleteModelView):
         "Are you sure you want to proceed?",
     )
     def action_cancel_campaigns(self, ids: list[str]) -> None:
-        self._campaigns_status_change([int(v) for v in ids], "cancelled")
+        if not len(ids) > 1:
+            self._campaigns_status_change([int(v) for v in ids], "cancelled")
+        flash("Cannot cancel more than one campaign at once", category="error")
 
     def on_model_change(self, form: wtforms.Form, model: "Campaign", is_created: bool) -> None:
         if not is_created:
