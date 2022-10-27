@@ -46,6 +46,7 @@ class _EarnRuleUpdatedValuesSchema(BaseModel):
     threshold: int | None
     increment: int | None
     increment_multiplier: Decimal | None
+    max_amount: int | None
 
 
 class _EarnRuleUpdatedDataSchema(BaseModel):

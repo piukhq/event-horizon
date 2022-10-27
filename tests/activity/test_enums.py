@@ -206,13 +206,20 @@ def test_get_earn_rule_updated_activity_data(mocker: MockFixture) -> None:
     threshold = 500
     increment = 1
     increment_multiplier = Decimal(2)
+    max_amount = 200
 
     new_values = {
         "threshold": threshold + 100,
         "increment": increment + 1,
         "increment_multiplier": increment_multiplier * 2,
+        "max_amount": max_amount * 2,
     }
-    original_values = {"threshold": threshold, "increment": increment, "increment_multiplier": increment_multiplier}
+    original_values = {
+        "threshold": threshold,
+        "increment": increment,
+        "increment_multiplier": increment_multiplier,
+        "max_amount": max_amount,
+    }
 
     payload = ActivityType.get_earn_rule_updated_activity_data(
         retailer_slug=retailer_slug,
@@ -229,7 +236,7 @@ def test_get_earn_rule_updated_activity_data(mocker: MockFixture) -> None:
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} Earn Rule changed",
-        "reasons": [],
+        "reasons": ["Updated"],
         "activity_identifier": campaign_slug,
         "user_id": user_name,
         "associated_value": "N/A",
@@ -241,11 +248,13 @@ def test_get_earn_rule_updated_activity_data(mocker: MockFixture) -> None:
                     "threshold": threshold + 100,
                     "increment": increment + 1,
                     "increment_multiplier": increment_multiplier * 2,
+                    "max_amount": max_amount * 2,
                 },
                 "original_values": {
                     "increment": increment,
                     "increment_multiplier": increment_multiplier,
                     "threshold": threshold,
+                    "max_amount": max_amount,
                 },
             }
         },
@@ -263,11 +272,13 @@ def test_get_earn_rule_updated_activity_partial_data(mocker: MockFixture) -> Non
     retailer_slug = "test-retailer"
     activity_datetime = datetime.now(tz=timezone.utc)
     threshold = 500
+    max_amount = 200
 
     new_values = {
         "threshold": threshold + 100,
+        "max_amount": max_amount * 2,
     }
-    original_values = {"threshold": threshold}
+    original_values = {"threshold": threshold, "max_amount": max_amount}
 
     payload = ActivityType.get_earn_rule_updated_activity_data(
         retailer_slug=retailer_slug,
@@ -284,7 +295,7 @@ def test_get_earn_rule_updated_activity_partial_data(mocker: MockFixture) -> Non
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} Earn Rule changed",
-        "reasons": [],
+        "reasons": ["Updated"],
         "activity_identifier": campaign_slug,
         "user_id": user_name,
         "associated_value": "N/A",
@@ -294,9 +305,11 @@ def test_get_earn_rule_updated_activity_partial_data(mocker: MockFixture) -> Non
             "earn_rule": {
                 "new_values": {
                     "threshold": threshold + 100,
+                    "max_amount": max_amount * 2,
                 },
                 "original_values": {
                     "threshold": threshold,
+                    "max_amount": max_amount,
                 },
             }
         },
@@ -332,7 +345,7 @@ def test_get_earn_rule_updated_activity_data_ignored_field(mocker: MockFixture) 
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} Earn Rule changed",
-        "reasons": [],
+        "reasons": ["Updated"],
         "activity_identifier": campaign_slug,
         "user_id": user_name,
         "associated_value": "N/A",
@@ -360,6 +373,7 @@ def test_get_earn_rule_deleted_activity_data(mocker: MockFixture) -> None:
     threshold = 500
     increment = 1
     increment_multiplier = Decimal(2)
+    max_amount = 200
 
     payload = ActivityType.get_earn_rule_deleted_activity_data(
         retailer_slug=retailer_slug,
@@ -370,6 +384,7 @@ def test_get_earn_rule_deleted_activity_data(mocker: MockFixture) -> None:
         threshold=threshold,
         increment=increment,
         increment_multiplier=increment_multiplier,
+        max_amount=max_amount,
     )
 
     assert payload == {
@@ -377,7 +392,7 @@ def test_get_earn_rule_deleted_activity_data(mocker: MockFixture) -> None:
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} Earn Rule removed",
-        "reasons": [],
+        "reasons": ["Deleted"],
         "activity_identifier": campaign_slug,
         "user_id": user_name,
         "associated_value": "N/A",
@@ -389,6 +404,7 @@ def test_get_earn_rule_deleted_activity_data(mocker: MockFixture) -> None:
                     "threshold": threshold,
                     "increment": increment,
                     "increment_multiplier": increment_multiplier,
+                    "max_amount": max_amount,
                 }
             }
         },
