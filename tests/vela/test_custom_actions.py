@@ -3,7 +3,7 @@ import pickle
 
 from dataclasses import dataclass
 from typing import Generator
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock
 
 import pytest
 
@@ -12,6 +12,7 @@ from pytest_mock import MockerFixture
 from sqlalchemy.orm import Session
 
 from event_horizon.vela.custom_actions import CampaignEndAction, CampaignRow, SessionFormData
+from event_horizon.vela.enums import PendingRewardChoices
 
 
 @dataclass
@@ -22,25 +23,21 @@ class SessionFormTestData:
 
 @dataclass
 class EndActionMockedCalls:
-    balance_transfer: MagicMock
+    transfer_balance: MagicMock
+    transfer_pending_rewards: MagicMock
     update_end_date: MagicMock
-    slug_and_goal: MagicMock
     status_change_fn: MagicMock
 
 
 @pytest.fixture
 def test_session_form_data() -> SessionFormTestData:
     session_form_data = SessionFormData(
-        active_campaigns=[
-            CampaignRow(id=1, slug="test-active-1", type="STAMPS"),
-            CampaignRow(id=2, slug="test-active-2", type="STAMPS"),
-            CampaignRow(id=3, slug="test-active-3", type="ACCUMULATOR"),
-        ],
-        draft_campaign=CampaignRow(id=4, slug="test-draft", type="STAMPS"),
-        transfer_balance_from_choices=[
-            (1, "test-active-1"),
-            (2, "test-active-2"),
-        ],
+        active_campaign=CampaignRow(
+            id=1, slug="test-active", type="STAMPS", reward_goal=100, reward_slug="test-reward-active"
+        ),
+        draft_campaign=CampaignRow(
+            id=2, slug="test-draft", type="STAMPS", reward_goal=100, reward_slug="test-reward-draft"
+        ),
         optional_fields_needed=True,
     )
 
@@ -53,9 +50,8 @@ def test_session_form_data() -> SessionFormTestData:
 @pytest.fixture
 def test_session_form_data_no_draft() -> SessionFormTestData:
     session_form_data = SessionFormData(
-        active_campaigns=[CampaignRow(id=1, slug="test", type="STAMPS")],
+        active_campaign=CampaignRow(id=1, slug="test", type="STAMPS", reward_goal=100, reward_slug="test-reward"),
         draft_campaign=None,
-        transfer_balance_from_choices=[],
         optional_fields_needed=False,
     )
     return SessionFormTestData(
@@ -75,13 +71,12 @@ def end_action() -> Generator[CampaignEndAction, None, None]:
 @pytest.fixture
 def end_action_mocks(mocker: MockerFixture, end_action: CampaignEndAction) -> EndActionMockedCalls:
     mocks = EndActionMockedCalls(
-        balance_transfer=mocker.patch("event_horizon.vela.custom_actions.balance_transfer"),
+        transfer_balance=mocker.patch("event_horizon.vela.custom_actions.transfer_balance"),
+        transfer_pending_rewards=mocker.patch("event_horizon.vela.custom_actions.transfer_pending_rewards"),
         update_end_date=mocker.patch.object(end_action, "_update_from_campaign_end_date"),
-        slug_and_goal=mocker.patch.object(end_action, "_get_from_campaign_slug_and_goal"),
         status_change_fn=MagicMock(),
     )
     mocks.status_change_fn.return_value = True
-    mocks.slug_and_goal.return_value = ("test-active-1", 300)
 
     return mocks
 
@@ -156,11 +151,26 @@ def test_campaign_end_action_update_form_invalid_content(end_action: CampaignEnd
 def test_campaign_end_action_validate_selected_campaigns_ok(
     end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, mocker: MockerFixture
 ) -> None:
+
     mock_campaigns_rows = [
-        MagicMock(id=1, slug="test-active-1", loyalty_type="STAMPS", status="ACTIVE", retailer_id=1),
-        MagicMock(id=2, slug="test-active-2", loyalty_type="STAMPS", status="ACTIVE", retailer_id=1),
-        MagicMock(id=3, slug="test-active-3", loyalty_type="ACCUMULATOR", status="ACTIVE", retailer_id=1),
-        MagicMock(id=4, slug="test-draft", loyalty_type="STAMPS", status="DRAFT", retailer_id=1),
+        MagicMock(
+            id=1,
+            slug="test-active",
+            loyalty_type="STAMPS",
+            status="ACTIVE",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-active",
+        ),
+        MagicMock(
+            id=2,
+            slug="test-draft",
+            loyalty_type="STAMPS",
+            status="DRAFT",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-draft",
+        ),
     ]
     mock_get_campaigns_rows = mocker.patch.object(end_action, "_get_campaign_rows", return_value=mock_campaigns_rows)
     selected_campaigns = ["these", "values", "are", "ignored", "because", "of", "mock"]
@@ -187,7 +197,7 @@ def test_campaign_end_action_validate_selected_campaigns_no_campaign_found(
     assert mock_flash.call_count == 2
     assert mock_flash.call_args_list[0].args[0] == "No campaign found."
     assert mock_flash.call_args_list[0].kwargs == {"category": "error"}
-    assert mock_flash.call_args_list[1].args[0] == "At least one ACTIVE campaign must be provided."
+    assert mock_flash.call_args_list[1].args[0] == "One ACTIVE campaign must be provided."
     assert mock_flash.call_args_list[1].kwargs == {"category": "error"}
 
 
@@ -195,10 +205,33 @@ def test_campaign_end_action_validate_selected_campaigns_too_many_draft(
     end_action: CampaignEndAction, mocker: MockerFixture
 ) -> None:
     mock_campaigns_rows = [
-        MagicMock(id=1, slug="test-active-1", loyalty_type="STAMPS", status="ACTIVE", retailer_id=1),
-        MagicMock(id=2, slug="test-active-2", loyalty_type="ACCUMULATOR", status="ACTIVE", retailer_id=1),
-        MagicMock(id=3, slug="test-draft-1", loyalty_type="ACCUMULATOR", status="DRAFT", retailer_id=1),
-        MagicMock(id=4, slug="test-draft-2", loyalty_type="STAMPS", status="DRAFT", retailer_id=1),
+        MagicMock(
+            id=1,
+            slug="test-active-1",
+            loyalty_type="STAMPS",
+            status="ACTIVE",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-active",
+        ),
+        MagicMock(
+            id=2,
+            slug="test-draft-1",
+            loyalty_type="STAMPS",
+            status="DRAFT",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-draft-1",
+        ),
+        MagicMock(
+            id=3,
+            slug="test-draft-2",
+            loyalty_type="STAMPS",
+            status="DRAFT",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-draft-2",
+        ),
     ]
     mock_get_campaigns_rows = mocker.patch.object(end_action, "_get_campaign_rows", return_value=mock_campaigns_rows)
     selected_campaigns = ["these", "values", "are", "ignored", "because", "of", "mock"]
@@ -209,15 +242,75 @@ def test_campaign_end_action_validate_selected_campaigns_too_many_draft(
 
     mock_get_campaigns_rows.assert_called_once_with(selected_campaigns)
     assert ex_info.value.args[0] == "failed validation"
-    mock_flash.assert_called_once_with("Only up to one DRAFT campaign allowed.", category="error")
+    mock_flash.assert_called_once_with("Only up to one DRAFT and one ACTIVE campaign allowed.", category="error")
+
+
+def test_campaign_end_action_validate_selected_campaigns_too_many_active(
+    end_action: CampaignEndAction, mocker: MockerFixture
+) -> None:
+    mock_campaigns_rows = [
+        MagicMock(
+            id=1,
+            slug="test-active-1",
+            loyalty_type="STAMPS",
+            status="ACTIVE",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-active-1",
+        ),
+        MagicMock(
+            id=2,
+            slug="test-active-2",
+            loyalty_type="STAMPS",
+            status="DRAFT",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-active-2",
+        ),
+        MagicMock(
+            id=3,
+            slug="test-draft",
+            loyalty_type="STAMPS",
+            status="DRAFT",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-draft",
+        ),
+    ]
+    mock_get_campaigns_rows = mocker.patch.object(end_action, "_get_campaign_rows", return_value=mock_campaigns_rows)
+    selected_campaigns = ["these", "values", "are", "ignored", "because", "of", "mock"]
+    mock_flash = mocker.patch("event_horizon.vela.custom_actions.flash")
+
+    with pytest.raises(ValueError) as ex_info:
+        end_action.validate_selected_campaigns(selected_campaigns)
+
+    mock_get_campaigns_rows.assert_called_once_with(selected_campaigns)
+    assert ex_info.value.args[0] == "failed validation"
+    mock_flash.assert_called_once_with("Only up to one DRAFT and one ACTIVE campaign allowed.", category="error")
 
 
 def test_campaign_end_action_validate_selected_campaigns_different_retailer(
     end_action: CampaignEndAction, mocker: MockerFixture
 ) -> None:
     mock_campaigns_rows = [
-        MagicMock(id=1, slug="test-active-1", loyalty_type="STAMPS", status="ACTIVE", retailer_id=1),
-        MagicMock(id=2, slug="test-active-2", loyalty_type="ACCUMULATOR", status="ACTIVE", retailer_id=2),
+        MagicMock(
+            id=1,
+            slug="test-active",
+            loyalty_type="STAMPS",
+            status="ACTIVE",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-active",
+        ),
+        MagicMock(
+            id=2,
+            slug="test-draft",
+            loyalty_type="STAMPS",
+            status="DRAFT",
+            retailer_id=2,
+            reward_goal=100,
+            reward_slug="test-reward-draft",
+        ),
     ]
     mock_get_campaigns_rows = mocker.patch.object(end_action, "_get_campaign_rows", return_value=mock_campaigns_rows)
     selected_campaigns = ["these", "values", "are", "ignored", "because", "of", "mock"]
@@ -228,15 +321,31 @@ def test_campaign_end_action_validate_selected_campaigns_different_retailer(
 
     mock_get_campaigns_rows.assert_called_once_with(selected_campaigns)
     assert ex_info.value.args[0] == "failed validation"
-    mock_flash.assert_called_once_with("Selected campaigns must belong to the same retailer", category="error")
+    mock_flash.assert_called_once_with("Selected campaigns must belong to the same retailer.", category="error")
 
 
 def test_campaign_end_action_validate_selected_campaigns_wrong_status(
     end_action: CampaignEndAction, mocker: MockerFixture
 ) -> None:
     mock_campaigns_rows = [
-        MagicMock(id=1, slug="test-active-1", loyalty_type="STAMPS", status="ACTIVE", retailer_id=1),
-        MagicMock(id=2, slug="test-active-2", loyalty_type="ACCUMULATOR", status="ENDED", retailer_id=1),
+        MagicMock(
+            id=1,
+            slug="test-active",
+            loyalty_type="ACCUMULATOR",
+            status="ACTIVE",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-active",
+        ),
+        MagicMock(
+            id=2,
+            slug="test-endend",
+            loyalty_type="ACCUMULATOR",
+            status="ENDED",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-ended",
+        ),
     ]
     mock_get_campaigns_rows = mocker.patch.object(end_action, "_get_campaign_rows", return_value=mock_campaigns_rows)
     selected_campaigns = ["these", "values", "are", "ignored", "because", "of", "mock"]
@@ -250,23 +359,55 @@ def test_campaign_end_action_validate_selected_campaigns_wrong_status(
     mock_flash.assert_called_once_with("Only ACTIVE or DRAFT campaigns allowed for this action.", category="error")
 
 
+def test_campaign_end_action_validate_selected_campaigns_different_loyalty_type(
+    end_action: CampaignEndAction, mocker: MockerFixture
+) -> None:
+    mock_campaigns_rows = [
+        MagicMock(
+            id=1,
+            slug="test-active",
+            loyalty_type="STAMPS",
+            status="ACTIVE",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-active",
+        ),
+        MagicMock(
+            id=2,
+            slug="test-draft",
+            loyalty_type="ACCUMULATOR",
+            status="DRAFT",
+            retailer_id=1,
+            reward_goal=100,
+            reward_slug="test-reward-draft",
+        ),
+    ]
+    mock_get_campaigns_rows = mocker.patch.object(end_action, "_get_campaign_rows", return_value=mock_campaigns_rows)
+    selected_campaigns = ["these", "values", "are", "ignored", "because", "of", "mock"]
+    mock_flash = mocker.patch("event_horizon.vela.custom_actions.flash")
+
+    with pytest.raises(ValueError) as ex_info:
+        end_action.validate_selected_campaigns(selected_campaigns)
+
+    mock_get_campaigns_rows.assert_called_once_with(selected_campaigns)
+    assert ex_info.value.args[0] == "failed validation"
+    mock_flash.assert_called_once_with("Selected campaigns must have the same loyalty type.", category="error")
+
+
 def test_campaign_end_action_end_campaigns_ok(
     end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, end_action_mocks: EndActionMockedCalls
 ) -> None:
     assert test_session_form_data.value.draft_campaign, "using wrong fixture"
 
-    convert_pending = False
-    transfer_balance_from = 1
     convert_rate = 100
     qualify_threshold = 0
 
     end_action._session_form_data = test_session_form_data.value
     end_action.update_form("")
     end_action.form.transfer_balance.data = True
-    end_action.form.transfer_balance_from.data = transfer_balance_from
     end_action.form.convert_rate.data = convert_rate
     end_action.form.qualify_threshold.data = qualify_threshold
-    end_action.form.convert_pending_rewards.data = convert_pending
+    end_action.form.handle_pending_rewards.data = PendingRewardChoices.TRANSFER
 
     end_action.end_campaigns(end_action_mocks.status_change_fn)
 
@@ -276,19 +417,25 @@ def test_campaign_end_action_end_campaigns_ok(
         "active",
     )
     assert end_action_mocks.status_change_fn.call_args_list[1].args == (
-        [cmp.id for cmp in test_session_form_data.value.active_campaigns],
+        [test_session_form_data.value.active_campaign.id],
         "ended",
     )
-    assert end_action_mocks.status_change_fn.call_args_list[1].kwargs == {"issue_pending_rewards": convert_pending}
+    assert end_action_mocks.status_change_fn.call_args_list[1].kwargs == {"issue_pending_rewards": False}
     end_action_mocks.update_end_date.assert_called_once_with()
-    end_action_mocks.balance_transfer.assert_called_once_with(
-        from_campaign_slug=test_session_form_data.value.active_campaigns[0].slug,
+    end_action_mocks.transfer_pending_rewards.assert_called_once_with(
+        ANY,  # this is the db_session
+        from_campaign_slug=test_session_form_data.value.active_campaign.slug,
+        to_campaign_slug=test_session_form_data.value.draft_campaign.slug,
+        to_campaign_reward_slug=test_session_form_data.value.draft_campaign.reward_slug,
+    )
+    end_action_mocks.transfer_balance.assert_called_once_with(
+        ANY,  # this is the db_session
+        from_campaign_slug=test_session_form_data.value.active_campaign.slug,
         to_campaign_slug=test_session_form_data.value.draft_campaign.slug,
         min_balance=int((300 / 100) * qualify_threshold),
         rate_percent=convert_rate,
         loyalty_type=test_session_form_data.value.draft_campaign.type,
     )
-    end_action_mocks.slug_and_goal.assert_called_once_with(transfer_balance_from)
 
 
 def test_campaign_end_action_end_campaigns_no_draft_ok(
@@ -297,23 +444,21 @@ def test_campaign_end_action_end_campaigns_no_draft_ok(
     end_action_mocks: EndActionMockedCalls,
 ) -> None:
 
-    convert_pending = False
-
     end_action._session_form_data = test_session_form_data_no_draft.value
     end_action.update_form("")
-    end_action.form.convert_pending_rewards.data = convert_pending
+    end_action.form.handle_pending_rewards.data = PendingRewardChoices.REMOVE
 
     end_action.end_campaigns(end_action_mocks.status_change_fn)
 
     end_action_mocks.status_change_fn.assert_called_once_with(
-        [cmp.id for cmp in test_session_form_data_no_draft.value.active_campaigns],
+        [test_session_form_data_no_draft.value.active_campaign.id],
         "ended",
-        issue_pending_rewards=convert_pending,
+        issue_pending_rewards=False,
     )
 
     end_action_mocks.update_end_date.assert_not_called()
-    end_action_mocks.balance_transfer.assert_not_called()
-    end_action_mocks.slug_and_goal.assert_not_called()
+    end_action_mocks.transfer_balance.assert_not_called()
+    end_action_mocks.transfer_pending_rewards.assert_not_called()
 
 
 def test_campaign_end_action_end_campaigns_no_transfer_ok(
@@ -321,15 +466,12 @@ def test_campaign_end_action_end_campaigns_no_transfer_ok(
 ) -> None:
     assert test_session_form_data.value.draft_campaign, "using wrong fixture"
 
-    convert_pending = False
-
     end_action._session_form_data = test_session_form_data.value
     end_action.update_form("")
     end_action.form.transfer_balance.data = False
-    end_action.form.transfer_balance_from.data = 1
     end_action.form.convert_rate.data = 100
     end_action.form.qualify_threshold.data = 0
-    end_action.form.convert_pending_rewards.data = convert_pending
+    end_action.form.handle_pending_rewards.data = PendingRewardChoices.REMOVE
 
     end_action.end_campaigns(end_action_mocks.status_change_fn)
 
@@ -339,17 +481,17 @@ def test_campaign_end_action_end_campaigns_no_transfer_ok(
         "active",
     )
     assert end_action_mocks.status_change_fn.call_args_list[1].args == (
-        [cmp.id for cmp in test_session_form_data.value.active_campaigns],
+        [test_session_form_data.value.active_campaign.id],
         "ended",
     )
-    assert end_action_mocks.status_change_fn.call_args_list[1].kwargs == {"issue_pending_rewards": convert_pending}
+    assert end_action_mocks.status_change_fn.call_args_list[1].kwargs == {"issue_pending_rewards": False}
 
     end_action_mocks.update_end_date.assert_not_called()
-    end_action_mocks.balance_transfer.assert_not_called()
-    end_action_mocks.slug_and_goal.assert_not_called()
+    end_action_mocks.transfer_balance.assert_not_called()
+    end_action_mocks.transfer_pending_rewards.assert_not_called()
 
 
-def test_campaign_end_action_end_campaigns_transfer_balance_but_no_transfer_from_error(
+def test_campaign_end_action_end_campaigns_transfer_balance_but_no_draft_error(
     end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, end_action_mocks: EndActionMockedCalls
 ) -> None:
 
@@ -358,10 +500,9 @@ def test_campaign_end_action_end_campaigns_transfer_balance_but_no_transfer_from
     end_action._session_form_data.draft_campaign = None
 
     end_action.form.transfer_balance.data = True
-    end_action.form.transfer_balance_from.data = 1
     end_action.form.convert_rate.data = 100
     end_action.form.qualify_threshold.data = 0
-    end_action.form.convert_pending_rewards.data = False
+    end_action.form.handle_pending_rewards.data = PendingRewardChoices.REMOVE
 
     with pytest.raises(ValueError) as exc_info:
         end_action.end_campaigns(end_action_mocks.status_change_fn)
@@ -369,43 +510,8 @@ def test_campaign_end_action_end_campaigns_transfer_balance_but_no_transfer_from
     assert exc_info.value.args[0] == "unexpected: no draft campaign found"
     end_action_mocks.status_change_fn.assert_not_called()
     end_action_mocks.update_end_date.assert_not_called()
-    end_action_mocks.balance_transfer.assert_not_called()
-    end_action_mocks.slug_and_goal.assert_not_called()
-
-
-def test_campaign_end_action_end_campaigns_cant_fetch_from_campaign_error(
-    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, end_action_mocks: EndActionMockedCalls
-) -> None:
-    assert test_session_form_data.value.draft_campaign, "using wrong fixture"
-
-    end_action_mocks.slug_and_goal.return_value = None
-
-    transfer_balance_from = 1
-    convert_rate = 100
-    qualify_threshold = 0
-
-    end_action._session_form_data = test_session_form_data.value
-    end_action.update_form("")
-
-    end_action.form.transfer_balance.data = True
-    end_action.form.transfer_balance_from.data = transfer_balance_from
-    end_action.form.convert_rate.data = convert_rate
-    end_action.form.qualify_threshold.data = qualify_threshold
-    end_action.form.convert_pending_rewards.data = False
-
-    with pytest.raises(ValueError) as exc_info:
-        end_action.end_campaigns(end_action_mocks.status_change_fn)
-
-    assert (
-        exc_info.value.args[0]
-        == f"Could not find Campaign.slug and RewardRule.reward_goal for campaign of id: {transfer_balance_from}"
-    )
-    end_action_mocks.status_change_fn.assert_called_once_with(
-        [test_session_form_data.value.draft_campaign.id], "active"
-    )
-    end_action_mocks.update_end_date.assert_called_once_with()
-    end_action_mocks.balance_transfer.assert_not_called()
-    end_action_mocks.slug_and_goal.assert_called_once_with(transfer_balance_from)
+    end_action_mocks.transfer_balance.assert_not_called()
+    end_action_mocks.transfer_pending_rewards.assert_not_called()
 
 
 def test_campaign_end_action_end_campaigns_failed_status_change_error(
@@ -419,10 +525,9 @@ def test_campaign_end_action_end_campaigns_failed_status_change_error(
     end_action.update_form("")
 
     end_action.form.transfer_balance.data = True
-    end_action.form.transfer_balance_from.data = 1
     end_action.form.convert_rate.data = 100
     end_action.form.qualify_threshold.data = 0
-    end_action.form.convert_pending_rewards.data = False
+    end_action.form.handle_pending_rewards.data = PendingRewardChoices.REMOVE
 
     end_action.end_campaigns(end_action_mocks.status_change_fn)
 
@@ -430,5 +535,5 @@ def test_campaign_end_action_end_campaigns_failed_status_change_error(
         [test_session_form_data.value.draft_campaign.id], "active"
     )
     end_action_mocks.update_end_date.assert_not_called()
-    end_action_mocks.balance_transfer.assert_not_called()
-    end_action_mocks.slug_and_goal.assert_not_called()
+    end_action_mocks.transfer_balance.assert_not_called()
+    end_action_mocks.transfer_pending_rewards.assert_not_called()

@@ -10,6 +10,7 @@ from event_horizon.activity_utils.schemas import (
     EarnRuleCreatedActivitySchema,
     EarnRuleDeletedActivitySchema,
     EarnRuleUpdatedActivitySchema,
+    RewardRuleCreatedActivitySchema,
 )
 from event_horizon.settings import PROJECT_NAME
 
@@ -17,6 +18,7 @@ from event_horizon.settings import PROJECT_NAME
 class ActivityType(Enum):
     CAMPAIGN_CHANGE = f"activity.{PROJECT_NAME}.campaign.change"
     EARN_RULE = f"activity.{PROJECT_NAME}.earn_rule.change"
+    REWARD_RULE = f"activity.{PROJECT_NAME}.reward_rule.change"
 
     @classmethod
     def get_campaign_created_activity_data(
@@ -147,7 +149,7 @@ class ActivityType(Enum):
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{campaign_name} Earn Rule changed",
-            "reasons": [],
+            "reasons": ["Updated"],
             "activity_identifier": campaign_slug,
             "user_id": sso_username,
             "associated_value": "N/A",
@@ -175,6 +177,7 @@ class ActivityType(Enum):
         threshold: int,
         increment: int,
         increment_multiplier: Decimal,
+        max_amount: int,
     ) -> dict:
 
         payload = {
@@ -182,7 +185,7 @@ class ActivityType(Enum):
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{campaign_name} Earn Rule removed",
-            "reasons": [],
+            "reasons": ["Deleted"],
             "activity_identifier": campaign_slug,
             "user_id": sso_username,
             "associated_value": "N/A",
@@ -194,6 +197,44 @@ class ActivityType(Enum):
                         "threshold": threshold,
                         "increment": increment,
                         "increment_multiplier": increment_multiplier,
+                        "max_amount": max_amount,
+                    }
+                }
+            ).dict(exclude_unset=True),
+        }
+        return payload
+
+    @classmethod
+    def get_reward_rule_created_activity_data(
+        cls,
+        *,
+        retailer_slug: str,
+        campaign_name: str,
+        sso_username: str,
+        activity_datetime: datetime,
+        campaign_slug: str,
+        reward_goal: int,
+        refund_window: int,
+        reward_slug: str,
+    ) -> dict:
+
+        payload = {
+            "type": cls.REWARD_RULE.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": f"{campaign_name} Reward Rule created",
+            "reasons": ["Created"],
+            "activity_identifier": campaign_slug,
+            "user_id": sso_username,
+            "associated_value": "N/A",
+            "retailer": retailer_slug,
+            "campaigns": [campaign_slug],
+            "data": RewardRuleCreatedActivitySchema(
+                reward_rule={
+                    "new_values": {
+                        "reward_goal": reward_goal,
+                        "refund_window": refund_window,
+                        "reward_slug": reward_slug,
                     }
                 }
             ).dict(exclude_unset=True),

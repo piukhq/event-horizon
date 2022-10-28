@@ -80,6 +80,10 @@ POLARIS_HOST = getenv("POLARIS_HOST", "http://polaris-api")
 POLARIS_BASE_URL = getenv("POLARIS_BASE_URL", f"{POLARIS_HOST}/loyalty")
 POLARIS_AUTH_TOKEN = get_env("POLARIS_AUTH_TOKEN") or key_vault.get_secret("bpl-polaris-api-auth-token")
 
+CARINA_HOST = getenv("CARINA_HOST", "http://carina-api")
+CARINA_BASE_URL = getenv("CARINA_BASE_URL", f"{CARINA_HOST}/rewards")
+CARINA_AUTH_TOKEN = get_env("CARINA_AUTH_TOKEN") or key_vault.get_secret("bpl-carina-api-auth-token")
+
 VELA_HOST = getenv("VELA_HOST", "http://vela-api")
 VELA_BASE_URL = getenv("VELA_BASE_URL", f"{VELA_HOST}/retailers")
 VELA_AUTH_TOKEN = get_env("VELA_AUTH_TOKEN") or key_vault.get_secret("bpl-vela-api-auth-token")

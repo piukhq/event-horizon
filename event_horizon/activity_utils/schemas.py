@@ -46,6 +46,7 @@ class _EarnRuleUpdatedValuesSchema(BaseModel):
     threshold: int | None
     increment: int | None
     increment_multiplier: Decimal | None
+    max_amount: int | None
 
 
 class _EarnRuleUpdatedDataSchema(BaseModel):
@@ -80,3 +81,17 @@ class _EarnRuleDeletedDataSchema(BaseModel):
 
 class EarnRuleDeletedActivitySchema(BaseModel):
     earn_rule: _EarnRuleDeletedDataSchema
+
+
+class _RewardRuleCreatedValuesSchema(BaseModel):
+    reward_goal: int
+    refund_window: int
+    reward_slug: str
+
+
+class _RewardRuleCreatedDataSchema(BaseModel):
+    new_values: _RewardRuleCreatedValuesSchema
+
+
+class RewardRuleCreatedActivitySchema(BaseModel):
+    reward_rule: _RewardRuleCreatedDataSchema

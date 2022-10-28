@@ -1,13 +1,25 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import func, literal
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.future import select
 
-from event_horizon.polaris.db import AccountHolderCampaignBalance, db_session
+from event_horizon.polaris.db import AccountHolderCampaignBalance, AccountHolderPendingReward
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 
-def balance_transfer(
-    *, from_campaign_slug: str, to_campaign_slug: str, min_balance: int, rate_percent: int, loyalty_type: str
+def transfer_balance(
+    db_session: "Session",
+    *,
+    from_campaign_slug: str,
+    to_campaign_slug: str,
+    min_balance: int,
+    rate_percent: int,
+    loyalty_type: str,
 ) -> None:  # pragma: no cover
+
     rate_multiplier = rate_percent / 100
 
     match loyalty_type:
@@ -35,4 +47,19 @@ def balance_transfer(
         set_={"balance": AccountHolderCampaignBalance.balance + insert_stmt.excluded.balance},
     )
     db_session.execute(upsert_stmt)
-    db_session.commit()
+
+
+def transfer_pending_rewards(
+    db_session: "Session",
+    *,
+    from_campaign_slug: str,
+    to_campaign_slug: str,
+    to_campaign_reward_slug: str,
+) -> None:  # pragma: no cover
+    db_session.execute(
+        AccountHolderPendingReward.__table__.update()
+        # NB: we might want to remove reward_slug here when we stop using it
+        .values(campaign_slug=to_campaign_slug, reward_slug=to_campaign_reward_slug).where(
+            AccountHolderPendingReward.campaign_slug == from_campaign_slug
+        )
+    )

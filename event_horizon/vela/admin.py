@@ -147,9 +147,8 @@ class CampaignAdmin(CanDeleteModelView):
 
         return self.render(
             "eh_end_campaign_action.html",
-            active_campaigns=cmp_end_action.session_form_data.active_campaigns,
+            active_campaign=cmp_end_action.session_form_data.active_campaign,
             draft_campaign=cmp_end_action.session_form_data.draft_campaign,
-            same_type_active_campaigns=cmp_end_action.session_form_data.transfer_balance_from_choices,
             form=cmp_end_action.form,
             easter_egg=self.get_easter_egg(),
         )
@@ -277,7 +276,9 @@ class CampaignAdmin(CanDeleteModelView):
         "Are you sure you want to proceed?",
     )
     def action_activate_campaigns(self, ids: list[str]) -> None:
-        self._campaigns_status_change([int(v) for v in ids], "active")
+        if not len(ids) > 1:
+            self._campaigns_status_change([int(v) for v in ids], "active")
+        flash("Cannot activate more than one campaign at once", category="error")
 
     @action(
         "cancel-campaigns",
@@ -286,7 +287,9 @@ class CampaignAdmin(CanDeleteModelView):
         "Are you sure you want to proceed?",
     )
     def action_cancel_campaigns(self, ids: list[str]) -> None:
-        self._campaigns_status_change([int(v) for v in ids], "cancelled")
+        if not len(ids) > 1:
+            self._campaigns_status_change([int(v) for v in ids], "cancelled")
+        flash("Cannot cancel more than one campaign at once", category="error")
 
     def on_model_change(self, form: wtforms.Form, model: "Campaign", is_created: bool) -> None:
         if not is_created:
@@ -350,9 +353,9 @@ class CampaignAdmin(CanDeleteModelView):
     @action(
         "end-campaigns",
         "End",
-        "Selected campaigns must belong to the same Retailer and be in a ACTIVE status.\n"
-        "An optional DRAFT campaign from the same retailer can be also selected, "
-        "this will automatically activate it and enable the balance transfer configuration.\n"
+        "The selected campaign must be in an ACTIVE state.\n"
+        "An optional DRAFT campaign from the same retailer can be selected, "
+        "this will automatically activate it and enable the transfer configuration for balances and pending rewards.\n"
         "You will be redirected to an action configuration page.\n"
         "Are you sure you want to proceed?",
     )
@@ -420,6 +423,7 @@ class EarnRuleAdmin(CanDeleteModelView):
                 threshold=model.threshold,
                 increment=model.increment,
                 increment_multiplier=model.increment_multiplier,
+                max_amount=model.max_amount,
             ),
             routing_key=ActivityType.EARN_RULE.value,
         )
@@ -527,6 +531,25 @@ class RewardRuleAdmin(CanDeleteModelView):
     def on_model_change(self, form: wtforms.Form, model: "RewardRule", is_created: bool) -> None:
         validate_reward_rule_change(model.campaign, is_created)
         return super().on_model_change(form, model, is_created)
+
+    def after_model_change(self, form: wtforms.Form, model: "RewardRule", is_created: bool) -> None:
+        user_name, *_ = self.user_info["name"].split(" ")
+
+        if is_created:
+            # Synchronously send activity for reward rule creation after successful creation
+            sync_send_activity(
+                ActivityType.get_reward_rule_created_activity_data(
+                    retailer_slug=model.campaign.retailerrewards.slug,
+                    campaign_name=model.campaign.name,
+                    sso_username=user_name,
+                    activity_datetime=model.created_at,
+                    campaign_slug=model.campaign.slug,
+                    reward_goal=model.reward_goal,
+                    refund_window=model.allocation_window,
+                    reward_slug=model.reward_slug,
+                ),
+                routing_key=ActivityType.REWARD_RULE.value,
+            )
 
 
 class RetailerRewardsAdmin(BaseModelView):

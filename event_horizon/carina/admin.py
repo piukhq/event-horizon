@@ -1,6 +1,12 @@
+import logging
+
 from typing import TYPE_CHECKING
 
-from flask import Markup
+import requests
+
+from flask import Markup, flash
+from flask_admin.actions import action
+from requests import RequestException
 from retry_tasks_lib.admin.views import (
     RetryTaskAdminBase,
     TaskTypeAdminBase,
@@ -10,6 +16,7 @@ from retry_tasks_lib.admin.views import (
 
 from event_horizon import settings
 from event_horizon.admin.model_views import BaseModelView, CanDeleteModelView
+from event_horizon.carina.db import RewardConfig
 from event_horizon.carina.validators import (
     validate_optional_yaml,
     validate_required_fields_values_yaml,
@@ -86,6 +93,38 @@ class RewardConfigAdmin(BaseModelView):
         + Markup.escape(model.required_fields_values)
         + Markup("</pre>"),
     }
+
+    @action(
+        "deactivate-reward-type",
+        "DEACTIVATE",
+        "This action can only be carried out on one reward_config at a time and is not reversible."
+        " Are you sure you wish to proceed?",
+    )
+    def deactivate_reward_type(self, reward_config_ids: list[str]) -> None:
+        if len(reward_config_ids) != 1:
+            flash("This action must be completed for reward_configs one at a time", category="error")
+            return
+        try:
+            reward_config = self._get_reward_config(int(reward_config_ids[0]))
+            resp = requests.delete(
+                f"{settings.CARINA_BASE_URL}/{reward_config.retailer.slug}/rewards/{reward_config.reward_slug}",
+                headers={"Authorization": f"token {settings.CARINA_AUTH_TOKEN}"},
+                timeout=settings.REQUEST_TIMEOUT,
+            )
+            if 200 <= resp.status_code <= 204:
+                flash("Successfully diactivated reward_config")
+            else:
+                self._flash_error_response(resp.json())
+
+        except (ValueError, RequestException) as exc:
+            flash(exc.args[0], category="error")
+            logging.exception("Could not deactivate reward type", exc_info=exc)
+
+    def _get_reward_config(self, reward_config_id: int) -> RewardConfig:
+        reward_config: RewardConfig | None = self.session.get(RewardConfig, reward_config_id)
+        if not reward_config:
+            raise ValueError(f"No RewardConfig with id {reward_config_id}")
+        return reward_config
 
 
 class RewardAdmin(BaseModelView):

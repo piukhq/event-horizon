@@ -1,11 +1,14 @@
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, FloatField, SelectField, validators
 
+from event_horizon.vela.enums import PendingRewardChoices
+
 
 class EndCampaignActionForm(FlaskForm):
-    convert_pending_rewards = BooleanField(label="Convert pending rewards?", render_kw={"class": "form-check-input"})
+    handle_pending_rewards = SelectField(
+        label="Pending Reward", coerce=PendingRewardChoices, render_kw={"class": "form-control"}
+    )
     transfer_balance = BooleanField(label="Transfer balance?", render_kw={"class": "form-check-input"})
-    transfer_balance_from = SelectField(label="Transfer balance from", coerce=int, render_kw={"class": "form-control"})
     convert_rate = FloatField(
         label="Balance conversion rate %",
         validators=[validators.NumberRange(min=0.1)],
