@@ -409,3 +409,51 @@ def test_get_earn_rule_deleted_activity_data(mocker: MockFixture) -> None:
             }
         },
     }
+
+
+def test_get_reward_rule_created_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    campaign_name = "Test Campaign"
+    campaign_slug = "test-campaign"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    reward_goal = 1000
+    refund_window = 7
+    reward_slug = "test-reward"
+
+    payload = ActivityType.get_reward_rule_created_activity_data(
+        retailer_slug=retailer_slug,
+        campaign_name=campaign_name,
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        campaign_slug=campaign_slug,
+        reward_goal=reward_goal,
+        refund_window=refund_window,
+        reward_slug=reward_slug,
+    )
+
+    assert payload == {
+        "type": ActivityType.REWARD_RULE.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{campaign_name} Reward Rule created",
+        "reasons": ["Created"],
+        "activity_identifier": campaign_slug,
+        "user_id": user_name,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [campaign_slug],
+        "data": {
+            "reward_rule": {
+                "new_values": {
+                    "reward_goal": reward_goal,
+                    "refund_window": refund_window,
+                    "reward_slug": reward_slug,
+                }
+            }
+        },
+    }
