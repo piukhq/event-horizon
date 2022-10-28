@@ -147,7 +147,7 @@ class ActivityType(Enum):
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{campaign_name} Earn Rule changed",
-            "reasons": [],
+            "reasons": ["Updated"],
             "activity_identifier": campaign_slug,
             "user_id": sso_username,
             "associated_value": "N/A",
@@ -175,6 +175,7 @@ class ActivityType(Enum):
         threshold: int,
         increment: int,
         increment_multiplier: Decimal,
+        max_amount: int,
     ) -> dict:
 
         payload = {
@@ -182,7 +183,7 @@ class ActivityType(Enum):
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{campaign_name} Earn Rule removed",
-            "reasons": [],
+            "reasons": ["Deleted"],
             "activity_identifier": campaign_slug,
             "user_id": sso_username,
             "associated_value": "N/A",
@@ -194,6 +195,7 @@ class ActivityType(Enum):
                         "threshold": threshold,
                         "increment": increment,
                         "increment_multiplier": increment_multiplier,
+                        "max_amount": max_amount,
                     }
                 }
             ).dict(exclude_unset=True),

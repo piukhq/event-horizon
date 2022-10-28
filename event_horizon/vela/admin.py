@@ -423,6 +423,7 @@ class EarnRuleAdmin(CanDeleteModelView):
                 threshold=model.threshold,
                 increment=model.increment,
                 increment_multiplier=model.increment_multiplier,
+                max_amount=model.max_amount,
             ),
             routing_key=ActivityType.EARN_RULE.value,
         )
