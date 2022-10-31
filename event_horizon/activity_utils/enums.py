@@ -113,7 +113,7 @@ class ActivityType(Enum):
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{campaign_name} Earn Rule created",
-            "reasons": [],
+            "reasons": ["Created"],
             "activity_identifier": campaign_slug,
             "user_id": sso_username,
             "associated_value": "N/A",
