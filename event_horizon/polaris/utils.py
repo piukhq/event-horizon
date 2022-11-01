@@ -4,7 +4,9 @@ from sqlalchemy import func, literal
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.future import select
 
+from event_horizon.activity_utils.enums import ActivityType
 from event_horizon.polaris.db import AccountHolderCampaignBalance, AccountHolderPendingReward
+from event_horizon.polaris.db.models import AccountHolder
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -13,12 +15,13 @@ if TYPE_CHECKING:
 def transfer_balance(
     db_session: "Session",
     *,
+    retailer_slug: str,
     from_campaign_slug: str,
     to_campaign_slug: str,
     min_balance: int,
     rate_percent: int,
     loyalty_type: str,
-) -> None:  # pragma: no cover
+) -> list[dict]:  # pragma: no cover
 
     rate_multiplier = rate_percent / 100
 
@@ -39,14 +42,41 @@ def transfer_balance(
         AccountHolderCampaignBalance.balance >= min_balance,
         AccountHolderCampaignBalance.balance > 0,
     )
-    insert_stmt = insert(AccountHolderCampaignBalance).from_select(
-        ["campaign_slug", "account_holder_id", "balance"], insert_values_stmt
+    insert_stmt = (
+        insert(AccountHolderCampaignBalance)
+        .returning(
+            AccountHolderCampaignBalance.account_holder_id,
+            AccountHolderCampaignBalance.balance,
+            AccountHolderCampaignBalance.updated_at,
+        )
+        .from_select(["campaign_slug", "account_holder_id", "balance"], insert_values_stmt)
     )
     upsert_stmt = insert_stmt.on_conflict_do_update(
         index_elements=["account_holder_id", "campaign_slug"],
         set_={"balance": AccountHolderCampaignBalance.balance + insert_stmt.excluded.balance},
     )
-    db_session.execute(upsert_stmt)
+    updated_balances = db_session.execute(upsert_stmt).all()
+
+    account_holder_id_map = dict(
+        db_session.execute(
+            select(AccountHolder.id, AccountHolder.account_holder_id).where(
+                AccountHolder.id.in_([val[0] for val in updated_balances])
+            )
+        ).all()
+    )
+
+    return [
+        ActivityType.get_balance_change_activity_data(
+            retailer_slug=retailer_slug,
+            from_campaign_slug=from_campaign_slug,
+            to_campaign_slug=to_campaign_slug,
+            account_holder_uuid=account_holder_id_map[ah_id],
+            activity_datetime=updated_at,
+            new_balance=balance,
+            loyalty_type=loyalty_type,
+        )
+        for ah_id, balance, updated_at in updated_balances
+    ]
 
 
 def transfer_pending_rewards(

@@ -12,7 +12,10 @@ class KeyVault:
             raise ValueError("must provide either vault_url or client")
         self.client = client or SecretClient(
             vault_url=cast(str, vault_url),
-            credential=DefaultAzureCredential(additionally_allowed_tenants=["a6e2367a-92ea-4e5a-b565-723830bcc095"]),
+            credential=DefaultAzureCredential(
+                additionally_allowed_tenants=["a6e2367a-92ea-4e5a-b565-723830bcc095"],
+                exclude_shared_token_cache_credential=True,
+            ),
         )
 
     def get_secret(self, name: str, /, *, key: str | None = "value") -> Any:
