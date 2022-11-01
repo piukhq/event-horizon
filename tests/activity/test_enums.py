@@ -1,3 +1,5 @@
+import uuid
+
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
@@ -457,3 +459,51 @@ def test_get_reward_rule_created_activity_data(mocker: MockFixture) -> None:
             }
         },
     }
+
+
+def test_get_balance_change_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    account_holder_uuid = str(uuid.uuid4())
+    from_campaign_slug = "ended-campaign"
+    to_campaign_slug = "activated-campaign"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    new_balance = 1200
+
+    for loyalty_type in ["STAMPS", "ACCUMULATOR"]:
+
+        if loyalty_type == "STAMPS":
+            expected_associated_value = "12 stamps"
+        else:
+            expected_associated_value = "£12.00"
+
+        payload = ActivityType.get_balance_change_activity_data(
+            retailer_slug=retailer_slug,
+            from_campaign_slug=from_campaign_slug,
+            to_campaign_slug=to_campaign_slug,
+            account_holder_uuid=account_holder_uuid,
+            activity_datetime=activity_datetime,
+            new_balance=new_balance,
+            loyalty_type=loyalty_type,
+        )
+        assert uuid.UUID(payload.pop("id")), "payload.id is not a uuid"
+        assert payload == {
+            "type": ActivityType.BALANCE_CHANGE.name,
+            "datetime": fake_now,
+            "underlying_datetime": activity_datetime,
+            "summary": f"{retailer_slug} {to_campaign_slug} Balance {expected_associated_value}",
+            "reasons": [f"Migrated from ended campaign {from_campaign_slug}"],
+            "activity_identifier": "N/A",
+            "user_id": account_holder_uuid,
+            "associated_value": expected_associated_value,
+            "retailer": retailer_slug,
+            "campaigns": [to_campaign_slug],
+            "data": {
+                "loyalty_type": loyalty_type,
+                "new_balance": new_balance,
+                "original_balance": 0,
+            },
+        }
