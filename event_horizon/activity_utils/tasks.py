@@ -10,3 +10,7 @@ connection, exchange = get_connection_and_exchange(
 
 def sync_send_activity(payload: dict, *, routing_key: str) -> None:
     verify_payload_and_send_activity(connection, exchange, payload, routing_key)
+
+
+def sync_send_list_of_activities(payload: list[dict], *, routing_key: str) -> None:
+    raise NotImplementedError

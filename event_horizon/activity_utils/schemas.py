@@ -1,7 +1,8 @@
 from decimal import Decimal
+from typing import Literal
 
 from cosmos_message_lib.schemas import utc_datetime
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, NonNegativeInt, validator
 
 
 class _CampaignUpdatedValuesSchema(BaseModel):
@@ -95,3 +96,9 @@ class _RewardRuleCreatedDataSchema(BaseModel):
 
 class RewardRuleCreatedActivitySchema(BaseModel):
     reward_rule: _RewardRuleCreatedDataSchema
+
+
+class BalanceChangeActivitySchema(BaseModel):
+    loyalty_type: Literal["STAMPS", "ACCUMULATOR"]
+    new_balance: NonNegativeInt
+    original_balance: NonNegativeInt

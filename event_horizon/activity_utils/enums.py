@@ -5,6 +5,7 @@ from enum import Enum
 from cosmos_message_lib.schemas import utc_datetime
 
 from event_horizon.activity_utils.schemas import (
+    BalanceChangeActivitySchema,
     CampaignCreatedActivitySchema,
     CampaignUpdatedActivitySchema,
     EarnRuleCreatedActivitySchema,
@@ -12,6 +13,7 @@ from event_horizon.activity_utils.schemas import (
     EarnRuleUpdatedActivitySchema,
     RewardRuleCreatedActivitySchema,
 )
+from event_horizon.activity_utils.utils import pence_integer_to_currency_string
 from event_horizon.settings import PROJECT_NAME
 
 
@@ -19,6 +21,7 @@ class ActivityType(Enum):
     CAMPAIGN_CHANGE = f"activity.{PROJECT_NAME}.campaign.change"
     EARN_RULE = f"activity.{PROJECT_NAME}.earn_rule.change"
     REWARD_RULE = f"activity.{PROJECT_NAME}.reward_rule.change"
+    BALANCE_CHANGE = f"activity.{PROJECT_NAME}.balance.change"
 
     @classmethod
     def get_campaign_created_activity_data(
@@ -238,5 +241,46 @@ class ActivityType(Enum):
                     }
                 }
             ).dict(exclude_unset=True),
+        }
+        return payload
+
+    @classmethod
+    def get_balance_change_activity_data(
+        cls,
+        *,
+        retailer_slug: str,
+        from_campaign_slug: str,
+        to_campaign_slug: str,
+        account_holder_uuid: str,
+        activity_datetime: datetime,
+        new_balance: int,
+        loyalty_type: str,
+    ) -> dict:
+
+        match loyalty_type:
+            case "STAMPS":
+                stamp_balance = new_balance // 100
+                associated_value = f"{stamp_balance} stamp" + ("s" if stamp_balance != 1 else "")
+            case "ACCUMULATOR":
+                associated_value = pence_integer_to_currency_string(new_balance, "GBP")
+            case _:
+                raise ValueError(f"Unexpected value {loyalty_type} for loyalty_type.")
+
+        payload = {
+            "type": cls.BALANCE_CHANGE.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": f"{retailer_slug} {to_campaign_slug} Balance {associated_value}",
+            "reasons": [f"Migrated from ended campaign {from_campaign_slug}"],
+            "activity_identifier": "N/A",
+            "user_id": account_holder_uuid,
+            "associated_value": associated_value,
+            "retailer": retailer_slug,
+            "campaigns": [to_campaign_slug],
+            "data": BalanceChangeActivitySchema(
+                loyalty_type=loyalty_type,
+                new_balance=new_balance,
+                original_balance=0,
+            ).dict(),
         }
         return payload
