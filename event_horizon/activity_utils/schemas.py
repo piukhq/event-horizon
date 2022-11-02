@@ -111,3 +111,21 @@ class BalanceChangeWholeActivitySchema(ActivitySchema):
     """
 
     data: _BalanceChangeActivityDataSchema
+
+
+class CampaignMigrationActivitySchema(BaseModel):
+    ended_campaign: str
+    activated_campaign: str
+    balance_conversion_rate: int
+    qualify_threshold: int
+    pending_rewards: str
+
+    @validator("balance_conversion_rate", "qualify_threshold", pre=False, always=True)
+    @classmethod
+    def convert_to_percentage_string(cls, v: int) -> str:
+        return f"{v}%"
+
+    @validator("pending_rewards", pre=False, always=True)
+    @classmethod
+    def convert_to_lower(cls, v: str) -> str:
+        return v.lower()
