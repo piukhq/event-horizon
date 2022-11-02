@@ -1,4 +1,4 @@
-from event_horizon.admin.custom_filters import StringInList, StringNotInList
+from event_horizon.admin.custom_filters import StringInArrayColumn, StringNotInArrayColumn
 from event_horizon.admin.custom_formatters import format_json_field
 from event_horizon.admin.model_views import BaseModelView
 from event_horizon.hubble.db import Activity
@@ -41,9 +41,10 @@ class ActivityAdmin(BaseModelView):
         "type",
         "retailer",
         "activity_identifier",
-        StringInList(Activity.reasons, "Reasons"),
-        StringNotInList(Activity.reasons, "Reasons"),
-        StringInList(Activity.campaigns, "Campaigns"),
-        StringNotInList(Activity.campaigns, "Campaigns"),
+        "summary",
+        StringInArrayColumn(Activity.reasons, "Reasons"),
+        StringNotInArrayColumn(Activity.reasons, "Reasons"),
+        StringInArrayColumn(Activity.campaigns, "Campaigns"),
+        StringNotInArrayColumn(Activity.campaigns, "Campaigns"),
     )
     column_formatters = {"data": format_json_field}
