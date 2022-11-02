@@ -6,6 +6,7 @@ from decimal import Decimal
 from pytest_mock import MockFixture
 
 from event_horizon.activity_utils.enums import ActivityType
+from event_horizon.vela.enums import PendingRewardChoices
 
 
 def test_get_campaign_created_activity_data(mocker: MockFixture) -> None:
@@ -507,3 +508,52 @@ def test_get_balance_change_activity_data(mocker: MockFixture) -> None:
                 "original_balance": 0,
             },
         }
+
+
+def test_get_campaign_migration_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    sso_username = "Test Runner"
+    from_campaign_slug = "ended-campaign"
+    to_campaign_slug = "activated-campaign"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    balance_conversion_rate = 100
+    qualify_threshold = 0
+    pending_rewards = PendingRewardChoices.CONVERT
+
+    payload = ActivityType.get_campaign_migration_activity_data(
+        retailer_slug=retailer_slug,
+        from_campaign_slug=from_campaign_slug,
+        to_campaign_slug=to_campaign_slug,
+        sso_username=sso_username,
+        activity_datetime=activity_datetime,
+        balance_conversion_rate=balance_conversion_rate,
+        qualify_threshold=qualify_threshold,
+        pending_rewards=pending_rewards,
+    )
+
+    assert payload == {
+        "type": ActivityType.CAMPAIGN_MIGRATION.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": (
+            f"{retailer_slug} Campaign {from_campaign_slug} has ended"
+            f" and account holders have been migrated to Campaign {to_campaign_slug}"
+        ),
+        "reasons": [f"Campaign {from_campaign_slug} was ended"],
+        "activity_identifier": retailer_slug,
+        "user_id": sso_username,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [from_campaign_slug, to_campaign_slug],
+        "data": {
+            "ended_campaign": from_campaign_slug,
+            "activated_campaign": to_campaign_slug,
+            "balance_conversion_rate": f"{balance_conversion_rate}%",
+            "qualify_threshold": f"{qualify_threshold}%",
+            "pending_rewards": pending_rewards.value.lower(),
+        },
+    }

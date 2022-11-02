@@ -7,6 +7,7 @@ from cosmos_message_lib.schemas import utc_datetime
 from event_horizon.activity_utils.schemas import (
     BalanceChangeActivitySchema,
     CampaignCreatedActivitySchema,
+    CampaignMigrationActivitySchema,
     CampaignUpdatedActivitySchema,
     EarnRuleCreatedActivitySchema,
     EarnRuleDeletedActivitySchema,
@@ -22,6 +23,7 @@ class ActivityType(Enum):
     EARN_RULE = f"activity.{PROJECT_NAME}.earn_rule.change"
     REWARD_RULE = f"activity.{PROJECT_NAME}.reward_rule.change"
     BALANCE_CHANGE = f"activity.{PROJECT_NAME}.balance.change"
+    CAMPAIGN_MIGRATION = f"activity.{PROJECT_NAME}.campaign.migration"
 
     @classmethod
     def get_campaign_created_activity_data(
@@ -281,6 +283,45 @@ class ActivityType(Enum):
                 loyalty_type=loyalty_type,
                 new_balance=new_balance,
                 original_balance=0,
+            ).dict(),
+        }
+
+        return payload
+
+    @classmethod
+    def get_campaign_migration_activity_data(
+        cls,
+        *,
+        retailer_slug: str,
+        from_campaign_slug: str,
+        to_campaign_slug: str,
+        sso_username: str,
+        activity_datetime: datetime,
+        balance_conversion_rate: int,
+        qualify_threshold: int,
+        pending_rewards: str,
+    ) -> dict:
+
+        payload = {
+            "type": cls.CAMPAIGN_MIGRATION.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": (
+                f"{retailer_slug} Campaign {from_campaign_slug} has ended"
+                f" and account holders have been migrated to Campaign {to_campaign_slug}"
+            ),
+            "reasons": [f"Campaign {from_campaign_slug} was ended"],
+            "activity_identifier": retailer_slug,
+            "user_id": sso_username,
+            "associated_value": "N/A",
+            "retailer": retailer_slug,
+            "campaigns": [from_campaign_slug, to_campaign_slug],
+            "data": CampaignMigrationActivitySchema(
+                ended_campaign=from_campaign_slug,
+                activated_campaign=to_campaign_slug,
+                balance_conversion_rate=balance_conversion_rate,
+                qualify_threshold=qualify_threshold,
+                pending_rewards=pending_rewards,
             ).dict(),
         }
         return payload

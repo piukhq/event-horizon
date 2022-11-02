@@ -142,7 +142,7 @@ class CampaignAdmin(CanDeleteModelView):
 
         if cmp_end_action.form.validate_on_submit():
             del session["form_dynamic_val"]
-            cmp_end_action.end_campaigns(self._campaigns_status_change)
+            cmp_end_action.end_campaigns(self._campaigns_status_change, self.user_info["name"])
             return redirect(campaigns_index_uri)
 
         return self.render(
