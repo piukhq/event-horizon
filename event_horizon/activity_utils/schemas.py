@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import Literal
 
 from cosmos_message_lib.schemas import ActivitySchema, utc_datetime
-from pydantic import BaseModel, NonNegativeInt, validator
+from pydantic import BaseModel, Field, NonNegativeInt, validator
 
 
 class _CampaignUpdatedValuesSchema(BaseModel):
@@ -129,3 +129,33 @@ class CampaignMigrationActivitySchema(BaseModel):
     @classmethod
     def convert_to_lower(cls, v: str) -> str:
         return v.lower()
+
+
+class _RewardRuleUpdateValuesSchema(BaseModel):
+    reward_goal: int | None
+    reward_slug: str | None
+    campaign_slug: str | None
+    refund_window: int | None = Field(alias="allocation_window")
+    reward_cap: int | None
+
+
+class _RewardRuleUpdatedDataSchema(BaseModel):
+    new_values: _RewardRuleUpdateValuesSchema
+    original_values: _RewardRuleUpdateValuesSchema
+
+
+class RewardRuleUpdatedActivitySchema(BaseModel):
+    reward_rule: _RewardRuleUpdatedDataSchema
+
+
+class _RewardRuleDeletedValuesSchema(_RewardRuleCreatedValuesSchema):
+    campaign_slug: str
+    reward_cap: int | None
+
+
+class _RewardRuleDeletedDataSchema(BaseModel):
+    original_values: _RewardRuleDeletedValuesSchema
+
+
+class RewardRuleDeletedActivitySchema(BaseModel):
+    reward_rule: _RewardRuleDeletedDataSchema

@@ -32,6 +32,10 @@ class UserSessionMixin:
     def user_is_authorized(self) -> bool:
         return bool(self.user_roles.intersection(self.ALL_AZURE_ROLES))
 
+    @property
+    def sso_username(self) -> str:
+        return self.user_info["name"]
+
 
 # custom admin classes needed for authorisation
 class AuthorisedModelView(ModelView, UserSessionMixin):
