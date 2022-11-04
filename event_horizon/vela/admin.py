@@ -83,18 +83,18 @@ class CampaignAdmin(CanDeleteModelView):
 
     def get_easter_egg(self) -> EasterEgg | None:
         try:
-            user_name, *_ = self.user_info["name"].split(" ")
+            first_name, *_ = self.sso_username.split(" ")
         except Exception:
             return None
 
-        greet_msg = f"Hello there {user_name}"
+        greet_msg = f"Hello there {first_name}"
         kitten_msg = "<img src='http://placekitten.com/200/300' alt='🐈 🐈‍⬛'>"
         profanities_msg = (
             "here's a list of profanities: "
             "<a href='https://en.wikipedia.org/wiki/Category:English_profanity'>profanities</a>"
         )
 
-        match user_name.lower():
+        match first_name.lower():
             case "francesco" | "susanne":
                 return EasterEgg(greet_msg, kitten_msg)
             case "jess":
@@ -142,7 +142,7 @@ class CampaignAdmin(CanDeleteModelView):
 
         if cmp_end_action.form.validate_on_submit():
             del session["form_dynamic_val"]
-            cmp_end_action.end_campaigns(self._campaigns_status_change, self.user_info["name"])
+            cmp_end_action.end_campaigns(self._campaigns_status_change, self.sso_username)
             return redirect(campaigns_index_uri)
 
         return self.render(
@@ -308,7 +308,6 @@ class CampaignAdmin(CanDeleteModelView):
         return super().on_model_change(form, model, is_created)
 
     def after_model_change(self, form: wtforms.Form, model: "Campaign", is_created: bool) -> None:
-        user_name, *_ = self.user_info["name"].split(" ")
 
         if is_created:
             # Synchronously send activity for campaign creation after successfull campaign creation
@@ -316,7 +315,7 @@ class CampaignAdmin(CanDeleteModelView):
                 ActivityType.get_campaign_created_activity_data(
                     retailer_slug=model.retailerrewards.slug,
                     campaign_name=model.name,
-                    sso_username=user_name,
+                    sso_username=self.sso_username,
                     activity_datetime=datetime.now(tz=timezone.utc),
                     campaign_slug=model.slug,
                     loyalty_type=model.loyalty_type,
@@ -343,7 +342,7 @@ class CampaignAdmin(CanDeleteModelView):
                     ActivityType.get_campaign_updated_activity_data(
                         retailer_slug=model.retailerrewards.slug,
                         campaign_name=model.name,
-                        sso_username=user_name,
+                        sso_username=self.sso_username,
                         activity_datetime=datetime.now(tz=timezone.utc),
                         campaign_slug=model.slug,
                         new_values=new_values,
@@ -413,13 +412,12 @@ class EarnRuleAdmin(CanDeleteModelView):
     def on_model_delete(self, model: "EarnRule") -> None:
         validate_earn_rule_deletion(model.campaign_id)
 
-        user_name, *_ = self.user_info["name"].split(" ")
         # Synchronously send activity for an earn rule deletion after successful deletion
         sync_send_activity(
             ActivityType.get_earn_rule_deleted_activity_data(
                 retailer_slug=model.campaign.retailerrewards.slug,
                 campaign_name=model.campaign.name,
-                sso_username=user_name,
+                sso_username=self.sso_username,
                 activity_datetime=datetime.now(tz=timezone.utc),
                 campaign_slug=model.campaign.slug,
                 threshold=model.threshold,
@@ -433,15 +431,13 @@ class EarnRuleAdmin(CanDeleteModelView):
         return super().on_model_delete(model)
 
     def after_model_change(self, form: wtforms.Form, model: "EarnRule", is_created: bool) -> None:
-        user_name, *_ = self.user_info["name"].split(" ")
-
         if is_created:
             # Synchronously send activity for earn rule creation after successful creation
             sync_send_activity(
                 ActivityType.get_earn_rule_created_activity_data(
                     retailer_slug=model.campaign.retailerrewards.slug,
                     campaign_name=model.campaign.name,
-                    sso_username=user_name,
+                    sso_username=self.sso_username,
                     activity_datetime=model.created_at,
                     campaign_slug=model.campaign.slug,
                     threshold=model.threshold,
@@ -467,7 +463,7 @@ class EarnRuleAdmin(CanDeleteModelView):
                     ActivityType.get_earn_rule_updated_activity_data(
                         retailer_slug=model.campaign.retailerrewards.slug,
                         campaign_name=model.campaign.name,
-                        sso_username=user_name,
+                        sso_username=self.sso_username,
                         activity_datetime=model.updated_at,
                         campaign_slug=model.campaign.slug,
                         new_values=new_values,
@@ -528,6 +524,21 @@ class RewardRuleAdmin(CanDeleteModelView):
 
     def on_model_delete(self, model: "RewardRule") -> None:
         validate_reward_rule_deletion(model.campaign_id)
+        # Synchronously send activity for an earn rule deletion after successful deletion
+        sync_send_activity(
+            ActivityType.get_reward_rule_deleted_activity_data(
+                retailer_slug=model.campaign.retailerrewards.slug,
+                campaign_name=model.campaign.name,
+                sso_username=self.sso_username,
+                activity_datetime=datetime.now(tz=timezone.utc),
+                campaign_slug=model.campaign.slug,
+                reward_slug=model.reward_slug,
+                reward_goal=model.reward_goal,
+                refund_window=model.allocation_window,
+                reward_cap=model.reward_cap,
+            ),
+            routing_key=ActivityType.REWARD_RULE.value,
+        )
         return super().on_model_delete(model)
 
     def on_model_change(self, form: wtforms.Form, model: "RewardRule", is_created: bool) -> None:
@@ -535,7 +546,6 @@ class RewardRuleAdmin(CanDeleteModelView):
         return super().on_model_change(form, model, is_created)
 
     def after_model_change(self, form: wtforms.Form, model: "RewardRule", is_created: bool) -> None:
-        user_name, *_ = self.user_info["name"].split(" ")
 
         if is_created:
             # Synchronously send activity for reward rule creation after successful creation
@@ -543,12 +553,38 @@ class RewardRuleAdmin(CanDeleteModelView):
                 ActivityType.get_reward_rule_created_activity_data(
                     retailer_slug=model.campaign.retailerrewards.slug,
                     campaign_name=model.campaign.name,
-                    sso_username=user_name,
+                    sso_username=self.sso_username,
                     activity_datetime=model.created_at,
                     campaign_slug=model.campaign.slug,
                     reward_goal=model.reward_goal,
                     refund_window=model.allocation_window,
                     reward_slug=model.reward_slug,
+                ),
+                routing_key=ActivityType.REWARD_RULE.value,
+            )
+
+        else:
+            new_values: dict = {}
+            original_values: dict = {}
+
+            for field in form:
+                if (new_val := getattr(model, field.name)) != field.object_data:
+                    if field.name == "campaign":
+                        new_values["campaign_slug"] = new_val.slug
+                        original_values["campaign_slug"] = field.object_data.slug
+                    else:
+                        new_values[field.name] = new_val
+                        original_values[field.name] = field.object_data
+            # Synchronously send activity for reward rule update after successful update
+            sync_send_activity(
+                ActivityType.get_reward_rule_updated_activity_data(
+                    retailer_slug=model.campaign.retailerrewards.slug,
+                    campaign_name=model.campaign.name,
+                    sso_username=self.sso_username,
+                    activity_datetime=model.updated_at,
+                    campaign_slug=model.campaign.slug,
+                    new_values=new_values,
+                    original_values=original_values,
                 ),
                 routing_key=ActivityType.REWARD_RULE.value,
             )
