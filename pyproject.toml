@@ -32,7 +32,9 @@ redis = "^4.3.4"
 rq = "^1.11.1"
 Flask-WTF = "^1.0.1"
 retry-tasks-lib = {version = "^2.0.0", source = "bink-pypi"}
-cosmos-message-lib = {version = "^1.2.0", source = "bink-pypi"}
+cosmos-message-lib = {version = "^1.3.0", source = "bink-pypi"}
+babel = "^2.10.3"
+cryptography = "^38.0.3" # patches openssl vuln
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.971"

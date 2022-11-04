@@ -1,9 +1,12 @@
+import uuid
+
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from pytest_mock import MockFixture
 
 from event_horizon.activity_utils.enums import ActivityType
+from event_horizon.vela.enums import PendingRewardChoices
 
 
 def test_get_campaign_created_activity_data(mocker: MockFixture) -> None:
@@ -455,5 +458,102 @@ def test_get_reward_rule_created_activity_data(mocker: MockFixture) -> None:
                     "reward_slug": reward_slug,
                 }
             }
+        },
+    }
+
+
+def test_get_balance_change_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    account_holder_uuid = str(uuid.uuid4())
+    from_campaign_slug = "ended-campaign"
+    to_campaign_slug = "activated-campaign"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    new_balance = 1200
+
+    for loyalty_type in ["STAMPS", "ACCUMULATOR"]:
+
+        if loyalty_type == "STAMPS":
+            expected_associated_value = "12 stamps"
+        else:
+            expected_associated_value = "£12.00"
+
+        payload = ActivityType.get_balance_change_activity_data(
+            retailer_slug=retailer_slug,
+            from_campaign_slug=from_campaign_slug,
+            to_campaign_slug=to_campaign_slug,
+            account_holder_uuid=account_holder_uuid,
+            activity_datetime=activity_datetime,
+            new_balance=new_balance,
+            loyalty_type=loyalty_type,
+        )
+        assert uuid.UUID(payload.pop("id")), "payload.id is not a uuid"
+        assert payload == {
+            "type": ActivityType.BALANCE_CHANGE.name,
+            "datetime": fake_now,
+            "underlying_datetime": activity_datetime,
+            "summary": f"{retailer_slug} {to_campaign_slug} Balance {expected_associated_value}",
+            "reasons": [f"Migrated from ended campaign {from_campaign_slug}"],
+            "activity_identifier": "N/A",
+            "user_id": account_holder_uuid,
+            "associated_value": expected_associated_value,
+            "retailer": retailer_slug,
+            "campaigns": [to_campaign_slug],
+            "data": {
+                "loyalty_type": loyalty_type,
+                "new_balance": new_balance,
+                "original_balance": 0,
+            },
+        }
+
+
+def test_get_campaign_migration_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    sso_username = "Test Runner"
+    from_campaign_slug = "ended-campaign"
+    to_campaign_slug = "activated-campaign"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    balance_conversion_rate = 100
+    qualify_threshold = 0
+    pending_rewards = PendingRewardChoices.CONVERT
+
+    payload = ActivityType.get_campaign_migration_activity_data(
+        retailer_slug=retailer_slug,
+        from_campaign_slug=from_campaign_slug,
+        to_campaign_slug=to_campaign_slug,
+        sso_username=sso_username,
+        activity_datetime=activity_datetime,
+        balance_conversion_rate=balance_conversion_rate,
+        qualify_threshold=qualify_threshold,
+        pending_rewards=pending_rewards,
+    )
+
+    assert payload == {
+        "type": ActivityType.CAMPAIGN_MIGRATION.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": (
+            f"{retailer_slug} Campaign {from_campaign_slug} has ended"
+            f" and account holders have been migrated to Campaign {to_campaign_slug}"
+        ),
+        "reasons": [f"Campaign {from_campaign_slug} was ended"],
+        "activity_identifier": retailer_slug,
+        "user_id": sso_username,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [from_campaign_slug, to_campaign_slug],
+        "data": {
+            "ended_campaign": from_campaign_slug,
+            "activated_campaign": to_campaign_slug,
+            "balance_conversion_rate": f"{balance_conversion_rate}%",
+            "qualify_threshold": f"{qualify_threshold}%",
+            "pending_rewards": pending_rewards.value.lower(),
         },
     }

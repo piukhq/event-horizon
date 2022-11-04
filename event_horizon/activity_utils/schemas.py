@@ -1,7 +1,8 @@
 from decimal import Decimal
+from typing import Literal
 
-from cosmos_message_lib.schemas import utc_datetime
-from pydantic import BaseModel, validator
+from cosmos_message_lib.schemas import ActivitySchema, utc_datetime
+from pydantic import BaseModel, NonNegativeInt, validator
 
 
 class _CampaignUpdatedValuesSchema(BaseModel):
@@ -95,3 +96,36 @@ class _RewardRuleCreatedDataSchema(BaseModel):
 
 class RewardRuleCreatedActivitySchema(BaseModel):
     reward_rule: _RewardRuleCreatedDataSchema
+
+
+class _BalanceChangeActivityDataSchema(BaseModel):
+    loyalty_type: Literal["STAMPS", "ACCUMULATOR"]
+    new_balance: NonNegativeInt
+    original_balance: NonNegativeInt
+
+
+class BalanceChangeWholeActivitySchema(ActivitySchema):
+    """
+    This will be used to send bulk messages we will use the ActivitySchema on message creation
+    to skip pre send validation
+    """
+
+    data: _BalanceChangeActivityDataSchema
+
+
+class CampaignMigrationActivitySchema(BaseModel):
+    ended_campaign: str
+    activated_campaign: str
+    balance_conversion_rate: int
+    qualify_threshold: int
+    pending_rewards: str
+
+    @validator("balance_conversion_rate", "qualify_threshold", pre=False, always=True)
+    @classmethod
+    def convert_to_percentage_string(cls, v: int) -> str:
+        return f"{v}%"
+
+    @validator("pending_rewards", pre=False, always=True)
+    @classmethod
+    def convert_to_lower(cls, v: str) -> str:
+        return v.lower()

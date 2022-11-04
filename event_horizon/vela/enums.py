@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class PendingRewardChoices(Enum):
+class PendingRewardChoices(str, Enum):
     TRANSFER = "Transfer"
     CONVERT = "Convert"
     REMOVE = "Remove"

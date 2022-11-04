@@ -1,16 +1,19 @@
 import base64
+import logging
 import pickle
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Callable, cast
+from typing import TYPE_CHECKING, Callable, Generator, cast
 
 from flask import flash
 from sqlalchemy.future import select
 
+from event_horizon.activity_utils.enums import ActivityType
+from event_horizon.activity_utils.tasks import sync_send_activity
 from event_horizon.polaris.db import db_session as polaris_db_session
 from event_horizon.polaris.utils import transfer_balance, transfer_pending_rewards
-from event_horizon.vela.db.models import Campaign, RewardRule
+from event_horizon.vela.db.models import Campaign, RetailerRewards, RewardRule
 from event_horizon.vela.enums import PendingRewardChoices
 from event_horizon.vela.forms import EndCampaignActionForm
 
@@ -30,6 +33,7 @@ class CampaignRow:
 
 @dataclass
 class SessionFormData:
+    retailer_slug: str
     active_campaign: CampaignRow
     draft_campaign: CampaignRow | None
     optional_fields_needed: bool
@@ -50,7 +54,15 @@ class SessionFormData:
         return session_form_data
 
 
+@dataclass
+class ActivityData:
+    type: ActivityType
+    payload: dict
+    error_message: str
+
+
 class CampaignEndAction:
+    logger = logging.getLogger("campaign-end-action")
     form_optional_fields = ["transfer_balance", "convert_rate", "qualify_threshold"]
 
     def __init__(self, db_session: "Session") -> None:
@@ -100,7 +112,7 @@ class CampaignEndAction:
         return active_campaign, draft_campaign, errors
 
     @staticmethod
-    def _check_retailer_and_status(campaign_rows: list["Row"]) -> list[str]:
+    def _get_retailer_and_check_status(campaign_rows: list["Row"]) -> list[str]:
         errors: list[str] = []
 
         if not campaign_rows:
@@ -109,7 +121,7 @@ class CampaignEndAction:
         if any(cmp.status not in ["ACTIVE", "DRAFT"] for cmp in campaign_rows):
             errors.append("Only ACTIVE or DRAFT campaigns allowed for this action.")
 
-        if not all(cmp.retailer_id == campaign_rows[0].retailer_id for cmp in campaign_rows):
+        if not all(cmp.retailer_slug == campaign_rows[0].retailer_slug for cmp in campaign_rows):
             errors.append("Selected campaigns must belong to the same retailer.")
 
         if not all(cmp.loyalty_type == campaign_rows[0].loyalty_type for cmp in campaign_rows):
@@ -125,12 +137,13 @@ class CampaignEndAction:
                 Campaign.slug,
                 Campaign.loyalty_type,
                 Campaign.status,
-                Campaign.retailer_id,
                 RewardRule.reward_goal,
                 RewardRule.reward_slug,
+                RetailerRewards.slug.label("retailer_slug"),
             )
             .select_from(RewardRule)
             .join(Campaign)
+            .join(RetailerRewards)
             .where(
                 Campaign.id.in_([int(campaigns_id) for campaigns_id in selected_campaigns_ids]),
             )
@@ -138,7 +151,7 @@ class CampaignEndAction:
 
     def validate_selected_campaigns(self, selected_campaigns_ids: list[str]) -> None:
         campaign_rows = self._get_campaign_rows(selected_campaigns_ids)
-        errors = self._check_retailer_and_status(campaign_rows)
+        errors = self._get_retailer_and_check_status(campaign_rows)
         active_campaign, draft_campaign, other_errors = self._get_and_validate_campaigns(campaign_rows)
         errors += other_errors
 
@@ -149,6 +162,7 @@ class CampaignEndAction:
             raise ValueError("failed validation")
 
         self._session_form_data = SessionFormData(
+            retailer_slug=campaign_rows[0].retailer_slug,
             active_campaign=active_campaign,
             draft_campaign=draft_campaign,
             optional_fields_needed=draft_campaign is not None,
@@ -169,6 +183,7 @@ class CampaignEndAction:
     def _transfer_balance_and_pending_rewards(
         self,
         *,
+        retailer_slug: str,
         from_campaign: CampaignRow,
         to_campaign: CampaignRow,
         rate_percent: int,
@@ -177,6 +192,7 @@ class CampaignEndAction:
         transfer_pending_rewards_requested: bool,
     ) -> None:
 
+        balance_change_activity_payloads: Generator[dict, None, None] | None = None
         msg = f"Transfer from campaign '{from_campaign.slug}' to campaign '{to_campaign.slug}'."
 
         # start a session savepoint to ensure all polaris changes are either successful or rolled back.
@@ -195,8 +211,9 @@ class CampaignEndAction:
             if transfer_balance_requested:
                 min_balance = int((from_campaign.reward_goal / 100) * threshold)
                 msg += f"\n Balance transferred with a {rate_percent}% rate for balances of at least {min_balance}."
-                transfer_balance(
+                balance_change_activity_payloads = transfer_balance(
                     polaris_db_session,
+                    retailer_slug=retailer_slug,
                     from_campaign_slug=from_campaign.slug,
                     to_campaign_slug=to_campaign.slug,
                     min_balance=min_balance,
@@ -205,6 +222,9 @@ class CampaignEndAction:
                 )
 
             savepoint.commit()
+
+        if balance_change_activity_payloads:
+            sync_send_activity(balance_change_activity_payloads, routing_key=ActivityType.BALANCE_CHANGE.value)
 
         polaris_db_session.commit()
         flash(msg)
@@ -218,7 +238,19 @@ class CampaignEndAction:
         )
         self.vela_db_session.commit()
 
-    def end_campaigns(self, status_change_fn: Callable) -> None:
+    def _handle_send_activity(self, success: bool, activity_data: ActivityData) -> None:
+        if success:
+            sync_send_activity(activity_data.payload, routing_key=activity_data.type.value)
+        else:
+
+            self.logger.error(
+                "%s\n%s payload: \n%s", activity_data.error_message, activity_data.type.name, activity_data.payload
+            )
+            flash(activity_data.error_message, category="error")
+
+    def end_campaigns(self, status_change_fn: Callable, sso_username: str) -> None:
+        activity_start_dt = datetime.now(tz=timezone.utc)
+        campaign_migration_activity: ActivityData | None = None
         success = True
         transfer_balance_requested = self.form.transfer_balance and self.form.transfer_balance.data
         transfer_pending_rewards_requested, issue_pending_rewards = cast(
@@ -235,6 +267,7 @@ class CampaignEndAction:
             if success and transfer_requested:
                 self._update_from_campaign_end_date()
                 self._transfer_balance_and_pending_rewards(
+                    retailer_slug=self.session_form_data.retailer_slug,
                     from_campaign=self.session_form_data.active_campaign,
                     to_campaign=self.session_form_data.draft_campaign,
                     rate_percent=self.form.convert_rate.data,
@@ -243,9 +276,30 @@ class CampaignEndAction:
                     transfer_pending_rewards_requested=transfer_pending_rewards_requested,
                 )
 
+                campaign_migration_activity = ActivityData(
+                    type=ActivityType.CAMPAIGN_MIGRATION,
+                    payload=ActivityType.get_campaign_migration_activity_data(
+                        retailer_slug=self.session_form_data.retailer_slug,
+                        from_campaign_slug=self.session_form_data.active_campaign.slug,
+                        to_campaign_slug=self.session_form_data.draft_campaign.slug,
+                        sso_username=sso_username,
+                        activity_datetime=activity_start_dt,
+                        balance_conversion_rate=self.form.convert_rate.data,
+                        qualify_threshold=self.form.qualify_threshold.data,
+                        pending_rewards=self.form.handle_pending_rewards.data,
+                    ),
+                    error_message=(
+                        "Balance migrated successfully but failed to end the active campaign"
+                        f" {self.session_form_data.active_campaign.slug}."
+                    ),
+                )
+
         if success:
-            status_change_fn(
+            success = status_change_fn(
                 [self.session_form_data.active_campaign.id],
                 "ended",
                 issue_pending_rewards=issue_pending_rewards,
             )
+
+        if campaign_migration_activity:
+            self._handle_send_activity(success, campaign_migration_activity)

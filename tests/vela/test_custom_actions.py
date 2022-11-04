@@ -11,7 +11,8 @@ from flask import Flask
 from pytest_mock import MockerFixture
 from sqlalchemy.orm import Session
 
-from event_horizon.vela.custom_actions import CampaignEndAction, CampaignRow, SessionFormData
+from event_horizon.activity_utils.enums import ActivityType
+from event_horizon.vela.custom_actions import ActivityData, CampaignEndAction, CampaignRow, SessionFormData
 from event_horizon.vela.enums import PendingRewardChoices
 
 
@@ -32,6 +33,7 @@ class EndActionMockedCalls:
 @pytest.fixture
 def test_session_form_data() -> SessionFormTestData:
     session_form_data = SessionFormData(
+        retailer_slug="test-retailer",
         active_campaign=CampaignRow(
             id=1, slug="test-active", type="STAMPS", reward_goal=100, reward_slug="test-reward-active"
         ),
@@ -50,6 +52,7 @@ def test_session_form_data() -> SessionFormTestData:
 @pytest.fixture
 def test_session_form_data_no_draft() -> SessionFormTestData:
     session_form_data = SessionFormData(
+        retailer_slug="test-retailer",
         active_campaign=CampaignRow(id=1, slug="test", type="STAMPS", reward_goal=100, reward_slug="test-reward"),
         draft_campaign=None,
         optional_fields_needed=False,
@@ -158,7 +161,7 @@ def test_campaign_end_action_validate_selected_campaigns_ok(
             slug="test-active",
             loyalty_type="STAMPS",
             status="ACTIVE",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-active",
         ),
@@ -167,7 +170,7 @@ def test_campaign_end_action_validate_selected_campaigns_ok(
             slug="test-draft",
             loyalty_type="STAMPS",
             status="DRAFT",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-draft",
         ),
@@ -210,7 +213,7 @@ def test_campaign_end_action_validate_selected_campaigns_too_many_draft(
             slug="test-active-1",
             loyalty_type="STAMPS",
             status="ACTIVE",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-active",
         ),
@@ -219,7 +222,7 @@ def test_campaign_end_action_validate_selected_campaigns_too_many_draft(
             slug="test-draft-1",
             loyalty_type="STAMPS",
             status="DRAFT",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-draft-1",
         ),
@@ -228,7 +231,7 @@ def test_campaign_end_action_validate_selected_campaigns_too_many_draft(
             slug="test-draft-2",
             loyalty_type="STAMPS",
             status="DRAFT",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-draft-2",
         ),
@@ -254,7 +257,7 @@ def test_campaign_end_action_validate_selected_campaigns_too_many_active(
             slug="test-active-1",
             loyalty_type="STAMPS",
             status="ACTIVE",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-active-1",
         ),
@@ -263,7 +266,7 @@ def test_campaign_end_action_validate_selected_campaigns_too_many_active(
             slug="test-active-2",
             loyalty_type="STAMPS",
             status="DRAFT",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-active-2",
         ),
@@ -272,7 +275,7 @@ def test_campaign_end_action_validate_selected_campaigns_too_many_active(
             slug="test-draft",
             loyalty_type="STAMPS",
             status="DRAFT",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-draft",
         ),
@@ -298,7 +301,7 @@ def test_campaign_end_action_validate_selected_campaigns_different_retailer(
             slug="test-active",
             loyalty_type="STAMPS",
             status="ACTIVE",
-            retailer_id=1,
+            retailer_slug="test-retailer-1",
             reward_goal=100,
             reward_slug="test-reward-active",
         ),
@@ -307,7 +310,7 @@ def test_campaign_end_action_validate_selected_campaigns_different_retailer(
             slug="test-draft",
             loyalty_type="STAMPS",
             status="DRAFT",
-            retailer_id=2,
+            retailer_slug="test-retailer-2",
             reward_goal=100,
             reward_slug="test-reward-draft",
         ),
@@ -333,7 +336,7 @@ def test_campaign_end_action_validate_selected_campaigns_wrong_status(
             slug="test-active",
             loyalty_type="ACCUMULATOR",
             status="ACTIVE",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-active",
         ),
@@ -342,7 +345,7 @@ def test_campaign_end_action_validate_selected_campaigns_wrong_status(
             slug="test-endend",
             loyalty_type="ACCUMULATOR",
             status="ENDED",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-ended",
         ),
@@ -368,7 +371,7 @@ def test_campaign_end_action_validate_selected_campaigns_different_loyalty_type(
             slug="test-active",
             loyalty_type="STAMPS",
             status="ACTIVE",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-active",
         ),
@@ -377,7 +380,7 @@ def test_campaign_end_action_validate_selected_campaigns_different_loyalty_type(
             slug="test-draft",
             loyalty_type="ACCUMULATOR",
             status="DRAFT",
-            retailer_id=1,
+            retailer_slug="test-retailer",
             reward_goal=100,
             reward_slug="test-reward-draft",
         ),
@@ -395,9 +398,14 @@ def test_campaign_end_action_validate_selected_campaigns_different_loyalty_type(
 
 
 def test_campaign_end_action_end_campaigns_ok(
-    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, end_action_mocks: EndActionMockedCalls
+    end_action: CampaignEndAction,
+    test_session_form_data: SessionFormTestData,
+    end_action_mocks: EndActionMockedCalls,
+    mocker: "MockerFixture",
 ) -> None:
     assert test_session_form_data.value.draft_campaign, "using wrong fixture"
+
+    mock_send_activity = mocker.patch("event_horizon.vela.custom_actions.sync_send_activity")
 
     convert_rate = 100
     qualify_threshold = 0
@@ -409,7 +417,7 @@ def test_campaign_end_action_end_campaigns_ok(
     end_action.form.qualify_threshold.data = qualify_threshold
     end_action.form.handle_pending_rewards.data = PendingRewardChoices.TRANSFER
 
-    end_action.end_campaigns(end_action_mocks.status_change_fn)
+    end_action.end_campaigns(end_action_mocks.status_change_fn, "Test Runner")
 
     assert end_action_mocks.status_change_fn.call_count == 2
     assert end_action_mocks.status_change_fn.call_args_list[0].args == (
@@ -430,12 +438,15 @@ def test_campaign_end_action_end_campaigns_ok(
     )
     end_action_mocks.transfer_balance.assert_called_once_with(
         ANY,  # this is the db_session
+        retailer_slug=test_session_form_data.value.retailer_slug,
         from_campaign_slug=test_session_form_data.value.active_campaign.slug,
         to_campaign_slug=test_session_form_data.value.draft_campaign.slug,
         min_balance=int((300 / 100) * qualify_threshold),
         rate_percent=convert_rate,
         loyalty_type=test_session_form_data.value.draft_campaign.type,
     )
+
+    assert mock_send_activity.call_count == 2
 
 
 def test_campaign_end_action_end_campaigns_no_draft_ok(
@@ -448,7 +459,7 @@ def test_campaign_end_action_end_campaigns_no_draft_ok(
     end_action.update_form("")
     end_action.form.handle_pending_rewards.data = PendingRewardChoices.REMOVE
 
-    end_action.end_campaigns(end_action_mocks.status_change_fn)
+    end_action.end_campaigns(end_action_mocks.status_change_fn, "Test Runner")
 
     end_action_mocks.status_change_fn.assert_called_once_with(
         [test_session_form_data_no_draft.value.active_campaign.id],
@@ -473,7 +484,7 @@ def test_campaign_end_action_end_campaigns_no_transfer_ok(
     end_action.form.qualify_threshold.data = 0
     end_action.form.handle_pending_rewards.data = PendingRewardChoices.REMOVE
 
-    end_action.end_campaigns(end_action_mocks.status_change_fn)
+    end_action.end_campaigns(end_action_mocks.status_change_fn, "Test Runner")
 
     assert end_action_mocks.status_change_fn.call_count == 2
     assert end_action_mocks.status_change_fn.call_args_list[0].args == (
@@ -505,7 +516,7 @@ def test_campaign_end_action_end_campaigns_transfer_balance_but_no_draft_error(
     end_action.form.handle_pending_rewards.data = PendingRewardChoices.REMOVE
 
     with pytest.raises(ValueError) as exc_info:
-        end_action.end_campaigns(end_action_mocks.status_change_fn)
+        end_action.end_campaigns(end_action_mocks.status_change_fn, "Test Runner")
 
     assert exc_info.value.args[0] == "unexpected: no draft campaign found"
     end_action_mocks.status_change_fn.assert_not_called()
@@ -529,7 +540,7 @@ def test_campaign_end_action_end_campaigns_failed_status_change_error(
     end_action.form.qualify_threshold.data = 0
     end_action.form.handle_pending_rewards.data = PendingRewardChoices.REMOVE
 
-    end_action.end_campaigns(end_action_mocks.status_change_fn)
+    end_action.end_campaigns(end_action_mocks.status_change_fn, "Test Runner")
 
     end_action_mocks.status_change_fn.assert_called_once_with(
         [test_session_form_data.value.draft_campaign.id], "active"
@@ -537,3 +548,43 @@ def test_campaign_end_action_end_campaigns_failed_status_change_error(
     end_action_mocks.update_end_date.assert_not_called()
     end_action_mocks.transfer_balance.assert_not_called()
     end_action_mocks.transfer_pending_rewards.assert_not_called()
+
+
+def test__handle_send_activity(
+    end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, mocker: "MockerFixture"
+) -> None:
+    end_action._session_form_data = test_session_form_data.value
+
+    mock_send_activity = mocker.patch("event_horizon.vela.custom_actions.sync_send_activity")
+    mock_flash = mocker.patch("event_horizon.vela.custom_actions.flash")
+    mock_logger = mocker.patch.object(CampaignEndAction, "logger")
+
+    test_activity_data = ActivityData(
+        type=ActivityType.CAMPAIGN_MIGRATION,
+        payload={"not": "important as long as it's a dict"},
+        error_message=(
+            "Balance migrated successfully but failed to end the active campaign "
+            f"{test_session_form_data.value.active_campaign.slug}."
+        ),
+    )
+
+    end_action._handle_send_activity(True, test_activity_data)
+
+    mock_send_activity.assert_called_once_with(test_activity_data.payload, routing_key=test_activity_data.type.value)
+    mock_flash.assert_not_called()
+    mock_logger.error.assert_not_called()
+
+    mock_send_activity.reset_mock()
+    mock_flash.reset_mock()
+    mock_logger.error.reset_mock()
+
+    end_action._handle_send_activity(False, test_activity_data)
+
+    mock_send_activity.assert_not_called()
+    mock_flash.assert_called_once_with(test_activity_data.error_message, category="error")
+    mock_logger.error.assert_called_once_with(
+        "%s\n%s payload: \n%s",
+        test_activity_data.error_message,
+        test_activity_data.type.name,
+        test_activity_data.payload,
+    )
