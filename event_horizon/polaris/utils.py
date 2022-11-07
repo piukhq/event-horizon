@@ -59,7 +59,7 @@ def transfer_balance(
 
     account_holder_id_map = dict(
         db_session.execute(
-            select(AccountHolder.id, AccountHolder.account_holder_id).where(
+            select(AccountHolder.id, AccountHolder.account_holder_uuid).where(
                 AccountHolder.id.in_([val[0] for val in updated_balances])
             )
         ).all()
