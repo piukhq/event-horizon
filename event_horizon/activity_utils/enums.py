@@ -13,6 +13,8 @@ from event_horizon.activity_utils.schemas import (
     EarnRuleDeletedActivitySchema,
     EarnRuleUpdatedActivitySchema,
     RewardRuleCreatedActivitySchema,
+    RewardRuleDeletedActivitySchema,
+    RewardRuleUpdatedActivitySchema,
 )
 from event_horizon.activity_utils.utils import pence_integer_to_currency_string
 from event_horizon.settings import PROJECT_NAME
@@ -300,6 +302,7 @@ class ActivityType(Enum):
         balance_conversion_rate: int,
         qualify_threshold: int,
         pending_rewards: str,
+        transfer_balance_requested: bool,
     ) -> dict:
 
         payload = {
@@ -317,11 +320,85 @@ class ActivityType(Enum):
             "retailer": retailer_slug,
             "campaigns": [from_campaign_slug, to_campaign_slug],
             "data": CampaignMigrationActivitySchema(
+                transfer_balance_requested=transfer_balance_requested,
                 ended_campaign=from_campaign_slug,
                 activated_campaign=to_campaign_slug,
                 balance_conversion_rate=balance_conversion_rate,
                 qualify_threshold=qualify_threshold,
                 pending_rewards=pending_rewards,
             ).dict(),
+        }
+        return payload
+
+    @classmethod
+    def get_reward_rule_updated_activity_data(
+        cls,
+        *,
+        retailer_slug: str,
+        campaign_name: str,
+        sso_username: str,
+        activity_datetime: datetime,
+        campaign_slug: str,
+        new_values: dict,
+        original_values: dict,
+    ) -> dict:
+
+        payload = {
+            "type": cls.REWARD_RULE.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": f"{campaign_name} Reward Rule changed",
+            "reasons": ["Updated"],
+            "activity_identifier": campaign_slug,
+            "user_id": sso_username,
+            "associated_value": "N/A",
+            "retailer": retailer_slug,
+            "campaigns": [campaign_slug],
+            "data": RewardRuleUpdatedActivitySchema(
+                reward_rule={
+                    "new_values": new_values,
+                    "original_values": original_values,
+                }
+            ).dict(exclude_unset=True),
+        }
+        return payload
+
+    @classmethod
+    def get_reward_rule_deleted_activity_data(
+        cls,
+        *,
+        retailer_slug: str,
+        campaign_name: str,
+        sso_username: str,
+        activity_datetime: datetime,
+        campaign_slug: str,
+        reward_slug: str,
+        reward_goal: int,
+        refund_window: int,
+        reward_cap: int | None,
+    ) -> dict:
+
+        payload = {
+            "type": cls.REWARD_RULE.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": f"{campaign_name} Reward Rule deleted",
+            "reasons": ["Deleted"],
+            "activity_identifier": campaign_slug,
+            "user_id": sso_username,
+            "associated_value": "N/A",
+            "retailer": retailer_slug,
+            "campaigns": [campaign_slug],
+            "data": RewardRuleDeletedActivitySchema(
+                reward_rule={
+                    "original_values": {
+                        "campaign_slug": campaign_slug,
+                        "reward_goal": reward_goal,
+                        "reward_slug": reward_slug,
+                        "refund_window": refund_window,
+                        "reward_cap": reward_cap,
+                    },
+                }
+            ).dict(exclude_unset=True, exclude_none=True),
         }
         return payload

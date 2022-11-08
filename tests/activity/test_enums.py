@@ -462,6 +462,169 @@ def test_get_reward_rule_created_activity_data(mocker: MockFixture) -> None:
     }
 
 
+def test_get_reward_rule_updated_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    original_campaign_name = "Test Campaign"
+    original_campaign_slug = "test-campaign"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+
+    new_values = {
+        "reward_goal": 500,
+        "reward_slug": "new-slug",
+        "campaign_slug": "new-campaign-slug",
+        "allocation_window": 30,
+        "reward_cap": 2,
+    }
+    original_values = {
+        "reward_goal": 800,
+        "reward_slug": "old-slug",
+        "campaign_slug": original_campaign_slug,
+        "allocation_window": 0,
+        "reward_cap": 1,
+    }
+
+    payload = ActivityType.get_reward_rule_updated_activity_data(
+        retailer_slug=retailer_slug,
+        campaign_name=original_campaign_name,
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        campaign_slug=original_campaign_slug,
+        new_values=new_values,
+        original_values=original_values,
+    )
+
+    # The activity schema has an alias for allocation_window
+    new_values["refund_window"] = new_values.pop("allocation_window")
+    original_values["refund_window"] = original_values.pop("allocation_window")
+
+    assert payload == {
+        "type": ActivityType.REWARD_RULE.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{original_campaign_name} Reward Rule changed",
+        "reasons": ["Updated"],
+        "activity_identifier": original_campaign_slug,
+        "user_id": user_name,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [original_campaign_slug],
+        "data": {
+            "reward_rule": {
+                "new_values": new_values,
+                "original_values": original_values,
+            }
+        },
+    }
+
+
+def test_get_reward_rule_updated_activity_data_partial(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    campaign_name = "Test Campaign"
+    campaign_slug = "test-campaign"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+
+    new_values = {
+        "reward_goal": 500,
+        "reward_slug": "new-slug",
+    }
+    original_values = {
+        "reward_goal": 800,
+        "reward_slug": "old-slug",
+    }
+
+    payload = ActivityType.get_reward_rule_updated_activity_data(
+        retailer_slug=retailer_slug,
+        campaign_name=campaign_name,
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        campaign_slug=campaign_slug,
+        new_values=new_values,
+        original_values=original_values,
+    )
+
+    assert payload == {
+        "type": ActivityType.REWARD_RULE.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{campaign_name} Reward Rule changed",
+        "reasons": ["Updated"],
+        "activity_identifier": campaign_slug,
+        "user_id": user_name,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [campaign_slug],
+        "data": {
+            "reward_rule": {
+                "new_values": new_values,
+                "original_values": original_values,
+            }
+        },
+    }
+
+
+def test_get_reward_rule_deleted_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    campaign_name = "Test Campaign"
+    campaign_slug = "test-campaign"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+
+    reward_goal = 800
+    reward_slug = "old-slug"
+    allocation_window = 0
+    reward_cap = 1
+
+    payload = ActivityType.get_reward_rule_deleted_activity_data(
+        retailer_slug=retailer_slug,
+        campaign_name=campaign_name,
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        campaign_slug=campaign_slug,
+        reward_slug=reward_slug,
+        reward_goal=reward_goal,
+        refund_window=allocation_window,
+        reward_cap=reward_cap,
+    )
+
+    assert payload == {
+        "type": ActivityType.REWARD_RULE.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{campaign_name} Reward Rule deleted",
+        "reasons": ["Deleted"],
+        "activity_identifier": campaign_slug,
+        "user_id": user_name,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [campaign_slug],
+        "data": {
+            "reward_rule": {
+                "original_values": {
+                    "campaign_slug": campaign_slug,
+                    "reward_goal": reward_goal,
+                    "reward_slug": reward_slug,
+                    "refund_window": allocation_window,
+                    "reward_cap": reward_cap,
+                },
+            }
+        },
+    }
+
+
 def test_get_balance_change_activity_data(mocker: MockFixture) -> None:
     mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
     fake_now = datetime.now(tz=timezone.utc)
@@ -524,7 +687,8 @@ def test_get_campaign_migration_activity_data(mocker: MockFixture) -> None:
     qualify_threshold = 0
     pending_rewards = PendingRewardChoices.CONVERT
 
-    payload = ActivityType.get_campaign_migration_activity_data(
+    payload_transfer_balance_requested = ActivityType.get_campaign_migration_activity_data(
+        transfer_balance_requested=True,
         retailer_slug=retailer_slug,
         from_campaign_slug=from_campaign_slug,
         to_campaign_slug=to_campaign_slug,
@@ -535,7 +699,7 @@ def test_get_campaign_migration_activity_data(mocker: MockFixture) -> None:
         pending_rewards=pending_rewards,
     )
 
-    assert payload == {
+    assert payload_transfer_balance_requested == {
         "type": ActivityType.CAMPAIGN_MIGRATION.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
@@ -554,6 +718,39 @@ def test_get_campaign_migration_activity_data(mocker: MockFixture) -> None:
             "activated_campaign": to_campaign_slug,
             "balance_conversion_rate": f"{balance_conversion_rate}%",
             "qualify_threshold": f"{qualify_threshold}%",
+            "pending_rewards": pending_rewards.value.lower(),
+        },
+    }
+
+    payload_transfer_balance_not_requested = ActivityType.get_campaign_migration_activity_data(
+        transfer_balance_requested=False,
+        retailer_slug=retailer_slug,
+        from_campaign_slug=from_campaign_slug,
+        to_campaign_slug=to_campaign_slug,
+        sso_username=sso_username,
+        activity_datetime=activity_datetime,
+        balance_conversion_rate=balance_conversion_rate,
+        qualify_threshold=qualify_threshold,
+        pending_rewards=pending_rewards,
+    )
+
+    assert payload_transfer_balance_not_requested == {
+        "type": ActivityType.CAMPAIGN_MIGRATION.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": (
+            f"{retailer_slug} Campaign {from_campaign_slug} has ended"
+            f" and account holders have been migrated to Campaign {to_campaign_slug}"
+        ),
+        "reasons": [f"Campaign {from_campaign_slug} was ended"],
+        "activity_identifier": retailer_slug,
+        "user_id": sso_username,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [from_campaign_slug, to_campaign_slug],
+        "data": {
+            "ended_campaign": from_campaign_slug,
+            "activated_campaign": to_campaign_slug,
             "pending_rewards": pending_rewards.value.lower(),
         },
     }
