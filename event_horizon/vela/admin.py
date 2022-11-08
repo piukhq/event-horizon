@@ -207,7 +207,11 @@ class CampaignAdmin(CanDeleteModelView):
     def _send_campaign_status_change_request(
         self, retailer_slug: str, campaign_slugs: list[str], status: str, issue_pending_rewards: bool | None = False
     ) -> bool:
-        request_body: dict[str, Any] = {"requested_status": status, "campaign_slugs": campaign_slugs}
+        request_body: dict[str, Any] = {
+            "requested_status": status,
+            "campaign_slugs": campaign_slugs,
+            "activity_metadata": {"sso_username": self.user_info["name"]},
+        }
 
         # Change request body depending on action chosen
         if status == "ended" and issue_pending_rewards:
