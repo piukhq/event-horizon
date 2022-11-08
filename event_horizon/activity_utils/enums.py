@@ -302,6 +302,7 @@ class ActivityType(Enum):
         balance_conversion_rate: int,
         qualify_threshold: int,
         pending_rewards: str,
+        transfer_balance_requested: bool,
     ) -> dict:
 
         payload = {
@@ -319,6 +320,7 @@ class ActivityType(Enum):
             "retailer": retailer_slug,
             "campaigns": [from_campaign_slug, to_campaign_slug],
             "data": CampaignMigrationActivitySchema(
+                transfer_balance_requested=transfer_balance_requested,
                 ended_campaign=from_campaign_slug,
                 activated_campaign=to_campaign_slug,
                 balance_conversion_rate=balance_conversion_rate,
