@@ -687,7 +687,8 @@ def test_get_campaign_migration_activity_data(mocker: MockFixture) -> None:
     qualify_threshold = 0
     pending_rewards = PendingRewardChoices.CONVERT
 
-    payload = ActivityType.get_campaign_migration_activity_data(
+    payload_transfer_balance_requested = ActivityType.get_campaign_migration_activity_data(
+        transfer_balance_requested=True,
         retailer_slug=retailer_slug,
         from_campaign_slug=from_campaign_slug,
         to_campaign_slug=to_campaign_slug,
@@ -698,7 +699,7 @@ def test_get_campaign_migration_activity_data(mocker: MockFixture) -> None:
         pending_rewards=pending_rewards,
     )
 
-    assert payload == {
+    assert payload_transfer_balance_requested == {
         "type": ActivityType.CAMPAIGN_MIGRATION.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
@@ -717,6 +718,39 @@ def test_get_campaign_migration_activity_data(mocker: MockFixture) -> None:
             "activated_campaign": to_campaign_slug,
             "balance_conversion_rate": f"{balance_conversion_rate}%",
             "qualify_threshold": f"{qualify_threshold}%",
+            "pending_rewards": pending_rewards.value.lower(),
+        },
+    }
+
+    payload_transfer_balance_not_requested = ActivityType.get_campaign_migration_activity_data(
+        transfer_balance_requested=False,
+        retailer_slug=retailer_slug,
+        from_campaign_slug=from_campaign_slug,
+        to_campaign_slug=to_campaign_slug,
+        sso_username=sso_username,
+        activity_datetime=activity_datetime,
+        balance_conversion_rate=balance_conversion_rate,
+        qualify_threshold=qualify_threshold,
+        pending_rewards=pending_rewards,
+    )
+
+    assert payload_transfer_balance_not_requested == {
+        "type": ActivityType.CAMPAIGN_MIGRATION.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": (
+            f"{retailer_slug} Campaign {from_campaign_slug} has ended"
+            f" and account holders have been migrated to Campaign {to_campaign_slug}"
+        ),
+        "reasons": [f"Campaign {from_campaign_slug} was ended"],
+        "activity_identifier": retailer_slug,
+        "user_id": sso_username,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [from_campaign_slug, to_campaign_slug],
+        "data": {
+            "ended_campaign": from_campaign_slug,
+            "activated_campaign": to_campaign_slug,
             "pending_rewards": pending_rewards.value.lower(),
         },
     }

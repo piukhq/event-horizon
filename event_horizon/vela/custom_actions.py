@@ -287,6 +287,7 @@ class CampaignEndAction:
                         balance_conversion_rate=self.form.convert_rate.data,
                         qualify_threshold=self.form.qualify_threshold.data,
                         pending_rewards=self.form.handle_pending_rewards.data,
+                        transfer_balance_requested=transfer_balance_requested,
                     ),
                     error_message=(
                         "Balance migrated successfully but failed to end the active campaign"
