@@ -25,6 +25,7 @@ def test__campaigns_status_change(mocker: MockerFixture) -> None:
         self.session = session
 
     mocker.patch.object(CampaignAdmin, "__init__", mock_init)
+    mocker.patch.object(CampaignAdmin, "user_info", {"name": "Jane Doe"})
     mocker.patch("event_horizon.vela.admin.Campaign", slug=mock.Mock())
     mocker.patch("event_horizon.vela.admin.RetailerRewards", slug=mock.Mock())
     mocker.patch("event_horizon.vela.admin.select", slug=mock.Mock())
@@ -104,6 +105,7 @@ def test__campaigns_ended_delete_pending_rewards(mocker: MockerFixture) -> None:
         self.session = session
 
     mocker.patch.object(CampaignAdmin, "__init__", mock_init)
+    mocker.patch.object(CampaignAdmin, "user_info", {"name": "Jane Doe"})
     mocker.patch("event_horizon.vela.admin.Campaign", slug=mock.Mock())
     mocker.patch("event_horizon.vela.admin.RewardRule", allocation_window=mock.Mock())
     mocker.patch("event_horizon.vela.admin.RetailerRewards", slug=mock.Mock())
@@ -142,6 +144,7 @@ def test__campaigns_ended_convert_pending_rewards(mocker: MockerFixture) -> None
         self.session = session
 
     mocker.patch.object(CampaignAdmin, "__init__", mock_init)
+    mocker.patch.object(CampaignAdmin, "user_info", {"name": "Jane Doe"})
     mocker.patch("event_horizon.vela.admin.Campaign", slug=mock.Mock())
     mocker.patch("event_horizon.vela.admin.RewardRule", allocation_window=mock.Mock())
     mocker.patch("event_horizon.vela.admin.RetailerRewards", slug=mock.Mock())
