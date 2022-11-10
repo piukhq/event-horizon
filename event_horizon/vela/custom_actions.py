@@ -186,6 +186,7 @@ class CampaignEndAction:
         retailer_slug: str,
         from_campaign: CampaignRow,
         to_campaign: CampaignRow,
+        to_campaign_start_date: datetime,
         rate_percent: int,
         threshold: int,
         transfer_balance_requested: bool,
@@ -216,6 +217,7 @@ class CampaignEndAction:
                     retailer_slug=retailer_slug,
                     from_campaign_slug=from_campaign.slug,
                     to_campaign_slug=to_campaign.slug,
+                    to_campaign_start_date=to_campaign_start_date,
                     min_balance=min_balance,
                     rate_percent=rate_percent,
                     loyalty_type=to_campaign.type,
@@ -237,6 +239,9 @@ class CampaignEndAction:
             .where(Campaign.id == self.session_form_data.active_campaign.id)
         )
         self.vela_db_session.commit()
+
+    def _get_campaign_start_date_by_id(self, campaign_id: int) -> datetime:
+        return self.vela_db_session.execute(select(Campaign.start_date).where(Campaign.id == campaign_id)).scalar_one()
 
     def _handle_send_activity(self, success: bool, activity_data: ActivityData) -> None:
         if success:
@@ -265,11 +270,13 @@ class CampaignEndAction:
             success = status_change_fn([self.session_form_data.draft_campaign.id], "active")
 
             if success and transfer_requested:
+                to_campaign_start_date = self._get_campaign_start_date_by_id(self.session_form_data.draft_campaign.id)
                 self._update_from_campaign_end_date()
                 self._transfer_balance_and_pending_rewards(
                     retailer_slug=self.session_form_data.retailer_slug,
                     from_campaign=self.session_form_data.active_campaign,
                     to_campaign=self.session_form_data.draft_campaign,
+                    to_campaign_start_date=to_campaign_start_date,
                     rate_percent=self.form.convert_rate.data,
                     threshold=self.form.qualify_threshold.data,
                     transfer_balance_requested=transfer_balance_requested,
