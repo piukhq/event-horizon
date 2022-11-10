@@ -9,6 +9,8 @@ from event_horizon.polaris.db import AccountHolderCampaignBalance, AccountHolder
 from event_horizon.polaris.db.models import AccountHolder
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from sqlalchemy.orm import Session
 
 
@@ -18,6 +20,7 @@ def transfer_balance(
     retailer_slug: str,
     from_campaign_slug: str,
     to_campaign_slug: str,
+    to_campaign_start_date: "datetime",
     min_balance: int,
     rate_percent: int,
     loyalty_type: str,
@@ -47,7 +50,6 @@ def transfer_balance(
         .returning(
             AccountHolderCampaignBalance.account_holder_id,
             AccountHolderCampaignBalance.balance,
-            AccountHolderCampaignBalance.updated_at,
         )
         .from_select(["campaign_slug", "account_holder_id", "balance"], insert_values_stmt)
     )
@@ -71,11 +73,11 @@ def transfer_balance(
             from_campaign_slug=from_campaign_slug,
             to_campaign_slug=to_campaign_slug,
             account_holder_uuid=account_holder_id_map[ah_id],
-            activity_datetime=updated_at,
+            activity_datetime=to_campaign_start_date,
             new_balance=balance,
             loyalty_type=loyalty_type,
         )
-        for ah_id, balance, updated_at in updated_balances
+        for ah_id, balance in updated_balances
     )
 
 
