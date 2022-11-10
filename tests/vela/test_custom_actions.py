@@ -2,6 +2,7 @@ import base64
 import pickle
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Generator
 from unittest.mock import ANY, MagicMock
 
@@ -27,6 +28,7 @@ class EndActionMockedCalls:
     transfer_balance: MagicMock
     transfer_pending_rewards: MagicMock
     update_end_date: MagicMock
+    get_start_date: MagicMock
     status_change_fn: MagicMock
 
 
@@ -77,6 +79,7 @@ def end_action_mocks(mocker: MockerFixture, end_action: CampaignEndAction) -> En
         transfer_balance=mocker.patch("event_horizon.vela.custom_actions.transfer_balance"),
         transfer_pending_rewards=mocker.patch("event_horizon.vela.custom_actions.transfer_pending_rewards"),
         update_end_date=mocker.patch.object(end_action, "_update_from_campaign_end_date"),
+        get_start_date=mocker.patch.object(end_action, "_get_campaign_start_date_by_id"),
         status_change_fn=MagicMock(),
     )
     mocks.status_change_fn.return_value = True
@@ -405,7 +408,9 @@ def test_campaign_end_action_end_campaigns_ok(
 ) -> None:
     assert test_session_form_data.value.draft_campaign, "using wrong fixture"
 
+    mock_start_date = datetime.utcnow()  # DB returns naive UTC datetimes
     mock_send_activity = mocker.patch("event_horizon.vela.custom_actions.sync_send_activity")
+    end_action_mocks.get_start_date.return_value = mock_start_date
 
     convert_rate = 100
     qualify_threshold = 0
@@ -441,12 +446,14 @@ def test_campaign_end_action_end_campaigns_ok(
         retailer_slug=test_session_form_data.value.retailer_slug,
         from_campaign_slug=test_session_form_data.value.active_campaign.slug,
         to_campaign_slug=test_session_form_data.value.draft_campaign.slug,
+        to_campaign_start_date=mock_start_date,
         min_balance=int((300 / 100) * qualify_threshold),
         rate_percent=convert_rate,
         loyalty_type=test_session_form_data.value.draft_campaign.type,
     )
 
     assert mock_send_activity.call_count == 2
+    end_action_mocks.get_start_date.assert_called_once_with(test_session_form_data.value.draft_campaign.id)
 
 
 def test_campaign_end_action_end_campaigns_no_draft_ok(
