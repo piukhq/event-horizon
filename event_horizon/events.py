@@ -11,9 +11,9 @@ from event_horizon.vela.db import db_session as vela_db_session
 
 # pylint: disable=unused-argument
 def sync_retailer_insert(mapper: Type[RetailerConfig], connection: str, target: RetailerConfig) -> None:
-    vela_db_session.add(RetailerRewards(slug=target.slug))
+    vela_db_session.add(RetailerRewards(slug=target.slug, status=target.status))
     vela_db_session.commit()
-    carina_db_session.add(Retailer(slug=target.slug))
+    carina_db_session.add(Retailer(slug=target.slug, status=target.status))
     carina_db_session.commit()
 
 

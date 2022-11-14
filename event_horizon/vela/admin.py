@@ -595,7 +595,11 @@ class RewardRuleAdmin(CanDeleteModelView):
 
 
 class RetailerRewardsAdmin(BaseModelView):
+    can_create = False
+    can_edit = False
     column_default_sort = ("slug", False)
+    column_searchable_list = ("slug",)
+    column_filters = ("status",)
 
 
 class RetailerStoreAdmin(BaseModelView):
