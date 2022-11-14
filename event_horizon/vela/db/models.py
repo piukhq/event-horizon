@@ -18,7 +18,7 @@ class RetailerStore(Base, UpdatedAtMixin):
     __tablename__ = "retailer_store"
 
     def __repr__(self) -> str:
-        return self.name
+        return self.store_name
 
 
 class Campaign(Base, UpdatedAtMixin):
