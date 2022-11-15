@@ -69,6 +69,7 @@ class _EarnRuleCreatedDataSchema(BaseModel):
 
 
 class EarnRuleCreatedActivitySchema(BaseModel):
+    loyalty_type: str
     earn_rule: _EarnRuleCreatedDataSchema
 
 

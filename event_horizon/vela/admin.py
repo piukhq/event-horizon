@@ -444,9 +444,11 @@ class EarnRuleAdmin(CanDeleteModelView):
                     sso_username=self.sso_username,
                     activity_datetime=model.created_at,
                     campaign_slug=model.campaign.slug,
+                    loyalty_type=model.campaign.loyalty_type,
                     threshold=model.threshold,
                     increment=model.increment,
                     increment_multiplier=model.increment_multiplier,
+                    max_amount=model.max_amount,
                 ),
                 routing_key=ActivityType.EARN_RULE.value,
             )
