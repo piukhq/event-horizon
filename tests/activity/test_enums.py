@@ -162,38 +162,76 @@ def test_get_earn_rule_created_activity_data(mocker: MockFixture) -> None:
     increment = 1
     increment_multiplier = Decimal(2)
 
-    payload = ActivityType.get_earn_rule_created_activity_data(
-        retailer_slug=retailer_slug,
-        campaign_name=campaign_name,
-        sso_username=user_name,
-        activity_datetime=activity_datetime,
-        campaign_slug=campaign_slug,
-        threshold=threshold,
-        increment=increment,
-        increment_multiplier=increment_multiplier,
-    )
+    for loyalty_type, max_amount, expected_new_values in (
+        (
+            "STAMPS",
+            0,
+            {
+                "threshold": threshold,
+                "increment": increment,
+                "increment_multiplier": increment_multiplier,
+            },
+        ),
+        (
+            "STAMPS",
+            10,
+            {
+                "threshold": threshold,
+                "increment": increment,
+                "increment_multiplier": increment_multiplier,
+                "max_amount": 10,
+            },
+        ),
+        (
+            "ACCUMULATOR",
+            0,
+            {
+                "threshold": threshold,
+                "increment_multiplier": increment_multiplier,
+            },
+        ),
+        (
+            "ACCUMULATOR",
+            10,
+            {
+                "threshold": threshold,
+                "increment_multiplier": increment_multiplier,
+                "max_amount": 10,
+            },
+        ),
+    ):
 
-    assert payload == {
-        "type": ActivityType.EARN_RULE.name,
-        "datetime": fake_now,
-        "underlying_datetime": activity_datetime,
-        "summary": f"{campaign_name} Earn Rule created",
-        "reasons": ["Created"],
-        "activity_identifier": campaign_slug,
-        "user_id": user_name,
-        "associated_value": "N/A",
-        "retailer": retailer_slug,
-        "campaigns": [campaign_slug],
-        "data": {
-            "earn_rule": {
-                "new_values": {
-                    "threshold": threshold,
-                    "increment": increment,
-                    "increment_multiplier": increment_multiplier,
-                }
-            }
-        },
-    }
+        payload = ActivityType.get_earn_rule_created_activity_data(
+            retailer_slug=retailer_slug,
+            campaign_name=campaign_name,
+            sso_username=user_name,
+            activity_datetime=activity_datetime,
+            campaign_slug=campaign_slug,
+            loyalty_type=loyalty_type,  # type: ignore
+            threshold=threshold,
+            increment=increment,
+            increment_multiplier=increment_multiplier,
+            max_amount=max_amount,
+        )
+
+        assert payload == {
+            "type": ActivityType.EARN_RULE.name,
+            "datetime": fake_now,
+            "underlying_datetime": activity_datetime,
+            "summary": f"{campaign_name} Earn Rule created",
+            "reasons": ["Created"],
+            "activity_identifier": campaign_slug,
+            "user_id": user_name,
+            "associated_value": "N/A",
+            "retailer": retailer_slug,
+            "campaigns": [campaign_slug],
+            "data": {
+                "loyalty_type": loyalty_type,
+                "earn_rule": {
+                    "new_values": expected_new_values,
+                },
+            },
+        }
 
 
 def test_get_earn_rule_updated_activity_data(mocker: MockFixture) -> None:

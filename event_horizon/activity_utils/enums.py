@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
+from typing import Literal
 
 from cosmos_message_lib.schemas import utc_datetime
 
@@ -110,10 +111,17 @@ class ActivityType(Enum):
         sso_username: str,
         activity_datetime: datetime,
         campaign_slug: str,
+        loyalty_type: Literal["STAMPS", "ACCUMULATOR"],
         threshold: int,
         increment: int,
         increment_multiplier: Decimal,
+        max_amount: int,
     ) -> dict:
+        new_values = {"threshold": threshold, "increment_multiplier": increment_multiplier}
+        if max_amount:
+            new_values["max_amount"] = max_amount
+        if loyalty_type == "STAMPS":
+            new_values["increment"] = increment
 
         payload = {
             "type": cls.EARN_RULE.name,
@@ -127,13 +135,8 @@ class ActivityType(Enum):
             "retailer": retailer_slug,
             "campaigns": [campaign_slug],
             "data": EarnRuleCreatedActivitySchema(
-                earn_rule={
-                    "new_values": {
-                        "threshold": threshold,
-                        "increment": increment,
-                        "increment_multiplier": increment_multiplier,
-                    }
-                }
+                loyalty_type=loyalty_type,
+                earn_rule={"new_values": new_values},
             ).dict(exclude_unset=True),
         }
         return payload
