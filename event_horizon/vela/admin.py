@@ -18,7 +18,9 @@ from retry_tasks_lib.admin.views import (
     TaskTypeKeyAdminBase,
     TaskTypeKeyValueAdminBase,
 )
+from sqlalchemy import inspect
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 from wtforms.validators import DataRequired
 
 from event_horizon import settings
@@ -383,10 +385,74 @@ class CampaignAdmin(CanDeleteModelView):
     def end_campaigns_action(self, ids: list[str]) -> "Response":
         return redirect(url_for("vela/campaigns.end_campaigns", ids=ids))
 
+    @action(
+        "clone-campaign",
+        "Clone",
+        "Only one campaign allowed for this action, the selected campaign's retailer must be in a TEST state.",
+    )
+    def clone_campaign_action(self, ids: list[str]) -> None:
+        if len(ids) > 1:
+            flash("Only one campaign at a time is supported for this action.", category="error")
+            return
+
+        campaign = (
+            self.session.execute(
+                select(Campaign)
+                .options(
+                    joinedload(Campaign.rewardrule_collection),
+                    joinedload(Campaign.earnrule_collection),
+                    joinedload(Campaign.retailerrewards),
+                )
+                .where(Campaign.id == ids[0])
+            )
+            .unique()
+            .scalar_one()
+        )
+
+        if campaign.retailerrewards.status != "TEST":
+            flash("The campaign's retailer status must be TEST.", category="error")
+            return
+
+        def clone_campaign_related_models(old_model_instance: Any) -> Any:
+
+            mapper = inspect(type(old_model_instance))
+            new_model_instance = type(old_model_instance)()
+
+            for name, col in mapper.columns.items():
+
+                if not (col.primary_key or col.unique or name in ["created_at", "updated_at"]):
+                    setattr(new_model_instance, name, getattr(old_model_instance, name))
+
+            return new_model_instance
+
+        nested = self.session.begin_nested()
+        new_campaign = clone_campaign_related_models(campaign)
+        new_campaign.slug = "CLONE_" + campaign.slug
+        new_campaign.status = "DRAFT"
+        self.session.add(new_campaign)
+        self.session.flush()
+
+        for earn_rule in campaign.earnrule_collection:
+            new_earn_rule = clone_campaign_related_models(earn_rule)
+            new_earn_rule.campaign_id = new_campaign.id
+            self.session.add(new_earn_rule)
+
+        for reward_rule in campaign.rewardrule_collection:
+            new_reward_rule = clone_campaign_related_models(reward_rule)
+            new_reward_rule.campaign_id = new_campaign.id
+            self.session.add(new_reward_rule)
+
+        nested.commit()
+        self.session.commit()
+        flash(
+            "Successfully cloned campaign, reward rules, and earn rules from campaign: "
+            f"{campaign.slug} (id {campaign.id}) to campaign {new_campaign.slug} (id {new_campaign.id})."
+        )
+
 
 class EarnRuleAdmin(CanDeleteModelView):
     column_auto_select_related = True
-    column_filters = ("campaign.name", "campaign.loyalty_type", "campaign.retailerrewards.slug")
+    column_filters = ("campaign.name", "campaign.slug", "campaign.loyalty_type", "campaign.retailerrewards.slug")
     column_searchable_list = ("campaign.name",)
     column_list = (
         "campaign.name",
@@ -497,7 +563,7 @@ class EarnRuleAdmin(CanDeleteModelView):
 
 class RewardRuleAdmin(CanDeleteModelView):
     column_auto_select_related = True
-    column_filters = ("campaign.name", "campaign.retailerrewards.slug")
+    column_filters = ("campaign.name", "campaign.slug", "campaign.retailerrewards.slug")
     column_searchable_list = ("campaign.name",)
     column_list = (
         "campaign.name",

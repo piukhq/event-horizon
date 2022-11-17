@@ -86,6 +86,37 @@ class AccountHolderAdmin(BaseModelView):
     }
 
     @action(
+        "delete-account-holder",
+        "Delete",
+        "The selected account holders' retailer must be in a TEST state. "
+        "This action is not reversible, are you sure you wish to proceed?",
+    )
+    def delete_account_holder(self, ids: list[str]) -> None:
+
+        account_holders_ids = [int(ah_id) for ah_id in ids]
+        retailers_statuses = (
+            self.session.execute(
+                select(RetailerConfig.status).join(AccountHolder).where(AccountHolder.id.in_(account_holders_ids))
+            )
+            .scalars()
+            .all()
+        )
+
+        if any(status != "TEST" for status in retailers_statuses):
+            flash("This action is allowed only for account holders that belong to a TEST retailer.", category="error")
+            return
+
+        # delete() queries make use of the ondelete="CASCADE" param on the ForeignKey.
+        # Fetching the object and calling session.delete(obj) makes use of the
+        # cascade="all, delete-orphan" param on the relationship.
+        # The first type is database side the second orm side.
+        # We are reflecting the db so we need to use the first method to ensure CASCADE is respected.
+        # By default Flask Admin's delete action uses the second method which would leave orphans in our case.
+        res = self.session.execute(AccountHolder.__table__.delete().where(AccountHolder.id.in_(account_holders_ids)))
+        self.session.commit()
+        flash(f"Deleted {res.rowcount} Account Holders.")
+
+    @action(
         "anonymise-account-holder",
         "Anonymise account holder (RTBF)",
         "This action is not reversible. Are you sure you wish to proceed?",
