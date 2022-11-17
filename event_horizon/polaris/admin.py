@@ -13,7 +13,7 @@ from retry_tasks_lib.admin.views import (
     TaskTypeKeyValueAdminBase,
 )
 from sqlalchemy.future import select
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, Optional
 
 from event_horizon import settings
 from event_horizon.admin.custom_formatters import format_json_field
@@ -199,6 +199,7 @@ class RetailerConfigAdmin(BaseModelView):
         "profile_config",
         "marketing_preference_config",
         "loyalty_name",
+        "status",
     )
     column_details_list = ("created_at", "updated_at") + form_create_rules
     form_excluded_columns = ("account_holder_collection",)
@@ -206,6 +207,7 @@ class RetailerConfigAdmin(BaseModelView):
         "account_number_length": {"disabled": True},
         "profile_config": {"rows": 20},
         "marketing_preference_config": {"rows": 10},
+        "status": {"disabled": True},
     }
     form_edit_rules = (
         "name",
@@ -256,6 +258,7 @@ marketing_pref:
                 validate_account_number_prefix,
             ]
         },
+        "status": {"default": "TEST", "validators": [Optional()]},
     }
     column_formatters = dict(
         profile_config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.profile_config) + Markup("</pre>"),
