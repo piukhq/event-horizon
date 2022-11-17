@@ -43,6 +43,28 @@ class CampaignCreatedActivitySchema(BaseModel):
     campaign: _CampaignCreatedDataSchema
 
 
+class _CampaignDeletedValuesSchema(BaseModel):
+    retailer: str
+    name: str
+    slug: str
+    loyalty_type: str
+    start_date: utc_datetime
+    end_date: utc_datetime
+
+    @validator("start_date", "end_date")
+    @classmethod
+    def format_datetime(cls, dt: utc_datetime) -> str:
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
+class _CampaignDeletedDataSchema(BaseModel):
+    original_values: _CampaignDeletedValuesSchema
+
+
+class CampaignDeletedActivitySchema(BaseModel):
+    campaign: _CampaignDeletedDataSchema
+
+
 class _EarnRuleUpdatedValuesSchema(BaseModel):
     threshold: int | None
     increment: int | None
