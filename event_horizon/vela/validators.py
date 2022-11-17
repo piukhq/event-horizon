@@ -121,7 +121,7 @@ def validate_reward_rule_change(campaign: Campaign, is_created: bool) -> None:
     if len(campaign.rewardrule_collection) > 1 and is_created:
         raise wtforms.ValidationError("There is already a reward rule in place for this campaign.")
 
-    if campaign.status == "ACTIVE" and not is_created:
+    if campaign.status == "ACTIVE" and campaign.retailerrewards.status != "TEST" and not is_created:
         raise wtforms.ValidationError("Can not edit the reward rule of an active campaign.")
 
 
