@@ -176,6 +176,22 @@ class CampaignAdmin(CanDeleteModelView):
         else:
             flash("Only verified users can do this.", "error")
 
+    def after_model_delete(self, model: Campaign) -> None:
+        # Synchronously send activity for a campaign deletion after successful deletion
+        sync_send_activity(
+            ActivityType.get_campaign_deleted_activity_data(
+                retailer_slug=model.retailerrewards.slug,
+                campaign_name=model.name,
+                sso_username=self.sso_username,
+                activity_datetime=datetime.now(tz=timezone.utc),
+                campaign_slug=model.slug,
+                loyalty_type=model.loyalty_type,
+                start_date=model.start_date,
+                end_date=model.end_date,
+            ),
+            routing_key=ActivityType.CAMPAIGN.value,
+        )
+
     def _check_for_refund_window(self, campaign_slug: str) -> bool:
         allocation_window = (
             self.session.execute(
@@ -326,7 +342,7 @@ class CampaignAdmin(CanDeleteModelView):
                     start_date=model.start_date,
                     end_date=model.end_date,
                 ),
-                routing_key=ActivityType.CAMPAIGN_CHANGE.value,
+                routing_key=ActivityType.CAMPAIGN.value,
             )
 
         else:
@@ -347,12 +363,12 @@ class CampaignAdmin(CanDeleteModelView):
                         retailer_slug=model.retailerrewards.slug,
                         campaign_name=model.name,
                         sso_username=self.sso_username,
-                        activity_datetime=datetime.now(tz=timezone.utc),
+                        activity_datetime=model.updated_at,
                         campaign_slug=model.slug,
                         new_values=new_values,
                         original_values=original_values,
                     ),
-                    routing_key=ActivityType.CAMPAIGN_CHANGE.value,
+                    routing_key=ActivityType.CAMPAIGN.value,
                 )
 
     @action(

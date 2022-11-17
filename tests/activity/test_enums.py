@@ -35,7 +35,7 @@ def test_get_campaign_created_activity_data(mocker: MockFixture) -> None:
     )
 
     assert payload == {
-        "type": ActivityType.CAMPAIGN_CHANGE.name,
+        "type": ActivityType.CAMPAIGN.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} created",
@@ -85,11 +85,11 @@ def test_get_campaign_updated_activity_data_ok(mocker: MockFixture) -> None:
     )
 
     assert payload == {
-        "type": ActivityType.CAMPAIGN_CHANGE.name,
+        "type": ActivityType.CAMPAIGN.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} changed",
-        "reasons": [],
+        "reasons": ["Updated"],
         "activity_identifier": campaign_slug,
         "user_id": user_name,
         "associated_value": "N/A",
@@ -129,11 +129,11 @@ def test_get_campaign_updated_activity_data_ignored_field(mocker: MockFixture) -
     )
 
     assert payload == {
-        "type": ActivityType.CAMPAIGN_CHANGE.name,
+        "type": ActivityType.CAMPAIGN.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{campaign_name} changed",
-        "reasons": [],
+        "reasons": ["Updated"],
         "activity_identifier": campaign_slug,
         "user_id": user_name,
         "associated_value": "N/A",
@@ -143,6 +143,57 @@ def test_get_campaign_updated_activity_data_ignored_field(mocker: MockFixture) -
             "campaign": {
                 "new_values": {},
                 "original_values": {},
+            }
+        },
+    }
+
+
+def test_get_campaign_deleted_activity_data_ok(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    campaign_name = "Test Campaign"
+    campaign_slug = "test-campaign"
+    loyalty_type = "ACCUMULATOR"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    start_date = datetime.now(tz=timezone.utc)
+    end_date = start_date + timedelta(days=30)
+
+    payload = ActivityType.get_campaign_deleted_activity_data(
+        retailer_slug=retailer_slug,
+        campaign_name=campaign_name,
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        campaign_slug=campaign_slug,
+        loyalty_type=loyalty_type,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    assert payload == {
+        "type": ActivityType.CAMPAIGN.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{campaign_name} deleted",
+        "reasons": ["Deleted"],
+        "activity_identifier": campaign_slug,
+        "user_id": user_name,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [campaign_slug],
+        "data": {
+            "campaign": {
+                "original_values": {
+                    "retailer": retailer_slug,
+                    "name": campaign_name,
+                    "slug": campaign_slug,
+                    "loyalty_type": loyalty_type.title(),
+                    "start_date": start_date.strftime("%Y-%m-%d %H:%M:%S"),
+                    "end_date": end_date.strftime("%Y-%m-%d %H:%M:%S"),
+                }
             }
         },
     }

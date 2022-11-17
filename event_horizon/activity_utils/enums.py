@@ -8,6 +8,7 @@ from cosmos_message_lib.schemas import utc_datetime
 from event_horizon.activity_utils.schemas import (
     BalanceChangeWholeActivitySchema,
     CampaignCreatedActivitySchema,
+    CampaignDeletedActivitySchema,
     CampaignMigrationActivitySchema,
     CampaignUpdatedActivitySchema,
     EarnRuleCreatedActivitySchema,
@@ -22,7 +23,7 @@ from event_horizon.settings import PROJECT_NAME
 
 
 class ActivityType(Enum):
-    CAMPAIGN_CHANGE = f"activity.{PROJECT_NAME}.campaign.change"
+    CAMPAIGN = f"activity.{PROJECT_NAME}.campaign.change"
     EARN_RULE = f"activity.{PROJECT_NAME}.earn_rule.change"
     REWARD_RULE = f"activity.{PROJECT_NAME}.reward_rule.change"
     BALANCE_CHANGE = f"activity.{PROJECT_NAME}.balance.change"
@@ -43,7 +44,7 @@ class ActivityType(Enum):
     ) -> dict:
 
         payload = {
-            "type": cls.CAMPAIGN_CHANGE.name,
+            "type": cls.CAMPAIGN.name,
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{campaign_name} created",
@@ -82,11 +83,11 @@ class ActivityType(Enum):
     ) -> dict:
 
         payload = {
-            "type": cls.CAMPAIGN_CHANGE.name,
+            "type": cls.CAMPAIGN.name,
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{campaign_name} changed",
-            "reasons": [],
+            "reasons": ["Updated"],
             "activity_identifier": campaign_slug,
             "user_id": sso_username,
             "associated_value": "N/A",
@@ -96,6 +97,47 @@ class ActivityType(Enum):
                 campaign={
                     "new_values": new_values,
                     "original_values": original_values,
+                }
+            ).dict(exclude_unset=True),
+        }
+
+        return payload
+
+    @classmethod
+    def get_campaign_deleted_activity_data(
+        cls,
+        *,
+        retailer_slug: str,
+        campaign_name: str,
+        sso_username: str,
+        activity_datetime: datetime,
+        campaign_slug: str,
+        loyalty_type: str,
+        start_date: utc_datetime | None = None,
+        end_date: utc_datetime | None = None,
+    ) -> dict:
+
+        payload = {
+            "type": cls.CAMPAIGN.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": f"{campaign_name} deleted",
+            "reasons": ["Deleted"],
+            "activity_identifier": campaign_slug,
+            "user_id": sso_username,
+            "associated_value": "N/A",
+            "retailer": retailer_slug,
+            "campaigns": [campaign_slug],
+            "data": CampaignDeletedActivitySchema(
+                campaign={
+                    "original_values": {
+                        "retailer": retailer_slug,
+                        "name": campaign_name,
+                        "slug": campaign_slug,
+                        "loyalty_type": loyalty_type.title(),
+                        "start_date": start_date,
+                        "end_date": end_date,
+                    }
                 }
             ).dict(exclude_unset=True),
         }
