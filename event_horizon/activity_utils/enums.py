@@ -14,6 +14,7 @@ from event_horizon.activity_utils.schemas import (
     EarnRuleCreatedActivitySchema,
     EarnRuleDeletedActivitySchema,
     EarnRuleUpdatedActivitySchema,
+    RetailerCreatedActivitySchema,
     RewardRuleCreatedActivitySchema,
     RewardRuleDeletedActivitySchema,
     RewardRuleUpdatedActivitySchema,
@@ -28,6 +29,7 @@ class ActivityType(Enum):
     REWARD_RULE = f"activity.{PROJECT_NAME}.reward_rule.change"
     BALANCE_CHANGE = f"activity.{PROJECT_NAME}.balance.change"
     CAMPAIGN_MIGRATION = f"activity.{PROJECT_NAME}.campaign.migration"
+    RETAILER = f"activity.{PROJECT_NAME}.retailer"
 
     @classmethod
     def get_campaign_created_activity_data(
@@ -445,5 +447,52 @@ class ActivityType(Enum):
                     },
                 }
             ).dict(exclude_unset=True, exclude_none=True),
+        }
+        return payload
+
+    # pylint: disable=too-many-locals
+    @classmethod
+    def get_retailer_created_activity_data(
+        cls,
+        *,
+        sso_username: str,
+        activity_datetime: datetime,
+        status: str,
+        retailer_name: str,
+        retailer_slug: str,
+        account_number_prefix: str,
+        enrolment_config: dict,
+        marketing_preferences: dict | None,
+        loyalty_name: str,
+    ) -> dict:
+        enrolment_config_data = [{"key": k, **v} for k, v in enrolment_config.items()]
+
+        if marketing_preferences:
+            marketing_pref_data = [{"key": k, **v} for k, v in marketing_preferences.items()]
+
+        payload = {
+            "type": cls.RETAILER.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": f"{retailer_name} retailer created",
+            "reasons": ["Created"],
+            "activity_identifier": retailer_slug,
+            "user_id": sso_username,
+            "associated_value": "N/A",
+            "retailer": retailer_slug,
+            "campaigns": [],
+            "data": {
+                "retailer": RetailerCreatedActivitySchema(
+                    new_values={
+                        "status": status,
+                        "name": retailer_name,
+                        "slug": retailer_slug,
+                        "account_number_prefix": account_number_prefix,
+                        "enrolment_config": enrolment_config_data,
+                        "marketing_preference_config": marketing_pref_data if marketing_preferences else None,
+                        "loyalty_name": loyalty_name,
+                    }
+                ).dict(exclude_unset=True, exclude_none=True),
+            },
         }
         return payload

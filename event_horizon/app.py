@@ -48,14 +48,11 @@ def create_app(config_name: str = "event_horizon.settings") -> Flask:
     HubbleModelBase.prepare(hubble_engine, reflect=True)
 
     from event_horizon.carina import register_carina_admin
-    from event_horizon.events import init_events
     from event_horizon.hubble import register_hubble_admin
     from event_horizon.polaris import register_polaris_admin
     from event_horizon.vela import register_vela_admin
     from event_horizon.views.auth import auth_bp
     from event_horizon.views.healthz import healthz_bp
-
-    init_events()
 
     query_log_level = getattr(logging, QUERY_LOG_LEVEL.upper())
     sqla_logger = logging.getLogger("sqlalchemy.engine")

@@ -3,6 +3,8 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
+import yaml
+
 from pytest_mock import MockFixture
 
 from event_horizon.activity_utils.enums import ActivityType
@@ -841,5 +843,146 @@ def test_get_campaign_migration_activity_data(mocker: MockFixture) -> None:
             "ended_campaign": from_campaign_slug,
             "activated_campaign": to_campaign_slug,
             "pending_rewards": pending_rewards.value.lower(),
+        },
+    }
+
+
+def test_get_retailer_config_created_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    retailer_slug = "test-retailer"
+    retailer_name = "Test retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    account_prefix = "RETB"
+    loyalty_name = "mock retailer"
+    retailer_status = "TEST"
+
+    retailer_enrol_config = """
+email:
+    required: true
+    label: email
+first_name:
+    required: true
+    label: First name
+last_name:
+    required: true
+    label: Last name
+"""
+
+    marketing_pref_config = """
+marketing_pref:
+    label: Would you like emails?
+    type: boolean
+"""
+
+    payload = ActivityType.get_retailer_created_activity_data(
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        status=retailer_status,
+        retailer_name=retailer_name,
+        retailer_slug=retailer_slug,
+        account_number_prefix=account_prefix,
+        enrolment_config=yaml.safe_load(retailer_enrol_config),
+        marketing_preferences=yaml.safe_load(marketing_pref_config),
+        loyalty_name=loyalty_name,
+    )
+
+    assert payload == {
+        "type": ActivityType.RETAILER.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{retailer_name} retailer created",
+        "reasons": ["Created"],
+        "activity_identifier": retailer_slug,
+        "user_id": user_name,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [],
+        "data": {
+            "retailer": {
+                "new_values": {
+                    "status": retailer_status,
+                    "name": retailer_name,
+                    "slug": retailer_slug,
+                    "account_number_prefix": account_prefix,
+                    "enrolment_config": [
+                        {"key": "email", "required": True, "label": "email"},
+                        {"key": "first_name", "required": True, "label": "First name"},
+                        {"key": "last_name", "required": True, "label": "Last name"},
+                    ],
+                    "marketing_preference_config": [
+                        {"key": "marketing_pref", "type": "boolean", "label": "Would you like emails?"}
+                    ],
+                    "loyalty_name": loyalty_name,
+                }
+            },
+        },
+    }
+
+
+def test_get_retailer_config_created_activity_data_without_optionals(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    retailer_slug = "test-retailer"
+    retailer_name = "Test retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    account_prefix = "RETB"
+    loyalty_name = "mock retailer"
+    retailer_status = "TEST"
+
+    retailer_enrol_config = """
+email:
+    required: true
+first_name:
+    required: true
+last_name:
+    required: true
+    label: Last name
+"""
+
+    payload = ActivityType.get_retailer_created_activity_data(
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        status=retailer_status,
+        retailer_name=retailer_name,
+        retailer_slug=retailer_slug,
+        account_number_prefix=account_prefix,
+        enrolment_config=yaml.safe_load(retailer_enrol_config),
+        marketing_preferences=yaml.safe_load(""),
+        loyalty_name=loyalty_name,
+    )
+
+    assert payload == {
+        "type": ActivityType.RETAILER.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{retailer_name} retailer created",
+        "reasons": ["Created"],
+        "activity_identifier": retailer_slug,
+        "user_id": user_name,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [],
+        "data": {
+            "retailer": {
+                "new_values": {
+                    "status": retailer_status,
+                    "name": retailer_name,
+                    "slug": retailer_slug,
+                    "account_number_prefix": account_prefix,
+                    "enrolment_config": [
+                        {"key": "email", "required": True},
+                        {"key": "first_name", "required": True},
+                        {"key": "last_name", "required": True, "label": "Last name"},
+                    ],
+                    "loyalty_name": loyalty_name,
+                }
+            },
         },
     }

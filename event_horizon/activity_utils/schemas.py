@@ -191,3 +191,17 @@ class _RewardRuleDeletedDataSchema(BaseModel):
 
 class RewardRuleDeletedActivitySchema(BaseModel):
     reward_rule: _RewardRuleDeletedDataSchema
+
+
+class RetailerConfigCreatedDataSchema(BaseModel):
+    status: str
+    name: str
+    slug: str
+    account_number_prefix: str
+    enrolment_config: list[dict]
+    marketing_preference_config: list[dict] | None
+    loyalty_name: str
+
+
+class RetailerCreatedActivitySchema(BaseModel):
+    new_values: RetailerConfigCreatedDataSchema
