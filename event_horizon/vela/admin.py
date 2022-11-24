@@ -157,7 +157,7 @@ class CampaignAdmin(CanDeleteModelView):
             easter_egg=self.get_easter_egg(),
         )
 
-    def delete_model(self, model: Campaign) -> None:
+    def delete_model(self, model: Campaign) -> bool:
         if self.can_delete:
             retailer_slug = model.retailerrewards.slug
             campaign_slug = model.slug
@@ -172,13 +172,19 @@ class CampaignAdmin(CanDeleteModelView):
                     flash("Selected campaign has been successfully deleted.")
                 else:
                     flash("Could not complete this action. Please try again", category="error")
+                    return False
 
             except Exception as ex:
                 msg = "Error: no response received."
                 flash(msg, category="error")
                 logging.exception(msg, exc_info=ex)
+                return False
+            else:
+                self.after_model_delete(model)
+                return True
         else:
             flash("Only verified users can do this.", "error")
+            return False
 
     def after_model_delete(self, model: Campaign) -> None:
         # Synchronously send activity for a campaign deletion after successful deletion

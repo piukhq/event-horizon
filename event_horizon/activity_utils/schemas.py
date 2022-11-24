@@ -5,6 +5,10 @@ from cosmos_message_lib.schemas import ActivitySchema, utc_datetime
 from pydantic import BaseModel, Field, NonNegativeInt, root_validator, validator
 
 
+def format_datetime(dt: utc_datetime | None) -> str | None:
+    return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else None
+
+
 class _CampaignUpdatedValuesSchema(BaseModel):
     status: str | None
     name: str | None
@@ -13,10 +17,7 @@ class _CampaignUpdatedValuesSchema(BaseModel):
     start_date: utc_datetime | None
     end_date: utc_datetime | None
 
-    @validator("start_date", "end_date")
-    @classmethod
-    def format_datetime(cls, dt: utc_datetime | None) -> str | None:
-        return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else None
+    format_datetime = validator("start_date", "end_date", allow_reuse=True)(format_datetime)
 
 
 class _CampaignUpdatedDataSchema(BaseModel):
@@ -49,12 +50,9 @@ class _CampaignDeletedValuesSchema(BaseModel):
     slug: str
     loyalty_type: str
     start_date: utc_datetime
-    end_date: utc_datetime
+    end_date: utc_datetime | None
 
-    @validator("start_date", "end_date")
-    @classmethod
-    def format_datetime(cls, dt: utc_datetime) -> str:
-        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    format_datetime = validator("start_date", "end_date", allow_reuse=True)(format_datetime)
 
 
 class _CampaignDeletedDataSchema(BaseModel):
