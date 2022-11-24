@@ -3,6 +3,8 @@ import logging
 from typing import TYPE_CHECKING, Type
 
 import requests
+import wtforms
+import yaml
 
 from flask import Markup, flash, url_for
 from flask_admin.actions import action
@@ -16,8 +18,11 @@ from sqlalchemy.future import select
 from wtforms.validators import DataRequired, Optional
 
 from event_horizon import settings
+from event_horizon.activity_utils.enums import ActivityType
+from event_horizon.activity_utils.tasks import sync_send_activity
 from event_horizon.admin.custom_formatters import format_json_field
 from event_horizon.admin.model_views import BaseModelView, CanDeleteModelView
+from event_horizon.helpers import sync_retailer_insert
 from event_horizon.hubble.account_activity_rtbf import anonymise_account_activities
 from event_horizon.polaris.db import AccountHolder, RetailerConfig
 
@@ -297,6 +302,32 @@ marketing_pref:
         + Markup.escape(model.marketing_preference_config)
         + Markup("</pre>"),
     )
+
+    def after_model_change(self, form: wtforms.Form, model: "RetailerConfig", is_created: bool) -> None:
+        if is_created:
+            try:
+                sync_retailer_insert(model.slug, model.status)
+            except Exception as ex:
+                msg = "Failed to create retailer in Vela or Carina table"
+                flash(msg, category="error")
+                logging.exception(msg, exc_info=ex)
+            else:
+                # Synchronously send activity for retailer creation after successful creation
+                # across polaris, vela and carina db
+                sync_send_activity(
+                    ActivityType.get_retailer_created_activity_data(
+                        sso_username=self.sso_username,
+                        activity_datetime=model.created_at,
+                        status=model.status,
+                        retailer_name=model.name,
+                        retailer_slug=model.slug,
+                        account_number_prefix=model.account_number_prefix,
+                        enrolment_config=yaml.safe_load(model.profile_config),
+                        marketing_preferences=yaml.safe_load(model.marketing_preference_config),
+                        loyalty_name=model.loyalty_name,
+                    ),
+                    routing_key=ActivityType.RETAILER.value,
+                )
 
 
 class AccountHolderCampaignBalanceAdmin(BaseModelView):
