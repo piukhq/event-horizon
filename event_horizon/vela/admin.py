@@ -167,10 +167,7 @@ class CampaignAdmin(CanDeleteModelView):
                     headers={"Authorization": f"token {settings.VELA_AUTH_TOKEN}"},
                     timeout=settings.REQUEST_TIMEOUT,
                 )
-                if 200 <= resp.status_code <= 204:
-                    # Change success message depending on action chose for ending campaign
-                    flash("Selected campaign has been successfully deleted.")
-                else:
+                if not 200 <= resp.status_code <= 204:
                     flash("Could not complete this action. Please try again", category="error")
                     return False
 
@@ -188,8 +185,9 @@ class CampaignAdmin(CanDeleteModelView):
 
     def after_model_delete(self, model: Campaign) -> None:
         # Synchronously send activity for a campaign deletion after successful deletion
-        sync_send_activity(
-            ActivityType.get_campaign_deleted_activity_data(
+        activity_data = {}
+        try:
+            activity_data = ActivityType.get_campaign_deleted_activity_data(
                 retailer_slug=model.retailerrewards.slug,
                 campaign_name=model.name,
                 sso_username=self.sso_username,
@@ -198,9 +196,13 @@ class CampaignAdmin(CanDeleteModelView):
                 loyalty_type=model.loyalty_type,
                 start_date=model.start_date,
                 end_date=model.end_date,
-            ),
-            routing_key=ActivityType.CAMPAIGN.value,
-        )
+            )
+            sync_send_activity(
+                activity_data,
+                routing_key=ActivityType.CAMPAIGN.value,
+            )
+        except Exception as exc:
+            logging.exception("Failed to publish CAMPAIGN (deleted) activity", exc_info=exc)
 
     def _check_for_refund_window(self, campaign_slug: str) -> bool:
         allocation_window = (
