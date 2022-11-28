@@ -986,3 +986,43 @@ last_name:
             },
         },
     }
+
+
+def test_get_reward_status_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    account_holder_uuid = str(uuid.uuid4())
+    from_campaign_slug = "ended-campaign"
+    to_campaign_slug = "activated-campaign"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    pending_reward_uuid = str(uuid.uuid4())
+
+    payload = ActivityType.get_reward_status_activity_data(
+        retailer_slug=retailer_slug,
+        from_campaign_slug=from_campaign_slug,
+        to_campaign_slug=to_campaign_slug,
+        account_holder_uuid=account_holder_uuid,
+        activity_datetime=activity_datetime,
+        pending_reward_uuid=pending_reward_uuid,
+    )
+
+    assert uuid.UUID(payload.pop("id")), "payload.id is not a uuid"
+    assert payload == {
+        "type": ActivityType.REWARD_STATUS.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{retailer_slug} pending reward transferred from {from_campaign_slug} to {to_campaign_slug}",
+        "reasons": ["Pending reward transferred at campaign end"],
+        "activity_identifier": pending_reward_uuid,
+        "user_id": account_holder_uuid,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [from_campaign_slug, to_campaign_slug],
+        "data": {
+            "old_campaign": from_campaign_slug,
+            "new_campaign": to_campaign_slug,
+        },
+    }

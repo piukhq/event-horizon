@@ -437,9 +437,11 @@ def test_campaign_end_action_end_campaigns_ok(
     end_action_mocks.update_end_date.assert_called_once_with()
     end_action_mocks.transfer_pending_rewards.assert_called_once_with(
         ANY,  # this is the db_session
+        retailer_slug=test_session_form_data.value.retailer_slug,
         from_campaign_slug=test_session_form_data.value.active_campaign.slug,
         to_campaign_slug=test_session_form_data.value.draft_campaign.slug,
         to_campaign_reward_slug=test_session_form_data.value.draft_campaign.reward_slug,
+        to_campaign_start_date=mock_start_date,
     )
     end_action_mocks.transfer_balance.assert_called_once_with(
         ANY,  # this is the db_session
@@ -452,7 +454,7 @@ def test_campaign_end_action_end_campaigns_ok(
         loyalty_type=test_session_form_data.value.draft_campaign.type,
     )
 
-    assert mock_send_activity.call_count == 2
+    assert mock_send_activity.call_count == 3
     end_action_mocks.get_start_date.assert_called_once_with(test_session_form_data.value.draft_campaign.id)
 
 

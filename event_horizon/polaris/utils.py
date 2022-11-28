@@ -84,14 +84,32 @@ def transfer_balance(
 def transfer_pending_rewards(
     db_session: "Session",
     *,
+    retailer_slug: str,
     from_campaign_slug: str,
     to_campaign_slug: str,
     to_campaign_reward_slug: str,
-) -> None:  # pragma: no cover
-    db_session.execute(
+    to_campaign_start_date: "datetime",
+) -> Generator[dict, None, None]:  # pragma: no cover
+    updated_rewards = db_session.execute(
         AccountHolderPendingReward.__table__.update()
         # NB: we might want to remove reward_slug here when we stop using it
-        .values(campaign_slug=to_campaign_slug, reward_slug=to_campaign_reward_slug).where(
-            AccountHolderPendingReward.campaign_slug == from_campaign_slug
+        .values(campaign_slug=to_campaign_slug, reward_slug=to_campaign_reward_slug)
+        .where(
+            AccountHolderPendingReward.campaign_slug == from_campaign_slug,
+            # this is needed to return the account_holder_uuid
+            AccountHolderPendingReward.account_holder_id == AccountHolder.id,
         )
+        .returning(AccountHolderPendingReward.pending_reward_uuid, AccountHolder.account_holder_uuid)
+    ).all()
+
+    return (
+        ActivityType.get_reward_status_activity_data(
+            retailer_slug=retailer_slug,
+            from_campaign_slug=from_campaign_slug,
+            to_campaign_slug=to_campaign_slug,
+            account_holder_uuid=ah_uuid,
+            activity_datetime=to_campaign_start_date,
+            pending_reward_uuid=pr_uuid,
+        )
+        for pr_uuid, ah_uuid in updated_rewards
     )
