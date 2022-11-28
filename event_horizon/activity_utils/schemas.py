@@ -134,6 +134,20 @@ class BalanceChangeWholeActivitySchema(ActivitySchema):
     data: _BalanceChangeActivityDataSchema
 
 
+class _RewardStatusActivityDataSchema(BaseModel):
+    new_campaign: str
+    old_campaign: str
+
+
+class RewardStatusWholeActivitySchema(ActivitySchema):
+    """
+    This will be used to send bulk messages we will use the ActivitySchema on message creation
+    to skip pre send validation
+    """
+
+    data: _RewardStatusActivityDataSchema
+
+
 class CampaignMigrationActivitySchema(BaseModel):
     transfer_balance_requested: bool
 

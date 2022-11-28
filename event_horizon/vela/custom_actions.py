@@ -193,6 +193,7 @@ class CampaignEndAction:
         transfer_pending_rewards_requested: bool,
     ) -> None:
 
+        pending_rewards_transfer_activity_payloads: Generator[dict, None, None] | None = None
         balance_change_activity_payloads: Generator[dict, None, None] | None = None
         msg = f"Transfer from campaign '{from_campaign.slug}' to campaign '{to_campaign.slug}'."
 
@@ -202,11 +203,13 @@ class CampaignEndAction:
 
             if transfer_pending_rewards_requested:
                 msg += "\n Pending Rewards transferred."
-                transfer_pending_rewards(
+                pending_rewards_transfer_activity_payloads = transfer_pending_rewards(
                     polaris_db_session,
+                    retailer_slug=retailer_slug,
                     from_campaign_slug=from_campaign.slug,
                     to_campaign_slug=to_campaign.slug,
                     to_campaign_reward_slug=to_campaign.reward_slug,
+                    to_campaign_start_date=to_campaign_start_date,
                 )
 
             if transfer_balance_requested:
@@ -224,6 +227,9 @@ class CampaignEndAction:
                 )
 
             savepoint.commit()
+
+        if pending_rewards_transfer_activity_payloads:
+            sync_send_activity(pending_rewards_transfer_activity_payloads, routing_key=ActivityType.REWARD_STATUS.value)
 
         if balance_change_activity_payloads:
             sync_send_activity(balance_change_activity_payloads, routing_key=ActivityType.BALANCE_CHANGE.value)

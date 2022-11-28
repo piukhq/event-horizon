@@ -18,6 +18,7 @@ from event_horizon.activity_utils.schemas import (
     RewardRuleCreatedActivitySchema,
     RewardRuleDeletedActivitySchema,
     RewardRuleUpdatedActivitySchema,
+    RewardStatusWholeActivitySchema,
 )
 from event_horizon.activity_utils.utils import pence_integer_to_currency_string
 from event_horizon.settings import PROJECT_NAME
@@ -30,6 +31,7 @@ class ActivityType(Enum):
     BALANCE_CHANGE = f"activity.{PROJECT_NAME}.balance.change"
     CAMPAIGN_MIGRATION = f"activity.{PROJECT_NAME}.campaign.migration"
     RETAILER = f"activity.{PROJECT_NAME}.retailer"
+    REWARD_STATUS = f"activity.{PROJECT_NAME}.reward.status"
 
     @classmethod
     def get_campaign_created_activity_data(
@@ -495,4 +497,35 @@ class ActivityType(Enum):
                 ).dict(exclude_unset=True, exclude_none=True),
             },
         }
+        return payload
+
+    @classmethod
+    def get_reward_status_activity_data(
+        cls,
+        *,
+        retailer_slug: str,
+        from_campaign_slug: str,
+        to_campaign_slug: str,
+        account_holder_uuid: str,
+        activity_datetime: datetime,
+        pending_reward_uuid: str,
+    ) -> dict:
+
+        payload = RewardStatusWholeActivitySchema(
+            type=cls.REWARD_STATUS.name,
+            datetime=datetime.now(tz=timezone.utc),
+            underlying_datetime=activity_datetime,
+            summary=f"{retailer_slug} pending reward transferred from {from_campaign_slug} to {to_campaign_slug}",
+            reasons=["Pending reward transferred at campaign end"],
+            activity_identifier=pending_reward_uuid,
+            user_id=account_holder_uuid,
+            associated_value="N/A",
+            retailer=retailer_slug,
+            campaigns=[from_campaign_slug, to_campaign_slug],
+            data={
+                "new_campaign": to_campaign_slug,
+                "old_campaign": from_campaign_slug,
+            },
+        ).dict()
+
         return payload
