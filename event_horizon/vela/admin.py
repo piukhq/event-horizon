@@ -508,23 +508,18 @@ class EarnRuleAdmin(CanDeleteModelView):
         "increment": {
             "validators": [validate_earn_rule_increment, wtforms.validators.NumberRange(min=1)],
             "description": (
-                "How much the balance increases when an earn is triggered. Please enter the value "
-                'multiplied by 100, e.g. for one stamp please enter "100" or for 15 points '
-                'please enter "1500". Leave blank if the campaign is set to increment earns by the '
-                "transaction value."
+                "Leave blank for accumulator campaigns. For stamp, this is the number to be awarded per eligible "
+                "transaction multiplied by 100. 100 = 1 stamp."
             ),
         },
         "threshold": {
             "validators": [wtforms.validators.NumberRange(min=0)],
-            "description": (
-                "Monetary value of a transaction required to trigger an earn. Please enter money value "
-                'multiplied by 100, e.g. for £10.50, please enter "1050".'
-            ),
+            "description": ("Minimum transaction value for earn in pence. E.g. for £10.50, please enter '1050'."),
         },
         "increment_multiplier": {"validators": [validate_increment_multiplier, wtforms.validators.NumberRange(min=0)]},
         "max_amount": {
             "validators": [validate_earn_rule_max_amount, wtforms.validators.NumberRange(min=0)],
-            "description": ("Can only be set if the campaign's loyalty type is ACCUMULATOR"),
+            "description": ("Upper limit for transaction earn in pence. 0 for stamp."),
         },
     }
     column_type_formatters = typefmt.BASE_FORMATTERS | {type(None): lambda view, value: "-"}
