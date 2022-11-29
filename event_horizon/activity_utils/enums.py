@@ -272,6 +272,7 @@ class ActivityType(Enum):
         reward_goal: int,
         refund_window: int,
         reward_slug: str,
+        reward_cap: int | None,
     ) -> dict:
 
         payload = {
@@ -288,9 +289,11 @@ class ActivityType(Enum):
             "data": RewardRuleCreatedActivitySchema(
                 reward_rule={
                     "new_values": {
+                        "campaign_slug": campaign_slug,
                         "reward_goal": reward_goal,
                         "refund_window": refund_window,
                         "reward_slug": reward_slug,
+                        "reward_cap": reward_cap,
                     }
                 }
             ).dict(exclude_unset=True),
