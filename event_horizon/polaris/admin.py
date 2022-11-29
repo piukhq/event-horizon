@@ -6,7 +6,7 @@ import requests
 import wtforms
 import yaml
 
-from flask import Markup, flash, url_for
+from flask import Markup, flash, redirect, url_for
 from flask_admin.actions import action
 from retry_tasks_lib.admin.views import (
     RetryTaskAdminBase,
@@ -31,6 +31,7 @@ from .validators import validate_account_number_prefix, validate_marketing_confi
 
 if TYPE_CHECKING:
     from jinja2.runtime import Context
+    from werkzeug.wrappers import Response
 
 # pylint: disable=unused-argument
 def _account_holder_repr(
@@ -192,6 +193,33 @@ class AccountHolderRewardAdmin(BaseModelView):
     column_formatters_export = dict(accountholder=_account_holder_export_repr)
     column_export_exclude_list = ["idempotency_token", "code"]
     can_export = True
+
+    def is_accessible(self) -> bool:
+        if not self.is_read_write_user:
+            return False
+
+        return super().is_accessible()
+
+    def inaccessible_callback(self, name: str, **kwargs: dict | None) -> "Response":
+        if self.is_read_write_user:
+            return redirect(url_for(f"{settings.POLARIS_ENDPOINT_PREFIX}/account-holder-rewards.index_view"))
+
+        if self.is_read_only_user:
+            return redirect(url_for(f"{settings.POLARIS_ENDPOINT_PREFIX}/ro-account-holder-rewards.index_view"))
+
+        return super().inaccessible_callback(name, **kwargs)
+
+
+class ReadOnlyAccountHolderRewardAdmin(AccountHolderRewardAdmin):
+    column_details_exclude_list = ["code", "associated_url"]
+    column_exclude_list = ["code", "associated_url"]
+    column_export_exclude_list = AccountHolderRewardAdmin.column_export_exclude_list + ["associated_url"]
+
+    def is_accessible(self) -> bool:
+        if self.is_read_write_user:
+            return False
+        res = super(AccountHolderRewardAdmin, self).is_accessible()
+        return res
 
 
 class AccountHolderPendingRewardAdmin(BaseModelView):

@@ -6,6 +6,7 @@ from event_horizon.settings import CARINA_ENDPOINT_PREFIX
 
 from .admin import (
     FetchTypeAdmin,
+    ReadOnlyRewardAdmin,
     RetailerFetchTypeAdmin,
     RetryTaskAdmin,
     RewardAdmin,
@@ -56,6 +57,15 @@ def register_carina_admin(event_horizon_admin: "Admin") -> None:
             db_session,
             "Rewards",
             endpoint=f"{CARINA_ENDPOINT_PREFIX}/rewards",
+            category=carina_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        ReadOnlyRewardAdmin(
+            Reward,
+            db_session,
+            "Rewards",
+            endpoint=f"{CARINA_ENDPOINT_PREFIX}/ro-rewards",
             category=carina_menu_title,
         )
     )

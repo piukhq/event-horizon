@@ -14,6 +14,7 @@ from .admin import (
     AccountHolderTransactionHistoryAdmin,
     EmailTemplateAdmin,
     EmailTemplateKeyAdmin,
+    ReadOnlyAccountHolderRewardAdmin,
     RetailerConfigAdmin,
     RetryTaskAdmin,
     TaskTypeAdmin,
@@ -73,6 +74,15 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             db_session,
             "Account Holder Rewards",
             endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-rewards",
+            category=polaris_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        ReadOnlyAccountHolderRewardAdmin(
+            AccountHolderReward,
+            db_session,
+            "Account Holder Rewards",
+            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/ro-account-holder-rewards",
             category=polaris_menu_title,
         )
     )

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import requests
 
-from flask import Markup, flash
+from flask import Markup, flash, redirect, url_for
 from flask_admin.actions import action
 from requests import RequestException
 from retry_tasks_lib.admin.views import (
@@ -24,6 +24,8 @@ from event_horizon.carina.validators import (
 )
 
 if TYPE_CHECKING:
+    from werkzeug.wrappers import Response
+
     from event_horizon.carina.db import Reward
 
 # pylint: disable=unused-argument
@@ -135,6 +137,33 @@ class RewardAdmin(BaseModelView):
     column_labels = {"rewardconfig": "Reward config"}
     column_filters = ("retailer.slug", "rewardconfig.reward_slug", "allocated")
     column_formatters = {"rewardconfig": reward_config_format}
+
+    def is_accessible(self) -> bool:
+        if not self.is_read_write_user:
+            return False
+
+        return super().is_accessible()
+
+    def inaccessible_callback(self, name: str, **kwargs: dict | None) -> "Response":
+        if self.user_roles.intersection(self.RW_AZURE_ROLES):
+            return redirect(url_for(f"{settings.CARINA_ENDPOINT_PREFIX}/rewards.index_view"))
+
+        if self.user_roles.intersection(self.RO_AZURE_ROLES):
+            return redirect(url_for(f"{settings.CARINA_ENDPOINT_PREFIX}/ro-rewards.index_view"))
+
+        return super().inaccessible_callback(name, **kwargs)
+
+
+class ReadOnlyRewardAdmin(RewardAdmin):
+    column_details_exclude_list = ["code"]
+    column_export_exclude_list = ["code"]
+    column_exclude_list = ["code"]
+
+    def is_accessible(self) -> bool:
+        if self.is_read_write_user:
+            return False
+
+        return super(RewardAdmin, self).is_accessible()
 
 
 class RewardUpdateAdmin(BaseModelView):
