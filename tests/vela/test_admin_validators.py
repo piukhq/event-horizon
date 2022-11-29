@@ -11,11 +11,13 @@ from event_horizon.vela.validators import (
     STAMPS,
     validate_campaign_end_date_change,
     validate_campaign_loyalty_type,
+    validate_campaign_slug_update,
     validate_campaign_start_date_change,
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
     validate_increment_multiplier,
+    validate_retailer_update,
     validate_reward_cap_for_loyalty_type,
     validate_reward_rule_allocation_window,
     validate_reward_rule_change,
@@ -485,6 +487,28 @@ def test_validate_draft_campaign_earlier_end_date() -> None:
         new_end_date=fake_now.replace(fake_now.year + 1),
         start_date=fake_now,
         status="DRAFT",
+    )
+
+
+def test_validate_retailer_update_non_draft_campaign() -> None:
+    with pytest.raises(wtforms.ValidationError):
+        validate_retailer_update(old_retailer="old-retailer", new_retailer="new-retailer", campaign_status="ACTIVE")
+
+
+def test_validate_retailer_update_draft_campaign() -> None:
+    validate_retailer_update(old_retailer="old-retailer", new_retailer="new-retailer", campaign_status="DRAFT")
+
+
+def test_validate_campaign_slug_update_non_draft_campaign() -> None:
+    with pytest.raises(wtforms.ValidationError):
+        validate_campaign_slug_update(
+            old_campaign_slug="old-campaign-slug", new_campaign_slug="new-campaign-slug", campaign_status="ACTIVE"
+        )
+
+
+def test_validate_campaign_slug_update_draft_campaign() -> None:
+    validate_campaign_slug_update(
+        old_campaign_slug="old-campaign-slug", new_campaign_slug="new-campaign-slug", campaign_status="DRAFT"
     )
 
 

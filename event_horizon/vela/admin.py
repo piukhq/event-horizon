@@ -33,12 +33,14 @@ from event_horizon.vela.db import Campaign, RetailerRewards, RewardRule
 from event_horizon.vela.validators import (
     validate_campaign_end_date_change,
     validate_campaign_loyalty_type,
+    validate_campaign_slug_update,
     validate_campaign_start_date_change,
     validate_campaign_status_change,
     validate_earn_rule_deletion,
     validate_earn_rule_increment,
     validate_earn_rule_max_amount,
     validate_increment_multiplier,
+    validate_retailer_update,
     validate_reward_cap_for_loyalty_type,
     validate_reward_rule_allocation_window,
     validate_reward_rule_change,
@@ -335,6 +337,14 @@ class CampaignAdmin(CanDeleteModelView):
             )
             validate_campaign_start_date_change(
                 old_start_date=form.start_date.object_data, new_start_date=model.start_date, status=model.status
+            )
+            validate_retailer_update(
+                old_retailer=form.retailerrewards.object_data,
+                new_retailer=model.retailerrewards,
+                campaign_status=model.status,
+            )
+            validate_campaign_slug_update(
+                old_campaign_slug=form.slug.object_data, new_campaign_slug=model.slug, campaign_status=model.status
             )
 
         return super().on_model_change(form, model, is_created)

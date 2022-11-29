@@ -128,3 +128,13 @@ def validate_reward_rule_change(campaign: Campaign, is_created: bool) -> None:
 def validate_reward_cap_for_loyalty_type(form: wtforms.Form, field: wtforms.Field) -> None:
     if form.campaign.data.loyalty_type != ACCUMULATOR and field.data is not None:
         raise wtforms.ValidationError("Reward cap can only be set for accumulator campaigns")
+
+
+def validate_retailer_update(old_retailer: str, new_retailer: str, campaign_status: str) -> None:
+    if old_retailer != new_retailer and campaign_status != "DRAFT":
+        raise wtforms.ValidationError("Can only change retailer for a draft campaign")
+
+
+def validate_campaign_slug_update(old_campaign_slug: str, new_campaign_slug: str, campaign_status: str) -> None:
+    if old_campaign_slug != new_campaign_slug and campaign_status != "DRAFT":
+        raise wtforms.ValidationError("Can only change campaign slug for a draft campaign")
