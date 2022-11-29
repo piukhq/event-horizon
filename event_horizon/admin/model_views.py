@@ -36,6 +36,14 @@ class UserSessionMixin:
     def sso_username(self) -> str:
         return self.user_info["name"]
 
+    @property
+    def is_read_only_user(self) -> bool:
+        return bool(self.user_roles.intersection(self.RO_AZURE_ROLES))
+
+    @property
+    def is_read_write_user(self) -> bool:
+        return bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
+
 
 # custom admin classes needed for authorisation
 class AuthorisedModelView(ModelView, UserSessionMixin):
@@ -47,11 +55,11 @@ class AuthorisedModelView(ModelView, UserSessionMixin):
 
     @property
     def can_create(self) -> bool:
-        return bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
+        return self.is_read_write_user
 
     @property
     def can_edit(self) -> bool:
-        return bool(self.user_roles.intersection(self.RW_AZURE_ROLES))
+        return self.is_read_write_user
 
     def is_accessible(self) -> bool:
         if not self.user_info:
