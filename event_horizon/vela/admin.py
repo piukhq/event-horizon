@@ -686,6 +686,7 @@ class RewardRuleAdmin(CanDeleteModelView):
                     reward_goal=model.reward_goal,
                     refund_window=model.allocation_window,
                     reward_slug=model.reward_slug,
+                    reward_cap=model.reward_cap,
                 ),
                 routing_key=ActivityType.REWARD_RULE.value,
             )

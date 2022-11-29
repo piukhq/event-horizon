@@ -518,6 +518,7 @@ def test_get_reward_rule_created_activity_data(mocker: MockFixture) -> None:
     reward_goal = 1000
     refund_window = 7
     reward_slug = "test-reward"
+    reward_cap = 2
 
     payload = ActivityType.get_reward_rule_created_activity_data(
         retailer_slug=retailer_slug,
@@ -528,6 +529,7 @@ def test_get_reward_rule_created_activity_data(mocker: MockFixture) -> None:
         reward_goal=reward_goal,
         refund_window=refund_window,
         reward_slug=reward_slug,
+        reward_cap=reward_cap,
     )
 
     assert payload == {
@@ -544,9 +546,11 @@ def test_get_reward_rule_created_activity_data(mocker: MockFixture) -> None:
         "data": {
             "reward_rule": {
                 "new_values": {
+                    "campaign_slug": campaign_slug,
                     "reward_goal": reward_goal,
                     "refund_window": refund_window,
                     "reward_slug": reward_slug,
+                    "reward_cap": reward_cap,
                 }
             }
         },
