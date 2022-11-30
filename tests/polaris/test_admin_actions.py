@@ -10,7 +10,7 @@ import httpretty
 
 from pytest_mock import MockerFixture
 
-from event_horizon.polaris.admin import AccountHolderAdmin
+from event_horizon.polaris.admin import AccountHolderAdmin, RetailerConfigAdmin
 from event_horizon.settings import POLARIS_BASE_URL
 
 
@@ -65,3 +65,43 @@ def test_anonymise_user(mock_activity_call: mock.MagicMock, mocker: MockerFixtur
     AccountHolderAdmin(session).anonymise_user(["1"])
     assert last_request == {"status": "inactive"}
     mock_model_views_flash.assert_called_with(f"Unexpected response received: {unexpected_error}", category="error")
+
+
+def test_activate_retailer(mocker: MockerFixture) -> None:
+    retailer = mock.MagicMock(status="TEST")
+
+    def mock_init(self: Any, session: mock.MagicMock) -> None:
+        self.session = session
+
+    session = mock.MagicMock()
+    mocker.patch.object(RetailerConfigAdmin, "__init__", mock_init)
+    mocker.patch("event_horizon.polaris.admin.RetailerConfig", slug=mock.Mock())
+    mocker.patch("event_horizon.polaris.admin.RetailerConfigAdmin._get_retailer_by_id").return_value = retailer
+    mocker.patch("event_horizon.polaris.admin.check_activate_campaign_for_retailer").return_value = [1]
+    mocker.patch("event_horizon.polaris.admin.sync_activate_retailer")
+    mock_flash = mocker.patch("event_horizon.polaris.admin.flash")
+
+    # More than one retailer ids in list
+    RetailerConfigAdmin(session).activate_retailer(["1", "2"])
+    mock_flash.assert_called_with("Cannot activate more than one retailer at once", category="error")
+
+    # Successfully update retailer status
+    assert retailer.status == "TEST"
+    RetailerConfigAdmin(session).activate_retailer(["1"])
+    mock_flash.assert_called_with("Update retailer status successfully")
+    assert retailer.status == "ACTIVE"
+
+    # Retailer not in test status
+    assert retailer.status == "ACTIVE"
+    RetailerConfigAdmin(session).activate_retailer(["1"])
+    mock_flash.assert_called_with("Retailer in incorrect state for activation", category="error")
+    assert retailer.status == "ACTIVE"
+
+    # No active campaign for retailer
+    retailer.status = "TEST"
+    mocker.patch(
+        "event_horizon.polaris.admin.check_activate_campaign_for_retailer"
+    ).return_value = []  # no active campaigns
+    RetailerConfigAdmin(session).activate_retailer(["1"])
+    mock_flash.assert_called_with("Retailer has no active campaign", category="error")
+    assert retailer.status == "TEST"

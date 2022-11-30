@@ -22,7 +22,7 @@ from event_horizon.activity_utils.enums import ActivityType
 from event_horizon.activity_utils.tasks import sync_send_activity
 from event_horizon.admin.custom_formatters import format_json_field
 from event_horizon.admin.model_views import BaseModelView, CanDeleteModelView
-from event_horizon.helpers import sync_retailer_insert
+from event_horizon.helpers import check_activate_campaign_for_retailer, sync_activate_retailer, sync_retailer_insert
 from event_horizon.hubble.account_activity_rtbf import anonymise_account_activities
 from event_horizon.polaris.db import AccountHolder, RetailerConfig
 
@@ -356,6 +356,37 @@ marketing_pref:
                     ),
                     routing_key=ActivityType.RETAILER.value,
                 )
+
+    def _get_retailer_by_id(self, retailer_id: int) -> RetailerConfig:
+        return self.session.execute(select(RetailerConfig).where(RetailerConfig.id == retailer_id)).scalar_one()
+
+    @action(
+        "activate retailer",
+        "Activate",
+        "Selected test retailer must have an activate campaign. Are you sure you want to proceed?",
+    )
+    def activate_retailer(self, ids: list[str]) -> None:
+        if len(ids) > 1:
+            flash("Cannot activate more than one retailer at once", category="error")
+        else:
+            retailer_id = int(ids[0])
+            retailer = self._get_retailer_by_id(retailer_id)
+            if retailer.status == "TEST":
+                if check_activate_campaign_for_retailer(retailer_id):
+                    try:
+                        # Vela and carina retailer update
+                        sync_activate_retailer(retailer_id)
+                        # Polaris retailer update
+                        retailer.status = "ACTIVE"
+                        self.session.commit()
+                        flash("Update retailer status successfully")
+                    except Exception:
+                        self.session.rollback()
+                        flash("Failed to update retailer", category="error")
+                else:
+                    flash("Retailer has no active campaign", category="error")
+            else:
+                flash("Retailer in incorrect state for activation", category="error")
 
 
 class AccountHolderCampaignBalanceAdmin(BaseModelView):
