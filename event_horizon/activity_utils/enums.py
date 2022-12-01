@@ -6,6 +6,7 @@ from typing import Literal
 from cosmos_message_lib.schemas import utc_datetime
 
 from event_horizon.activity_utils.schemas import (
+    ActivitySchema,
     BalanceChangeWholeActivitySchema,
     CampaignCreatedActivitySchema,
     CampaignDeletedActivitySchema,
@@ -32,6 +33,7 @@ class ActivityType(Enum):
     CAMPAIGN_MIGRATION = f"activity.{PROJECT_NAME}.campaign.migration"
     RETAILER = f"activity.{PROJECT_NAME}.retailer"
     REWARD_STATUS = f"activity.{PROJECT_NAME}.reward.status"
+    ACCOUNT_DELETED = f"activity.{PROJECT_NAME}.account.deleted"
 
     @classmethod
     def get_campaign_created_activity_data(
@@ -531,4 +533,31 @@ class ActivityType(Enum):
             },
         ).dict()
 
+        return payload
+
+    @classmethod
+    def get_account_holder_deleted_activity_data(
+        cls,
+        *,
+        activity_datetime: datetime,
+        account_holder_uuid: str,
+        retailer_name: str,
+        retailer_status: str,
+        retailer_slug: str,
+        sso_username: str,
+    ) -> dict:
+
+        payload = ActivitySchema(
+            type=cls.ACCOUNT_DELETED.name,
+            datetime=datetime.now(tz=timezone.utc),
+            underlying_datetime=activity_datetime,
+            summary=f"Account holder deleted for {retailer_name}",
+            reasons=["Deleted"],
+            activity_identifier=account_holder_uuid,
+            user_id=sso_username,
+            associated_value=retailer_status,
+            retailer=retailer_slug,
+            campaigns=[],
+            data={},
+        ).dict()
         return payload

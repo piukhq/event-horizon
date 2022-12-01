@@ -1030,3 +1030,36 @@ def test_get_reward_status_activity_data(mocker: MockFixture) -> None:
             "new_campaign": to_campaign_slug,
         },
     }
+
+
+def test_delete_account_holder_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    activity_datetime = datetime.now(tz=timezone.utc)
+    account_holder_uuid = str(uuid.uuid4())
+
+    payload = ActivityType.get_account_holder_deleted_activity_data(
+        activity_datetime=activity_datetime,
+        account_holder_uuid=account_holder_uuid,
+        retailer_name="test retailer",
+        retailer_status="TEST",
+        retailer_slug="test-retailer",
+        sso_username="Jane Doe",
+    )
+
+    assert uuid.UUID(payload.pop("id")), "payload.id is not a uuid"
+    assert payload == {
+        "type": ActivityType.ACCOUNT_DELETED.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": "Account holder deleted for test retailer",
+        "reasons": ["Deleted"],
+        "activity_identifier": account_holder_uuid,
+        "user_id": "Jane Doe",
+        "associated_value": "TEST",
+        "retailer": "test-retailer",
+        "campaigns": [],
+        "data": {},
+    }

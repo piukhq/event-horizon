@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Generator
 
 from sqlalchemy import func, literal
@@ -9,8 +10,6 @@ from event_horizon.polaris.db import AccountHolderCampaignBalance, AccountHolder
 from event_horizon.polaris.db.models import AccountHolder
 
 if TYPE_CHECKING:
-    from datetime import datetime
-
     from sqlalchemy.orm import Session
 
 
@@ -112,4 +111,22 @@ def transfer_pending_rewards(
             pending_reward_uuid=pr_uuid,
         )
         for pr_uuid, ah_uuid in updated_rewards
+    )
+
+
+def generate_payloads_for_delete_account_holder_activity(
+    account_holders: list[AccountHolder],
+    sso_username: str,
+) -> Generator[dict, None, None]:  # pragma: no cover
+
+    return (
+        ActivityType.get_account_holder_deleted_activity_data(
+            activity_datetime=datetime.now(tz=timezone.utc),
+            account_holder_uuid=account_holder.account_holder_uuid,
+            retailer_name=account_holder.retailerconfig.name,
+            retailer_status=account_holder.retailerconfig.status,
+            retailer_slug=account_holder.retailerconfig.slug,
+            sso_username=sso_username,
+        )
+        for account_holder in account_holders
     )
