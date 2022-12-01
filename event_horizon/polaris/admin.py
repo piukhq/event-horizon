@@ -1,6 +1,6 @@
 import logging
 
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Generator, Type
 
 import requests
 import wtforms
@@ -15,6 +15,7 @@ from retry_tasks_lib.admin.views import (
     TaskTypeKeyValueAdminBase,
 )
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 from wtforms.validators import DataRequired, Optional
 
 from event_horizon import settings
@@ -25,6 +26,7 @@ from event_horizon.admin.model_views import BaseModelView, CanDeleteModelView
 from event_horizon.helpers import check_activate_campaign_for_retailer, sync_activate_retailer, sync_retailer_insert
 from event_horizon.hubble.account_activity_rtbf import anonymise_account_activities
 from event_horizon.polaris.db import AccountHolder, RetailerConfig
+from event_horizon.polaris.utils import generate_payloads_for_delete_account_holder_activity
 
 from .db import AccountHolderCampaignBalance, AccountHolderPendingReward, AccountHolderProfile, AccountHolderReward
 from .validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
@@ -98,19 +100,21 @@ class AccountHolderAdmin(BaseModelView):
         "This action is not reversible, are you sure you wish to proceed?",
     )
     def delete_account_holder(self, ids: list[str]) -> None:
-
+        activity_payloads: Generator[dict, None, None] | None = None
         account_holders_ids = [int(ah_id) for ah_id in ids]
-        retailers_statuses = (
+        account_holders = (
             self.session.execute(
-                select(RetailerConfig.status).join(AccountHolder).where(AccountHolder.id.in_(account_holders_ids))
+                select(AccountHolder)
+                .options(joinedload(AccountHolder.retailerconfig))
+                .where(AccountHolder.id.in_(account_holders_ids))
             )
             .scalars()
             .all()
         )
-
-        if any(status != "TEST" for status in retailers_statuses):
+        if any(account_holder.retailerconfig.status != "TEST" for account_holder in account_holders):
             flash("This action is allowed only for account holders that belong to a TEST retailer.", category="error")
             return
+        activity_payloads = generate_payloads_for_delete_account_holder_activity(account_holders, self.sso_username)
 
         # delete() queries make use of the ondelete="CASCADE" param on the ForeignKey.
         # Fetching the object and calling session.delete(obj) makes use of the
@@ -119,7 +123,9 @@ class AccountHolderAdmin(BaseModelView):
         # We are reflecting the db so we need to use the first method to ensure CASCADE is respected.
         # By default Flask Admin's delete action uses the second method which would leave orphans in our case.
         res = self.session.execute(AccountHolder.__table__.delete().where(AccountHolder.id.in_(account_holders_ids)))
+        sync_send_activity(activity_payloads, routing_key=ActivityType.ACCOUNT_DELETED.value)
         self.session.commit()
+
         flash(f"Deleted {res.rowcount} Account Holders.")
 
     @action(
