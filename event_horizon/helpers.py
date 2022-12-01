@@ -16,7 +16,9 @@ def sync_retailer_insert(retailer_slug: str, retailer_status: str) -> None:
 def check_activate_campaign_for_retailer(retailer_slug: str) -> list[int]:
     return (
         vela_db_session.execute(
-            select(Campaign.id).where(RetailerRewards.slug == retailer_slug, Campaign.status == "ACTIVE")
+            select(Campaign.id)
+            .join(RetailerRewards)
+            .where(RetailerRewards.slug == retailer_slug, Campaign.status == "ACTIVE")
         )
         .scalars()
         .all()
