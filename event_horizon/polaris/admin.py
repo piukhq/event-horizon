@@ -372,7 +372,7 @@ marketing_pref:
             retailer_id = int(ids[0])
             retailer = self._get_retailer_by_id(retailer_id)
             if retailer.status == "TEST":
-                if check_activate_campaign_for_retailer(retailer_id):
+                if check_activate_campaign_for_retailer(retailer.slug):
                     try:
                         # Vela and carina retailer update
                         sync_activate_retailer(retailer_id)

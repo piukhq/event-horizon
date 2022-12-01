@@ -13,10 +13,10 @@ def sync_retailer_insert(retailer_slug: str, retailer_status: str) -> None:
     carina_db_session.commit()
 
 
-def check_activate_campaign_for_retailer(retailer_id: int) -> list[int]:
+def check_activate_campaign_for_retailer(retailer_slug: str) -> list[int]:
     return (
         vela_db_session.execute(
-            select(Campaign.id).where(Campaign.retailer_id == retailer_id, Campaign.status == "ACTIVE")
+            select(Campaign.id).where(RetailerRewards.slug == retailer_slug, Campaign.status == "ACTIVE")
         )
         .scalars()
         .all()
