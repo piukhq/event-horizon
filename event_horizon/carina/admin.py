@@ -13,10 +13,11 @@ from retry_tasks_lib.admin.views import (
     TaskTypeKeyAdminBase,
     TaskTypeKeyValueAdminBase,
 )
+from sqlalchemy.future import select
 
 from event_horizon import settings
 from event_horizon.admin.model_views import BaseModelView, CanDeleteModelView
-from event_horizon.carina.db import RewardConfig
+from event_horizon.carina.db import Reward, RewardConfig
 from event_horizon.carina.validators import (
     validate_optional_yaml,
     validate_required_fields_values_yaml,
@@ -24,9 +25,8 @@ from event_horizon.carina.validators import (
 )
 
 if TYPE_CHECKING:
-    from werkzeug.wrappers import Response
 
-    from event_horizon.carina.db import Reward
+    from werkzeug.wrappers import Response
 
 # pylint: disable=unused-argument
 def reward_config_format(view: BaseModelView, context: dict, model: "Reward", name: str) -> str:
@@ -135,7 +135,7 @@ class RewardAdmin(BaseModelView):
     can_delete = False
     column_searchable_list = ("rewardconfig.id", "rewardconfig.reward_slug", "retailer.slug")
     column_labels = {"rewardconfig": "Reward config"}
-    column_filters = ("retailer.slug", "rewardconfig.reward_slug", "allocated")
+    column_filters = ("retailer.slug", "rewardconfig.reward_slug", "allocated", "deleted")
     column_formatters = {"rewardconfig": reward_config_format}
 
     def is_accessible(self) -> bool:
@@ -145,13 +145,38 @@ class RewardAdmin(BaseModelView):
         return super().is_accessible()
 
     def inaccessible_callback(self, name: str, **kwargs: dict | None) -> "Response":
-        if self.user_roles.intersection(self.RW_AZURE_ROLES):
+        if self.is_read_write_user:
             return redirect(url_for(f"{settings.CARINA_ENDPOINT_PREFIX}/rewards.index_view"))
 
-        if self.user_roles.intersection(self.RO_AZURE_ROLES):
+        if self.is_read_only_user:
             return redirect(url_for(f"{settings.CARINA_ENDPOINT_PREFIX}/ro-rewards.index_view"))
 
         return super().inaccessible_callback(name, **kwargs)
+
+    def is_action_allowed(self, name: str) -> bool:
+        if name == "delete-rewards":
+            return self.is_read_write_user
+
+        return super().is_action_allowed(name)
+
+    @action(
+        "delete-rewards",
+        "Delete",
+        "This action can only be carried out on non allocated and non soft deleted rewards."
+        "This action is unreversible. Proceed?",
+    )
+    def delete_rewards(self, reward_ids: list[str]) -> None:
+        reward: Reward
+        for reward in self.session.scalars(select(Reward).where(Reward.id.in_(reward_ids))):
+            if reward.allocated or reward.deleted:
+                self.session.rollback()
+                flash("Not all selected rewards are eligible for deletion", category="error")
+                return
+
+            self.session.delete(reward)
+
+        self.session.commit()
+        flash("Successfully deleted selected rewards")
 
 
 class ReadOnlyRewardAdmin(RewardAdmin):
