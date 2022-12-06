@@ -377,7 +377,8 @@ marketing_pref:
         else:
             retailer_id = int(ids[0])
             retailer = self._get_retailer_by_id(retailer_id)
-            if retailer.status == "TEST":
+            original_status = retailer.status
+            if original_status == "TEST":
                 if check_activate_campaign_for_retailer(retailer.slug):
                     try:
                         # Vela and carina retailer update
@@ -389,6 +390,19 @@ marketing_pref:
                     except Exception:
                         self.session.rollback()
                         flash("Failed to update retailer", category="error")
+                    else:
+                        self.session.refresh(retailer)
+                        sync_send_activity(
+                            ActivityType.get_retailer_status_update_activity_data(
+                                sso_username=self.sso_username,
+                                activity_datetime=retailer.updated_at,
+                                new_status=retailer.status,
+                                original_status=original_status,
+                                retailer_name=retailer.name,
+                                retailer_slug=retailer.slug,
+                            ),
+                            routing_key=ActivityType.RETAILER_STATUS.value,
+                        )
                 else:
                     flash("Retailer has no active campaign", category="error")
             else:

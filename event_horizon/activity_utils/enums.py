@@ -16,6 +16,7 @@ from event_horizon.activity_utils.schemas import (
     EarnRuleDeletedActivitySchema,
     EarnRuleUpdatedActivitySchema,
     RetailerCreatedActivitySchema,
+    RetailerUpdateActivitySchema,
     RewardRuleCreatedActivitySchema,
     RewardRuleDeletedActivitySchema,
     RewardRuleUpdatedActivitySchema,
@@ -32,6 +33,7 @@ class ActivityType(Enum):
     BALANCE_CHANGE = f"activity.{PROJECT_NAME}.balance.change"
     CAMPAIGN_MIGRATION = f"activity.{PROJECT_NAME}.campaign.migration"
     RETAILER = f"activity.{PROJECT_NAME}.retailer"
+    RETAILER_STATUS = f"activity.{PROJECT_NAME}.retailer.status"
     REWARD_STATUS = f"activity.{PROJECT_NAME}.reward.status"
     ACCOUNT_DELETED = f"activity.{PROJECT_NAME}.account.deleted"
 
@@ -500,6 +502,37 @@ class ActivityType(Enum):
                         "loyalty_name": loyalty_name,
                     }
                 ).dict(exclude_unset=True, exclude_none=True),
+            },
+        }
+        return payload
+
+    @classmethod
+    def get_retailer_status_update_activity_data(
+        cls,
+        *,
+        sso_username: str,
+        activity_datetime: datetime,
+        new_status: str,
+        original_status: str,
+        retailer_name: str,
+        retailer_slug: str,
+    ) -> dict:
+
+        payload = {
+            "type": cls.RETAILER_STATUS.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": f"{retailer_name} status is {new_status}",
+            "reasons": ["Updated"],
+            "activity_identifier": retailer_slug,
+            "user_id": sso_username,
+            "associated_value": new_status,
+            "retailer": retailer_slug,
+            "campaigns": [],
+            "data": {
+                "retailer": RetailerUpdateActivitySchema(
+                    new_values={"status": new_status}, original_values={"status": original_status}
+                ).dict(),
             },
         }
         return payload

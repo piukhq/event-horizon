@@ -219,5 +219,14 @@ class RetailerConfigCreatedDataSchema(BaseModel):
     loyalty_name: str
 
 
+class RetailerConfigUpdateDataSchema(BaseModel):
+    status: str
+
+
 class RetailerCreatedActivitySchema(BaseModel):
     new_values: RetailerConfigCreatedDataSchema
+
+
+class RetailerUpdateActivitySchema(BaseModel):
+    new_values: RetailerConfigUpdateDataSchema
+    original_values: RetailerConfigUpdateDataSchema
