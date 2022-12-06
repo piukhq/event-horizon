@@ -134,7 +134,7 @@ class CampaignAdmin(CanDeleteModelView):
             selected_campaigns_ids: list[str] = request.args.to_dict(flat=False).get("ids", [])
             if not selected_campaigns_ids:
                 flash("no campaign selected.", category="error")
-                redirect(campaigns_index_uri)
+                return redirect(campaigns_index_uri)
 
             try:
                 cmp_end_action.validate_selected_campaigns(selected_campaigns_ids)

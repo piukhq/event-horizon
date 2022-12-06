@@ -1,6 +1,4 @@
-import base64
 import logging
-import pickle
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -11,6 +9,7 @@ from sqlalchemy.future import select
 
 from event_horizon.activity_utils.enums import ActivityType
 from event_horizon.activity_utils.tasks import sync_send_activity
+from event_horizon.admin.utils import SessionDataMethodsMixin
 from event_horizon.polaris.db import db_session as polaris_db_session
 from event_horizon.polaris.utils import transfer_balance, transfer_pending_rewards
 from event_horizon.vela.db.models import Campaign, RetailerRewards, RewardRule
@@ -32,26 +31,11 @@ class CampaignRow:
 
 
 @dataclass
-class SessionFormData:
+class SessionFormData(SessionDataMethodsMixin):
     retailer_slug: str
     active_campaign: CampaignRow
     draft_campaign: CampaignRow | None
     optional_fields_needed: bool
-
-    def to_base64_str(self) -> str:
-        return base64.b64encode(pickle.dumps(self)).decode()
-
-    @classmethod
-    def from_base64_str(cls, form_dynamic_values: str) -> "SessionFormData":
-        try:
-            session_form_data = pickle.loads(base64.b64decode(form_dynamic_values.encode()))
-        except Exception as ex:
-            raise ValueError("unexpected value found for 'form_dynamic_values'") from ex
-
-        if not isinstance(session_form_data, cls):
-            raise TypeError(f"'form_dynamic_values' is not a valid {cls.__name__}")
-
-        return session_form_data
 
 
 @dataclass

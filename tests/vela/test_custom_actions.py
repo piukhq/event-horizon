@@ -143,7 +143,7 @@ def test_campaign_end_action_update_form_invalid_str(end_action: CampaignEndActi
         end_action.update_form("not a base64 string")
 
     assert not end_action._session_form_data
-    assert ex_info.value.args[0] == "unexpected value found for 'form_dynamic_values'"
+    assert ex_info.value.args[0] == "unexpected value for 'base64_session_data'"
 
 
 def test_campaign_end_action_update_form_invalid_content(end_action: CampaignEndAction) -> None:
@@ -151,7 +151,7 @@ def test_campaign_end_action_update_form_invalid_content(end_action: CampaignEnd
         end_action.update_form(base64.b64encode(pickle.dumps({"value": "not SessionFormData"})).decode())
 
     assert not end_action._session_form_data
-    assert ex_info.value.args[0] == "'form_dynamic_values' is not a valid SessionFormData"
+    assert ex_info.value.args[0] == "'base64_session_data' is not a valid SessionFormData"
 
 
 def test_campaign_end_action_validate_selected_campaigns_ok(

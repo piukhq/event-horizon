@@ -6,7 +6,8 @@ import requests
 import wtforms
 import yaml
 
-from flask import Markup, flash, redirect, url_for
+from flask import Markup, flash, redirect, request, session, url_for
+from flask_admin import expose
 from flask_admin.actions import action
 from retry_tasks_lib.admin.views import (
     RetryTaskAdminBase,
@@ -25,6 +26,7 @@ from event_horizon.admin.custom_formatters import format_json_field
 from event_horizon.admin.model_views import BaseModelView, CanDeleteModelView
 from event_horizon.helpers import check_activate_campaign_for_retailer, sync_activate_retailer, sync_retailer_insert
 from event_horizon.hubble.account_activity_rtbf import anonymise_account_activities
+from event_horizon.polaris.custom_actions import DeleteRetailerAction
 from event_horizon.polaris.db import AccountHolder, RetailerConfig
 from event_horizon.polaris.utils import generate_payloads_for_delete_account_holder_activity
 
@@ -407,6 +409,49 @@ marketing_pref:
                     flash("Retailer has no active campaign", category="error")
             else:
                 flash("Retailer in incorrect state for activation", category="error")
+
+    @expose("/custom-actions/delete-retailer", methods=["GET", "POST"])
+    def delete_retailer(self) -> "Response":
+        if not self.user_info or self.user_session_expired:
+            return redirect(url_for("auth_views.login"))
+
+        retailers_index_uri = url_for("polaris/retailers-config.index_view")
+        if not self.can_edit:
+            return redirect(retailers_index_uri)
+
+        del_ret_action = DeleteRetailerAction()
+
+        if "action_context" in session and request.method == "POST":
+            del_ret_action.session_data = session["action_context"]
+
+        else:
+            if error_msg := del_ret_action.validate_selected_ids(request.args.to_dict(flat=False).get("ids", [])):
+                flash(error_msg, category="error")
+                return redirect(retailers_index_uri)
+
+            session["action_context"] = del_ret_action.session_data.to_base64_str()
+
+        if del_ret_action.form.validate_on_submit():
+            del session["action_context"]
+            del_ret_action.delete_retailer()
+            return redirect(retailers_index_uri)
+
+        return self.render(
+            "eh_delete_retailer_action.html",
+            retailer_name=del_ret_action.session_data.retailer_name,
+            account_holders_count=del_ret_action.affected_account_holders_count(),
+            rewards_count=del_ret_action.affected_rewards_count(),
+            campaign_slugs=del_ret_action.affected_campaigns_slugs(),
+            form=del_ret_action.form,
+        )
+
+    @action(
+        "delete-retailer",
+        "Delete",
+        "Only one non active retailer allowed for this action. This action is unreversible, Proceed?",
+    )
+    def delete_retailer_action(self, ids: list[str]) -> "Response":
+        return redirect(url_for("polaris/retailers-config.delete_retailer", ids=ids))
 
 
 class AccountHolderCampaignBalanceAdmin(BaseModelView):
