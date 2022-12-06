@@ -1063,3 +1063,48 @@ def test_delete_account_holder_activity_data(mocker: MockFixture) -> None:
         "campaigns": [],
         "data": {},
     }
+
+
+def test_get_retailer_status_update_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    retailer_slug = "test-retailer"
+    retailer_name = "Test retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    original_status = "TEST"
+    new_status = "ACTIVE"
+
+    payload = ActivityType.get_retailer_status_update_activity_data(
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        new_status=new_status,
+        original_status=original_status,
+        retailer_name=retailer_name,
+        retailer_slug=retailer_slug,
+    )
+
+    assert payload == {
+        "type": ActivityType.RETAILER_STATUS.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{retailer_name} status is {new_status}",
+        "reasons": ["Updated"],
+        "activity_identifier": retailer_slug,
+        "user_id": user_name,
+        "associated_value": new_status,
+        "retailer": retailer_slug,
+        "campaigns": [],
+        "data": {
+            "retailer": {
+                "new_values": {
+                    "status": new_status,
+                },
+                "original_values": {
+                    "status": original_status,
+                },
+            },
+        },
+    }

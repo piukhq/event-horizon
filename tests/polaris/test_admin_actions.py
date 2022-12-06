@@ -3,6 +3,7 @@
 import json
 import uuid
 
+from datetime import datetime
 from typing import Any
 from unittest import mock
 
@@ -80,16 +81,20 @@ def test_activate_retailer(mocker: MockerFixture) -> None:
     mocker.patch("event_horizon.polaris.admin.check_activate_campaign_for_retailer").return_value = [1]
     mocker.patch("event_horizon.polaris.admin.sync_activate_retailer")
     mock_flash = mocker.patch("event_horizon.polaris.admin.flash")
+    mocker.patch.object(RetailerConfigAdmin, "sso_username", "test-user")
+    mock_send_activity = mocker.patch("event_horizon.polaris.admin.sync_send_activity")
 
     # More than one retailer ids in list
     RetailerConfigAdmin(session).activate_retailer(["1", "2"])
     mock_flash.assert_called_with("Cannot activate more than one retailer at once", category="error")
+    assert mock_send_activity.call_count == 0
 
     # Successfully update retailer status
     assert retailer.status == "TEST"
     RetailerConfigAdmin(session).activate_retailer(["1"])
     mock_flash.assert_called_with("Update retailer status successfully")
     assert retailer.status == "ACTIVE"
+    assert mock_send_activity.call_count == 1
 
     # Retailer not in test status
     assert retailer.status == "ACTIVE"
@@ -105,3 +110,5 @@ def test_activate_retailer(mocker: MockerFixture) -> None:
     RetailerConfigAdmin(session).activate_retailer(["1"])
     mock_flash.assert_called_with("Retailer has no active campaign", category="error")
     assert retailer.status == "TEST"
+
+    assert mock_send_activity.call_count == 1
