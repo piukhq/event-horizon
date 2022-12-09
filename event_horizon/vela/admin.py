@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 import requests
 import wtforms
 
+from cosmos_message_lib.schemas import ActivitySchema
 from flask import flash, redirect, request, session, url_for
 from flask_admin import expose
 from flask_admin.actions import action
@@ -405,6 +406,67 @@ class CampaignAdmin(CanDeleteModelView):
     def end_campaigns_action(self, ids: list[str]) -> "Response":
         return redirect(url_for("vela/campaigns.end_campaigns", ids=ids))
 
+    def _send_cloned_campaign_activities(
+        self, retailer_slug: str, campaign: Campaign, earn_rules: list["EarnRule"], reward_rules: list[RewardRule]
+    ) -> None:
+        sso_username = self.user_info["name"]
+        campaign_slug = campaign.slug
+        campaign_name = campaign.name
+        loyalty_type = campaign.loyalty_type
+
+        sync_send_activity(
+            ActivityType.get_campaign_created_activity_data(
+                retailer_slug=retailer_slug,
+                campaign_name=campaign_name,
+                sso_username=sso_username,
+                activity_datetime=campaign.created_at,
+                campaign_slug=campaign_slug,
+                loyalty_type=loyalty_type,
+                start_date=campaign.start_date,
+                end_date=campaign.end_date,
+            ),
+            routing_key=ActivityType.CAMPAIGN.value,
+        )
+        sync_send_activity(
+            (
+                ActivitySchema(
+                    **ActivityType.get_earn_rule_created_activity_data(
+                        retailer_slug=retailer_slug,
+                        campaign_name=campaign_name,
+                        sso_username=sso_username,
+                        activity_datetime=earn_rule.created_at,
+                        campaign_slug=campaign_slug,
+                        loyalty_type=loyalty_type,
+                        threshold=earn_rule.threshold,
+                        increment=earn_rule.increment,
+                        increment_multiplier=earn_rule.increment_multiplier,
+                        max_amount=earn_rule.max_amount,
+                    )
+                ).dict()
+                for earn_rule in earn_rules
+            ),
+            routing_key=ActivityType.EARN_RULE.value,
+        )
+        sync_send_activity(
+            (
+                ActivitySchema(
+                    **ActivityType.get_reward_rule_created_activity_data(
+                        retailer_slug=retailer_slug,
+                        campaign_name=campaign_name,
+                        sso_username=sso_username,
+                        activity_datetime=reward_rule.created_at,
+                        campaign_slug=campaign_slug,
+                        reward_slug=reward_rule.reward_slug,
+                        reward_goal=reward_rule.reward_goal,
+                        reward_cap=reward_rule.reward_cap,
+                        refund_window=reward_rule.allocation_window,
+                    )
+                ).dict()
+                for reward_rule in reward_rules
+            ),
+            routing_key=ActivityType.REWARD_RULE.value,
+        )
+
     def _clone_campaign_and_rules_instances(self, campaign: Campaign) -> Campaign | None:
         def clone_instance(old_model_instance: Any) -> Any:
 
@@ -443,19 +505,29 @@ class CampaignAdmin(CanDeleteModelView):
                 flash(error_msg, category="error")
                 return None
 
+            new_earn_rules: list["EarnRule"] = []
             for earn_rule in campaign.earnrule_collection:
                 new_earn_rule = clone_instance(earn_rule)
                 new_earn_rule.campaign_id = new_campaign.id
+                new_earn_rules.append(new_earn_rule)
                 self.session.add(new_earn_rule)
 
+            new_reward_rules: list[RewardRule] = []
             for reward_rule in campaign.rewardrule_collection:
                 new_reward_rule = clone_instance(reward_rule)
                 new_reward_rule.campaign_id = new_campaign.id
+                new_reward_rules.append(new_reward_rule)
                 self.session.add(new_reward_rule)
 
             nested.commit()
 
         self.session.commit()
+        self._send_cloned_campaign_activities(
+            campaign.retailerrewards.slug,
+            new_campaign,
+            new_earn_rules,
+            new_reward_rules,
+        )
         return new_campaign
 
     @action(
