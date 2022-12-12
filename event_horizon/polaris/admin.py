@@ -1,5 +1,6 @@
 import logging
 
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Generator, Type
 
 import requests
@@ -15,6 +16,7 @@ from retry_tasks_lib.admin.views import (
     TaskTypeKeyAdminBase,
     TaskTypeKeyValueAdminBase,
 )
+from sqlalchemy import update
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 from wtforms.validators import DataRequired, Optional
@@ -369,6 +371,21 @@ marketing_pref:
                     ),
                     routing_key=ActivityType.RETAILER.value,
                 )
+
+    def on_model_change(self, form: wtforms.Form, model: "RetailerConfig", is_created: bool) -> None:
+        if not is_created and form.balance_lifespan.object_data == 0 and form.balance_lifespan.data > 0:
+            reset_date = (datetime.now(tz=timezone.utc) + timedelta(days=model.balance_lifespan)).date()
+            stmt = (
+                update(AccountHolderCampaignBalance)
+                .where(
+                    AccountHolderCampaignBalance.account_holder_id == AccountHolder.id,
+                    AccountHolder.retailer_id == model.id,
+                )
+                .values(reset_date=reset_date)
+                .execution_options(synchronize_session=False)
+            )
+            self.session.execute(stmt)
+        return super().on_model_change(form, model, is_created)
 
     def _get_retailer_by_id(self, retailer_id: int) -> RetailerConfig:
         return self.session.execute(select(RetailerConfig).where(RetailerConfig.id == retailer_id)).scalar_one()
