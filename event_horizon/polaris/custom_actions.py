@@ -62,6 +62,7 @@ class DeleteRetailerAction:
     def affected_campaigns_slugs(self) -> list[str]:  # pragma: no cover
         return vela_db_session.scalars(
             select(Campaign.slug).where(
+                Campaign.status == "ACTIVE",
                 Campaign.retailer_id == RetailerRewards.id,
                 RetailerRewards.slug == self.session_data.retailer_slug,
             )
