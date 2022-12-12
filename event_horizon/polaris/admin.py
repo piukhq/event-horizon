@@ -286,6 +286,7 @@ class RetailerConfigAdmin(BaseModelView):
         "profile_config",
         "marketing_preference_config",
         "loyalty_name",
+        "balance_lifespan",
     )
 
     profile_config_placeholder = """
@@ -331,6 +332,10 @@ marketing_pref:
             ]
         },
         "status": {"default": "TEST", "validators": [Optional()]},
+        "balance_lifespan": {
+            "description": "Optional: provide a value >0 (in days) if balances are to be periodically reset based on "
+            "this value. 0 implies balances will not be reset."
+        },
     }
     column_formatters = dict(
         profile_config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.profile_config) + Markup("</pre>"),
