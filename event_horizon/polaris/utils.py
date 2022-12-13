@@ -6,8 +6,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.future import select
 
 from event_horizon.activity_utils.enums import ActivityType
-from event_horizon.polaris.db import AccountHolderCampaignBalance, AccountHolderPendingReward
-from event_horizon.polaris.db.models import AccountHolder
+from event_horizon.polaris.db import AccountHolder, AccountHolderCampaignBalance, AccountHolderPendingReward
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -24,7 +23,6 @@ def transfer_balance(
     rate_percent: int,
     loyalty_type: str,
 ) -> Generator[dict, None, None]:  # pragma: no cover
-
     rate_multiplier = rate_percent / 100
 
     match loyalty_type:
@@ -36,9 +34,10 @@ def transfer_balance(
             raise ValueError(f"Unexpected loyalty type '{loyalty_type}' received. Expected ACCUMULATOR or STAMPS.")
 
     insert_values_stmt = select(
-        literal(to_campaign_slug).label("literal_slug"),
+        literal(to_campaign_slug).label("campaign_slug"),
         AccountHolderCampaignBalance.account_holder_id,
-        computed_balance.label("computed_balance"),
+        computed_balance.label("balance"),
+        AccountHolderCampaignBalance.reset_date,
     ).where(
         AccountHolderCampaignBalance.campaign_slug == from_campaign_slug,
         AccountHolderCampaignBalance.balance >= min_balance,
@@ -50,11 +49,14 @@ def transfer_balance(
             AccountHolderCampaignBalance.account_holder_id,
             AccountHolderCampaignBalance.balance,
         )
-        .from_select(["campaign_slug", "account_holder_id", "balance"], insert_values_stmt)
+        .from_select(insert_values_stmt.c.keys(), insert_values_stmt)
     )
     upsert_stmt = insert_stmt.on_conflict_do_update(
         index_elements=["account_holder_id", "campaign_slug"],
-        set_={"balance": AccountHolderCampaignBalance.balance + insert_stmt.excluded.balance},
+        set_={
+            "balance": AccountHolderCampaignBalance.balance + insert_stmt.excluded.balance,
+            "reset_date": insert_stmt.excluded.reset_date,
+        },
     )
     updated_balances = db_session.execute(upsert_stmt).all()
 
