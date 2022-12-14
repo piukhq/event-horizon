@@ -19,7 +19,7 @@ from retry_tasks_lib.admin.views import (
 from sqlalchemy import update
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
-from wtforms.validators import DataRequired, Optional
+from wtforms.validators import DataRequired, InputRequired, Optional
 
 from event_horizon import settings
 from event_horizon.activity_utils.enums import ActivityType
@@ -338,7 +338,7 @@ marketing_pref:
         "balance_lifespan": {
             "description": "Provide a value >0 (in days) if balances are to be periodically reset based on "
             "this value. 0 implies balances will not be reset.",
-            "validators": [DataRequired()],
+            "validators": [InputRequired()],
         },
     }
     column_formatters = dict(
