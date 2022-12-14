@@ -273,6 +273,7 @@ class RetailerConfigAdmin(BaseModelView):
         "profile_config",
         "marketing_preference_config",
         "loyalty_name",
+        "balance_lifespan",
         "status",
     )
     column_details_list = ("created_at", "updated_at") + form_create_rules
@@ -335,8 +336,9 @@ marketing_pref:
         },
         "status": {"default": "TEST", "validators": [Optional()]},
         "balance_lifespan": {
-            "description": "Optional: provide a value >0 (in days) if balances are to be periodically reset based on "
-            "this value. 0 implies balances will not be reset."
+            "description": "Provide a value >0 (in days) if balances are to be periodically reset based on "
+            "this value. 0 implies balances will not be reset.",
+            "validators": [DataRequired()],
         },
     }
     column_formatters = dict(
