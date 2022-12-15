@@ -31,6 +31,7 @@ from event_horizon.hubble.account_activity_rtbf import anonymise_account_activit
 from event_horizon.polaris.custom_actions import DeleteRetailerAction
 from event_horizon.polaris.db import AccountHolder, RetailerConfig
 from event_horizon.polaris.utils import generate_payloads_for_delete_account_holder_activity
+from event_horizon.polaris.validators import validate_balance_reset_advanced_warning_days
 
 from .db import AccountHolderCampaignBalance, AccountHolderPendingReward, AccountHolderProfile, AccountHolderReward
 from .validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
@@ -274,6 +275,7 @@ class RetailerConfigAdmin(BaseModelView):
         "marketing_preference_config",
         "loyalty_name",
         "balance_lifespan",
+        "balance_reset_advanced_warning_days",
         "status",
     )
     column_details_list = ("created_at", "updated_at") + form_create_rules
@@ -290,6 +292,7 @@ class RetailerConfigAdmin(BaseModelView):
         "marketing_preference_config",
         "loyalty_name",
         "balance_lifespan",
+        "balance_reset_advanced_warning_days",
     )
 
     profile_config_placeholder = """
@@ -340,6 +343,10 @@ marketing_pref:
             "this value. 0 implies balances will not be reset.",
             "validators": [InputRequired()],
         },
+        "balance_reset_advanced_warning_days": {
+            "description": "Number of days ahead of account holder balance reset "
+            "date that a balance reset nudge should be sent."
+        },
     }
     column_formatters = dict(
         profile_config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.profile_config) + Markup("</pre>"),
@@ -375,6 +382,7 @@ marketing_pref:
                 )
 
     def on_model_change(self, form: wtforms.Form, model: "RetailerConfig", is_created: bool) -> None:
+        validate_balance_reset_advanced_warning_days(form, retailer_status=model.status)
         if not is_created and form.balance_lifespan.object_data == 0 and form.balance_lifespan.data > 0:
             reset_date = (datetime.now(tz=timezone.utc) + timedelta(days=model.balance_lifespan)).date()
             stmt = (
@@ -387,6 +395,7 @@ marketing_pref:
                 .execution_options(synchronize_session=False)
             )
             self.session.execute(stmt)
+
         return super().on_model_change(form, model, is_created)
 
     def _get_retailer_by_id(self, retailer_id: int) -> RetailerConfig:

@@ -122,3 +122,37 @@ def validate_account_number_prefix(form: wtforms.Form, field: wtforms.Field) -> 
         raise wtforms.ValidationError("Account number prefix needs to be 2-4 alpha characters")
 
     field.data = field.data.upper()
+
+
+def _active_retailer_validation(original_warning_days: int, new_warning_days: int, balance_lifespan: int) -> None:
+    if new_warning_days != original_warning_days != 0:
+        raise wtforms.ValidationError("You cannot change this field for an active retailer")
+    if balance_lifespan != 0 and new_warning_days == 0:
+        raise wtforms.ValidationError(
+            "You must set both the balance_lifespan with the balance_reset_advanced_warning_days for active retailers"
+        )
+
+
+def validate_balance_reset_advanced_warning_days(
+    form: wtforms.Form,
+    retailer_status: str,
+) -> None:
+    try:
+        form.balance_reset_advanced_warning_days.data or form.balance_lifespan.data
+    except AttributeError:
+        pass
+    else:
+        original_warning_days = form.balance_reset_advanced_warning_days.object_data
+        new_warning_days = form.balance_reset_advanced_warning_days.data
+        balance_lifespan = form.balance_lifespan.data
+        if retailer_status == "ACTIVE":
+            _active_retailer_validation(original_warning_days, new_warning_days, balance_lifespan)
+        if original_warning_days != new_warning_days:
+            if balance_lifespan <= 0 != new_warning_days:
+                raise wtforms.ValidationError("There must be a balance_lifespan set")
+            if new_warning_days <= 0 not in {original_warning_days, balance_lifespan}:
+                raise wtforms.ValidationError("The balance_reset_advanced_warning_days must be >0")
+        if balance_lifespan <= new_warning_days != 0:
+            raise wtforms.ValidationError(
+                "The balance_reset_advanced_warning_days must be less than the balance_lifespan"
+            )
