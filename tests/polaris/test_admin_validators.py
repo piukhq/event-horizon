@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name
 
+from dataclasses import dataclass
 from typing import Generator
 from unittest import mock
 
@@ -8,6 +9,7 @@ import wtforms
 
 from event_horizon.polaris.validators import (
     validate_account_number_prefix,
+    validate_balance_reset_advanced_warning_days,
     validate_marketing_config,
     validate_retailer_config,
 )
@@ -297,3 +299,117 @@ Marketing_conf :
 
     validate_marketing_config(mock_form, mock_config_field)
     assert mock_config_field.data == ""
+
+
+@dataclass
+class SetupData:
+    original_warning_days: int
+    new_warning_days: int
+    status: str
+    balance_lifespan: int
+
+
+@dataclass
+class ExpectationData:
+    response: str | None
+
+
+test_data = [
+    [
+        "balance_reset_advanced_warning_days more than balance_lifespan",
+        SetupData(
+            original_warning_days=0,
+            new_warning_days=30,
+            status="TEST",
+            balance_lifespan=20,
+        ),
+        ExpectationData(response="The balance_reset_advanced_warning_days must be less than the balance_lifespan"),
+    ],
+    [
+        "balance_reset_advanced_warning_days are manditory if the balance_lifespan is set",
+        SetupData(
+            original_warning_days=0,
+            new_warning_days=0,
+            status="TEST",
+            balance_lifespan=20,
+        ),
+        ExpectationData(response="You must set both the balance_lifespan with the balance_reset_advanced_warning_days"),
+    ],
+    [
+        "able to update the balance_reset_advanced_warning_days for a retailer >0",
+        SetupData(
+            original_warning_days=0,
+            new_warning_days=7,
+            status="ACTIVE",
+            balance_lifespan=30,
+        ),
+        ExpectationData(response=None),
+    ],
+    [
+        "not able to update the balance_reset_advanced_warning_days for an active retailer",
+        SetupData(
+            original_warning_days=7,
+            new_warning_days=10,
+            status="ACTIVE",
+            balance_lifespan=30,
+        ),
+        ExpectationData(response="You cannot change this field for an active retailer"),
+    ],
+    [
+        "not able to set a balance_lifespan without a balance_reset_advanced_warning_days for ACTIVE retailers",
+        SetupData(
+            original_warning_days=0,
+            new_warning_days=0,
+            status="ACTIVE",
+            balance_lifespan=30,
+        ),
+        ExpectationData(
+            response="You must set both the balance_lifespan with the balance_reset_advanced_warning_days "
+            "for active retailers"
+        ),
+    ],
+    [
+        "able to set a balance_lifespan without a balance_reset_advanced_warning_days for TEST retailers",
+        SetupData(
+            original_warning_days=0,
+            new_warning_days=0,
+            status="TEST",
+            balance_lifespan=30,
+        ),
+        ExpectationData(response=None),
+    ],
+    [
+        "not able to have balance_reset_advanced_warning_days without a balance_lifespan",
+        SetupData(
+            original_warning_days=7,
+            new_warning_days=7,
+            status="TEST",
+            balance_lifespan=0,
+        ),
+        ExpectationData(response="The balance_reset_advanced_warning_days must be less than the balance_lifespan"),
+    ],
+]
+
+
+@pytest.mark.parametrize(
+    "_description,setup_data,expectation_data",
+    test_data,
+    ids=[f"{i[0]}" for i in test_data],
+)
+def test_validate_balance_reset_advanced_warning_days(
+    _description: str,
+    setup_data: SetupData,
+    expectation_data: ExpectationData,
+) -> None:
+    mock_form: wtforms.Form = {
+        "balance_reset_advanced_warning_days": {
+            "data": setup_data.new_warning_days,
+            "object_data": setup_data.original_warning_days,
+        },
+        "balance_lifespan": {"data": setup_data.balance_lifespan},
+    }
+    retailer_status = setup_data.status
+    try:
+        validate_balance_reset_advanced_warning_days(mock_form, retailer_status)
+    except Exception as ex:
+        assert ex.args[0] == expectation_data.response
