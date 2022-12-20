@@ -31,7 +31,10 @@ jobs:
       - run: isort --check .
       - run: xenon --no-assert --max-average A --max-modules B --max-absolute B .
       - run: mypy .
-      - run: pytest --fixtures --collect-only
+      - run: pytest --fixtures --collect-only tests/carina/test_admin_validators.py
+      - run: pytest --fixtures --collect-only tests/carina/test_admin_actions.py
+      - run: pytest --fixtures --collect-only tests/polaris/test_admin_validators.py
+      - run: pytest --fixtures --collect-only tests/polaris/test_custom_actions.py
       - run: pylint event_horizon tests
       - run: pytest --verbose --cov event_horizon --cov-report term-missing
 
