@@ -377,6 +377,8 @@ marketing_pref:
                         enrolment_config=yaml.safe_load(model.profile_config),
                         marketing_preferences=yaml.safe_load(model.marketing_preference_config),
                         loyalty_name=model.loyalty_name,
+                        balance_lifespan=model.balance_lifespan,
+                        balance_reset_advanced_warning_days=model.balance_reset_advanced_warning_days,
                     ),
                     routing_key=ActivityType.RETAILER.value,
                 )
