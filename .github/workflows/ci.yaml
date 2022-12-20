@@ -31,6 +31,7 @@ jobs:
       - run: isort --check .
       - run: xenon --no-assert --max-average A --max-modules B --max-absolute B .
       - run: mypy .
+      - run: pytest --fixtures --collect-only
       - run: pylint event_horizon tests
       - run: pytest --verbose --cov event_horizon --cov-report term-missing
 
