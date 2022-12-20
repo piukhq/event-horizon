@@ -863,6 +863,8 @@ def test_get_retailer_config_created_activity_data(mocker: MockFixture) -> None:
     account_prefix = "RETB"
     loyalty_name = "mock retailer"
     retailer_status = "TEST"
+    balance_lifespan = 30
+    balance_reset_advanced_warning_days = 10
 
     retailer_enrol_config = """
 email:
@@ -892,6 +894,8 @@ marketing_pref:
         enrolment_config=yaml.safe_load(retailer_enrol_config),
         marketing_preferences=yaml.safe_load(marketing_pref_config),
         loyalty_name=loyalty_name,
+        balance_lifespan=balance_lifespan,
+        balance_reset_advanced_warning_days=balance_reset_advanced_warning_days,
     )
 
     assert payload == {
@@ -939,6 +943,8 @@ def test_get_retailer_config_created_activity_data_without_optionals(mocker: Moc
     account_prefix = "RETB"
     loyalty_name = "mock retailer"
     retailer_status = "TEST"
+    balance_lifespan = 0
+    balance_reset_advanced_warning_days = 0
 
     retailer_enrol_config = """
 email:
@@ -960,6 +966,8 @@ last_name:
         enrolment_config=yaml.safe_load(retailer_enrol_config),
         marketing_preferences=yaml.safe_load(""),
         loyalty_name=loyalty_name,
+        balance_lifespan=balance_lifespan,
+        balance_reset_advanced_warning_days=balance_reset_advanced_warning_days,
     )
 
     assert payload == {

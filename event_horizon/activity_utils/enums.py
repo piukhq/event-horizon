@@ -473,6 +473,8 @@ class ActivityType(Enum):
         enrolment_config: dict,
         marketing_preferences: dict | None,
         loyalty_name: str,
+        balance_lifespan: int,
+        balance_reset_advanced_warning_days: int,
     ) -> dict:
         enrolment_config_data = [{"key": k, **v} for k, v in enrolment_config.items()]
 
@@ -500,6 +502,8 @@ class ActivityType(Enum):
                         "enrolment_config": enrolment_config_data,
                         "marketing_preference_config": marketing_pref_data if marketing_preferences else None,
                         "loyalty_name": loyalty_name,
+                        "balance_lifespan": balance_lifespan,
+                        "balance_reset_advanced_warning_days": balance_reset_advanced_warning_days,
                     }
                 ).dict(exclude_unset=True, exclude_none=True),
             },
