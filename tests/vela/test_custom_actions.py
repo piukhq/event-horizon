@@ -32,8 +32,8 @@ class EndActionMockedCalls:
     status_change_fn: MagicMock
 
 
-@pytest.fixture
-def test_session_form_data() -> SessionFormTestData:
+@pytest.fixture(name="test_session_form_data")
+def test_session_form_data_fixture() -> SessionFormTestData:
     session_form_data = SessionFormData(
         retailer_slug="test-retailer",
         active_campaign=CampaignRow(
@@ -51,8 +51,8 @@ def test_session_form_data() -> SessionFormTestData:
     )
 
 
-@pytest.fixture
-def test_session_form_data_no_draft() -> SessionFormTestData:
+@pytest.fixture(name="test_session_form_data_no_draft")
+def test_session_form_data_no_draft_fixture() -> SessionFormTestData:
     session_form_data = SessionFormData(
         retailer_slug="test-retailer",
         active_campaign=CampaignRow(id=1, slug="test", type="STAMPS", reward_goal=100, reward_slug="test-reward"),
@@ -65,16 +65,16 @@ def test_session_form_data_no_draft() -> SessionFormTestData:
     )
 
 
-@pytest.fixture
-def end_action() -> Generator[CampaignEndAction, None, None]:
+@pytest.fixture(name="end_action")
+def end_action_fixture() -> Generator[CampaignEndAction, None, None]:
     app = Flask(__name__)
     app.secret_key = "random string"
     with app.app_context(), app.test_request_context():
         yield CampaignEndAction(MagicMock(spec=Session))
 
 
-@pytest.fixture
-def end_action_mocks(mocker: MockerFixture, end_action: CampaignEndAction) -> EndActionMockedCalls:
+@pytest.fixture(name="end_action_mocks")
+def end_action_mocks_fixture(mocker: MockerFixture, end_action: CampaignEndAction) -> EndActionMockedCalls:
     mocks = EndActionMockedCalls(
         transfer_balance=mocker.patch("event_horizon.vela.custom_actions.transfer_balance"),
         transfer_pending_rewards=mocker.patch("event_horizon.vela.custom_actions.transfer_pending_rewards"),

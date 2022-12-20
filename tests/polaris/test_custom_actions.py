@@ -40,8 +40,8 @@ class DBSessionsMocks(NamedTuple):
     hubble_db_session: MagicMock
 
 
-@pytest.fixture
-def test_session_data() -> SessionTestData:
+@pytest.fixture(name="test_session_data")
+def test_session_data_fixture() -> SessionTestData:
     session_data = SessionData(
         retailer_slug="test-retailer",
         retailer_name="Test Retailer",
@@ -54,16 +54,18 @@ def test_session_data() -> SessionTestData:
     )
 
 
-@pytest.fixture
-def delete_action() -> Generator[DeleteRetailerAction, None, None]:
+@pytest.fixture(name="delete_action")
+def delete_action_fixture() -> Generator[DeleteRetailerAction, None, None]:
     app = Flask(__name__)
     app.secret_key = "random string"
     with app.app_context(), app.test_request_context():
         yield DeleteRetailerAction()
 
 
-@pytest.fixture
-def delete_action_mocks(mocker: MockerFixture, delete_action: DeleteRetailerAction) -> DeleteActionMockedDBCalls:
+@pytest.fixture(name="delete_action_mocks")
+def delete_action_mocks_fixture(
+    mocker: MockerFixture, delete_action: DeleteRetailerAction
+) -> DeleteActionMockedDBCalls:
     return DeleteActionMockedDBCalls(
         get_retailer_by_id=mocker.patch.object(
             delete_action,
@@ -82,8 +84,8 @@ def delete_action_mocks(mocker: MockerFixture, delete_action: DeleteRetailerActi
     )
 
 
-@pytest.fixture
-def db_sessions_mocks(mocker: MockerFixture) -> DBSessionsMocks:
+@pytest.fixture(name="db_sessions_mocks")
+def db_sessions_mocks_fixture(mocker: MockerFixture) -> DBSessionsMocks:
     return DBSessionsMocks(
         polaris_db_session=mocker.patch("event_horizon.polaris.custom_actions.polaris_db_session"),
         vela_db_session=mocker.patch("event_horizon.polaris.custom_actions.vela_db_session"),
