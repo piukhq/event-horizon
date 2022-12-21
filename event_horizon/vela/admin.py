@@ -109,13 +109,13 @@ class CampaignAdmin(CanDeleteModelView):
                 return EasterEgg(greet_msg, profanities_msg)
             case "alyson":
                 return EasterEgg(greet_msg, kitten_msg if getrandbits(1) else profanities_msg)
-            case _:
-                return EasterEgg(
-                    greet_msg,
-                    "<p>This is an internal tool with very little input validation.</p>"
-                    "<p>¯\\_(ツ)_/¯</p>"
-                    "<p>Please do try not to destroy everything.</p>",
-                )
+
+        return EasterEgg(
+            greet_msg,
+            "<p>This is an internal tool with very little input validation.</p>"
+            "<p>¯\\_(ツ)_/¯</p>"
+            "<p>Please do try not to destroy everything.</p>",
+        )
 
     @expose("/custom-actions/end-campaigns", methods=["GET", "POST"])
     def end_campaigns(self) -> "Response":
@@ -300,7 +300,7 @@ class CampaignAdmin(CanDeleteModelView):
         if retailer_slug is None:
             raise ValueError(f"Unable to determine retailer for selected campaigns: {campaigns_ids}")
 
-        if different_retailers is True:
+        if different_retailers:
             flash("All the selected campaigns must belong to the same retailer.", category="error")
             return False
 
@@ -478,7 +478,7 @@ class CampaignAdmin(CanDeleteModelView):
 
             for name, col in mapper.columns.items():
 
-                if not (col.primary_key or col.unique or name in ["created_at", "updated_at"]):
+                if not (col.primary_key or col.unique or name in ("created_at", "updated_at")):
                     setattr(new_model_instance, name, getattr(old_model_instance, name))
 
             return new_model_instance

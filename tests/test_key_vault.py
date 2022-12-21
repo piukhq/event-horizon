@@ -43,9 +43,7 @@ def test_get_secret(mocked_client: mock.MagicMock) -> None:
     mocked_client.get_secret.side_effect = secret_factory()
 
     key_vault = KeyVault(client=mocked_client)
-    results = []
-    for _, key_to_retrieve in list(fake_secrets):
-        results.append(key_vault.get_secret("made-up-name", key=key_to_retrieve))
+    results = [key_vault.get_secret("made-up-name", key=key_to_retrieve) for _, key_to_retrieve in fake_secrets.copy()]
 
     assert results == [
         "secret #1",

@@ -31,7 +31,9 @@ jobs:
       - run: isort --check .
       - run: xenon --no-assert --max-average A --max-modules B --max-absolute B .
       - run: mypy .
-      - run: pylint event_horizon tests
+      - run: flakeheaven lint
+      - run: refurb event_horizon tests wsgi.py
+      - run: pylint event_horizon tests wsgi.py
       - run: pytest --verbose --cov event_horizon --cov-report term-missing
 
   release_dev:

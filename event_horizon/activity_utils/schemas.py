@@ -173,8 +173,8 @@ class CampaignMigrationActivitySchema(BaseModel):
     @classmethod
     def format_payload(cls, values: dict) -> dict:
         if not values.pop("transfer_balance_requested"):
-            del values["balance_conversion_rate"]
-            del values["qualify_threshold"]
+            values.pop("balance_conversion_rate")
+            values.pop("qualify_threshold")
 
         return values
 

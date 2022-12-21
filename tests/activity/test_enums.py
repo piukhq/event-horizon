@@ -732,7 +732,7 @@ def test_get_balance_change_activity_data(mocker: MockFixture) -> None:
     activity_datetime = datetime.now(tz=timezone.utc)
     new_balance = 1200
 
-    for loyalty_type in ["STAMPS", "ACCUMULATOR"]:
+    for loyalty_type in ("STAMPS", "ACCUMULATOR"):
 
         if loyalty_type == "STAMPS":
             expected_associated_value = "12 stamps"

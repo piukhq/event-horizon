@@ -42,7 +42,7 @@ def _validate_required_fields_values(required_fields: dict, fields_to_check: dic
 
 
 def validate_required_fields_values_yaml(form: wtforms.Form, field: wtforms.Field) -> None:
-    if form.fetchtype.data.required_fields in [None, ""]:
+    if form.fetchtype.data.required_fields in (None, ""):
         required_fields = None
     else:
         required_fields = yaml.safe_load(form.fetchtype.data.required_fields)
@@ -71,7 +71,7 @@ def validate_required_fields_values_yaml(form: wtforms.Form, field: wtforms.Fiel
 def validate_optional_yaml(form: wtforms.Form, field: wtforms.Field) -> None:  # pylint: disable=unused-argument
     try:
 
-        if field.data in [None, ""]:
+        if field.data in (None, ""):
             field.data = ""
             return
 
