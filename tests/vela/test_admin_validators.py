@@ -105,7 +105,7 @@ def test_validate_earn_rule_increment__stamps__inc_has_val(
     mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
     mock_form.campaign = mock.Mock(data=mock.Mock(loyalty_type=STAMPS))
-    for val in [100, 200, 300, 500, 1000, 1200, 10000]:
+    for val in (100, 200, 300, 500, 1000, 1200, 10000):
         mock_field.data = val
 
         try:
@@ -113,7 +113,7 @@ def test_validate_earn_rule_increment__stamps__inc_has_val(
         except Exception:
             pytest.fail()
 
-    for val in [1, 2, 10, 50, 101, 250, 399, 560, 1050, 1210, 10042]:
+    for val in (1, 2, 10, 50, 101, 250, 399, 560, 1050, 1210, 10042):
         mock_field.data = val
 
         with pytest.raises(wtforms.validators.StopValidation) as ex_info:

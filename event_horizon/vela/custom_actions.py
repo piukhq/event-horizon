@@ -102,7 +102,7 @@ class CampaignEndAction:
         if not campaign_rows:
             errors.append("No campaign found.")
 
-        if any(cmp.status not in ["ACTIVE", "DRAFT"] for cmp in campaign_rows):
+        if any(cmp.status not in ("ACTIVE", "DRAFT") for cmp in campaign_rows):
             errors.append("Only ACTIVE or DRAFT campaigns allowed for this action.")
 
         if not all(cmp.retailer_slug == campaign_rows[0].retailer_slug for cmp in campaign_rows):

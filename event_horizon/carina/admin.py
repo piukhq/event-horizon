@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
     from werkzeug.wrappers import Response
 
+
 # pylint: disable=unused-argument
 def reward_config_format(view: BaseModelView, context: dict, model: "Reward", name: str) -> str:
     return Markup(

@@ -3,6 +3,7 @@ import logging
 import re
 
 from typing import TYPE_CHECKING, Any, TypedDict
+from uuid import UUID
 
 from sqlalchemy.future import select
 from sqlalchemy.orm.attributes import flag_modified
@@ -40,7 +41,7 @@ class AccountRequestActivityData(TypedDict):
     datatime: str
 
 
-def _encode_value(account_holder_uuid: str, value: Any | None) -> str:
+def _encode_value(account_holder_uuid: str | UUID, value: Any | None) -> str:
     """
     Returns hashlib.sha224 encoded hash str of the input str account_holder_uuid
 

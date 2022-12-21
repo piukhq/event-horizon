@@ -22,13 +22,13 @@ def readyz() -> Any:
 
     try:
         polaris_db_session.execute(text("SELECT 1"))
-    except Exception as e:
-        db_errors.append(f"failed to connect to polaris database due to error: {repr(e)}")
+    except Exception as ex:
+        db_errors.append(f"failed to connect to polaris database due to error: {ex!r}")
 
     try:
         vela_db_session.execute(text("SELECT 1"))
-    except Exception as e:
-        db_errors.append(f"failed to connect to vela database due to error: {repr(e)}")
+    except Exception as ex:
+        db_errors.append(f"failed to connect to vela database due to error: {ex!r}")
 
     if db_errors:
         payload = {"postgres": db_errors}

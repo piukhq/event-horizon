@@ -22,7 +22,7 @@ def get_env(k: str, default: str = None, *, conv: Callable = str) -> Any:
 def to_bool(v: str) -> bool:
     value = v.lower()
 
-    if value not in ["true", "false"]:
+    if value not in ("true", "false"):
         raise ValueError("Invalid value for a boolean.")
 
     return value == "true"

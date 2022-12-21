@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from jinja2.runtime import Context
     from sqlalchemy.ext.automap import AutomapBase
 
+
 # pylint: disable=unused-argument
 def format_json_field(v: Type["ModelView"], c: "Context", model: Type["AutomapBase"], p: str) -> str:
     return (

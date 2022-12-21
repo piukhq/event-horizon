@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     from jinja2.runtime import Context
     from werkzeug.wrappers import Response
 
+
 # pylint: disable=unused-argument
 def _account_holder_repr(
     v: Type[BaseModelView],
