@@ -29,6 +29,7 @@ from event_horizon import settings
 from event_horizon.activity_utils.enums import ActivityType
 from event_horizon.activity_utils.tasks import sync_send_activity
 from event_horizon.admin.model_views import BaseModelView, CanDeleteModelView
+from event_horizon.carina.utils import delete_reward_campaign
 from event_horizon.vela.custom_actions import CampaignEndAction
 from event_horizon.vela.db import Campaign, RetailerRewards, RewardRule
 from event_horizon.vela.validators import (
@@ -173,6 +174,8 @@ class CampaignAdmin(CanDeleteModelView):
                 if not 200 <= resp.status_code <= 204:
                     flash("Could not complete this action. Please try again", category="error")
                     return False
+
+                delete_reward_campaign(campaign_slug)
 
             except Exception as ex:
                 msg = "Error: no response received."

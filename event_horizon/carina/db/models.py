@@ -74,3 +74,10 @@ class RewardUpdate(Base, UpdatedAtMixin):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.id})"
+
+
+class RewardCampaign(Base, UpdatedAtMixin):
+    __tablename__ = "reward_campaign"
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.id})"

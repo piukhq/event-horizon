@@ -10,13 +10,14 @@ from .admin import (
     RetailerFetchTypeAdmin,
     RetryTaskAdmin,
     RewardAdmin,
+    RewardCampaignAdmin,
     RewardConfigAdmin,
     RewardUpdateAdmin,
     TaskTypeAdmin,
     TaskTypeKeyAdmin,
     TaskTypeKeyValueAdmin,
 )
-from .db import FetchType, RetailerFetchType, Reward, RewardConfig, RewardUpdate, db_session
+from .db import FetchType, RetailerFetchType, Reward, RewardCampaign, RewardConfig, RewardUpdate, db_session
 
 if TYPE_CHECKING:
     from flask_admin import Admin
@@ -75,6 +76,15 @@ def register_carina_admin(event_horizon_admin: "Admin") -> None:
             db_session,
             "Reward Updates",
             endpoint=f"{CARINA_ENDPOINT_PREFIX}/reward-updates",
+            category=carina_menu_title,
+        )
+    )
+    event_horizon_admin.add_view(
+        RewardCampaignAdmin(
+            RewardCampaign,
+            db_session,
+            "Reward Campaign",
+            endpoint=f"{CARINA_ENDPOINT_PREFIX}/reward-campaign",
             category=carina_menu_title,
         )
     )

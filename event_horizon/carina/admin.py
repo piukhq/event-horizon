@@ -196,6 +196,14 @@ class RewardUpdateAdmin(BaseModelView):
     column_filters = ("reward.retailer.slug",)
 
 
+class RewardCampaignAdmin(BaseModelView):
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_searchable_list = ("id",)
+    column_filters = ("retailer.slug", "reward_slug", "campaign_slug", "campaign_status")
+
+
 class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
     endpoint_prefix = settings.CARINA_ENDPOINT_PREFIX
     redis = settings.redis
