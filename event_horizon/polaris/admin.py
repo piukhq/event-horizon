@@ -342,11 +342,12 @@ marketing_pref:
         "balance_lifespan": {
             "description": "Provide a value >0 (in days) if balances are to be periodically reset based on "
             "this value. 0 implies balances will not be reset.",
-            "validators": [InputRequired()],
+            "validators": [wtforms.validators.NumberRange(min=0), InputRequired()],
         },
         "balance_reset_advanced_warning_days": {
             "description": "Number of days ahead of account holder balance reset "
-            "date that a balance reset nudge should be sent."
+            "date that a balance reset nudge should be sent.",
+            "validators": [wtforms.validators.NumberRange(min=0), InputRequired()],
         },
     }
     column_formatters = dict(
