@@ -927,6 +927,8 @@ marketing_pref:
                         {"key": "marketing_pref", "type": "boolean", "label": "Would you like emails?"}
                     ],
                     "loyalty_name": loyalty_name,
+                    "balance_lifespan": 30,
+                    "balance_reset_advanced_warning_days": 10,
                 }
             },
         },
@@ -996,6 +998,8 @@ last_name:
                         {"key": "last_name", "required": True, "label": "Last name"},
                     ],
                     "loyalty_name": loyalty_name,
+                    "balance_lifespan": 0,
+                    "balance_reset_advanced_warning_days": 0,
                 }
             },
         },
