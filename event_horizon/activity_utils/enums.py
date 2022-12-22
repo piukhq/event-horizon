@@ -16,6 +16,8 @@ from event_horizon.activity_utils.schemas import (
     EarnRuleDeletedActivitySchema,
     EarnRuleUpdatedActivitySchema,
     RetailerCreatedActivitySchema,
+    RetailerDeletedActivitySchema,
+    RetailerStatusUpdateActivitySchema,
     RetailerUpdateActivitySchema,
     RewardRuleCreatedActivitySchema,
     RewardRuleDeletedActivitySchema,
@@ -32,7 +34,9 @@ class ActivityType(Enum):
     REWARD_RULE = f"activity.{PROJECT_NAME}.reward_rule.change"
     BALANCE_CHANGE = f"activity.{PROJECT_NAME}.balance.change"
     CAMPAIGN_MIGRATION = f"activity.{PROJECT_NAME}.campaign.migration"
-    RETAILER = f"activity.{PROJECT_NAME}.retailer"
+    RETAILER_CREATED = f"activity.{PROJECT_NAME}.retailer.created"
+    RETAILER_CHANGED = f"activity.{PROJECT_NAME}.retailer.changed"
+    RETAILER_DELETED = f"activity.{PROJECT_NAME}.retailer.deleted"
     RETAILER_STATUS = f"activity.{PROJECT_NAME}.retailer.status"
     REWARD_STATUS = f"activity.{PROJECT_NAME}.reward.status"
     ACCOUNT_DELETED = f"activity.{PROJECT_NAME}.account.deleted"
@@ -482,7 +486,7 @@ class ActivityType(Enum):
             marketing_pref_data = [{"key": k, **v} for k, v in marketing_preferences.items()]
 
         payload = {
-            "type": cls.RETAILER.name,
+            "type": cls.RETAILER_CREATED.name,
             "datetime": datetime.now(tz=timezone.utc),
             "underlying_datetime": activity_datetime,
             "summary": f"{retailer_name} retailer created",
@@ -505,6 +509,70 @@ class ActivityType(Enum):
                         "balance_lifespan": balance_lifespan,
                         "balance_reset_advanced_warning_days": balance_reset_advanced_warning_days,
                     }
+                ).dict(exclude_unset=True, exclude_none=True),
+            },
+        }
+        return payload
+
+    # pylint: disable=too-many-locals
+    @classmethod
+    def get_retailer_update_activity_data(
+        cls,
+        *,
+        sso_username: str,
+        activity_datetime: datetime,
+        retailer_name: str,
+        retailer_slug: str,
+        new_values: dict,
+        original_values: dict,
+    ) -> dict:
+
+        payload = {
+            "type": cls.RETAILER_CHANGED.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": f"{retailer_name} changed",
+            "reasons": ["Updated"],
+            "activity_identifier": retailer_slug,
+            "user_id": sso_username,
+            "associated_value": "N/A",
+            "retailer": retailer_slug,
+            "campaigns": [],
+            "data": {
+                "retailer": RetailerUpdateActivitySchema(
+                    new_values=new_values,
+                    original_values=original_values,
+                ).dict(exclude_unset=True, exclude_none=True),
+            },
+        }
+        return payload
+
+    # pylint: disable=too-many-locals
+    @classmethod
+    def get_retailer_deletion_activity_data(
+        cls,
+        *,
+        sso_username: str,
+        activity_datetime: datetime,
+        retailer_name: str,
+        retailer_slug: str,
+        original_values: dict,
+    ) -> dict:
+
+        payload = {
+            "type": cls.RETAILER_DELETED.name,
+            "datetime": datetime.now(tz=timezone.utc),
+            "underlying_datetime": activity_datetime,
+            "summary": f"{retailer_name} deleted",
+            "reasons": ["Deleted"],
+            "activity_identifier": retailer_slug,
+            "user_id": sso_username,
+            "associated_value": "N/A",
+            "retailer": retailer_slug,
+            "campaigns": [],
+            "data": {
+                "retailer": RetailerDeletedActivitySchema(
+                    original_values=original_values,
                 ).dict(exclude_unset=True, exclude_none=True),
             },
         }
@@ -534,7 +602,7 @@ class ActivityType(Enum):
             "retailer": retailer_slug,
             "campaigns": [],
             "data": {
-                "retailer": RetailerUpdateActivitySchema(
+                "retailer": RetailerStatusUpdateActivitySchema(
                     new_values={"status": new_status}, original_values={"status": original_status}
                 ).dict(),
             },

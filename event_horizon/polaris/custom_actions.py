@@ -24,6 +24,8 @@ class SessionData(SessionDataMethodsMixin):
     retailer_name: str
     retailer_slug: str
     polaris_retailer_id: int
+    retailer_status: str
+    loyalty_name: str
 
 
 class DeleteRetailerAction:
@@ -85,7 +87,11 @@ class DeleteRetailerAction:
             return "Only non active Retailers allowed for this action"
 
         self._session_data = SessionData(
-            retailer_name=retailer.name, retailer_slug=retailer.slug, polaris_retailer_id=retailer.id
+            retailer_name=retailer.name,
+            retailer_slug=retailer.slug,
+            polaris_retailer_id=retailer.id,
+            retailer_status=retailer.status,
+            loyalty_name="ACCUMULATOR",
         )
 
         return None

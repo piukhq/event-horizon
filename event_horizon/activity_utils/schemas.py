@@ -221,7 +221,7 @@ class RetailerConfigCreatedDataSchema(BaseModel):
     marketing_preference_config: list[dict] | None
 
 
-class RetailerConfigUpdateDataSchema(BaseModel):
+class RetailerStatusUpdateDataSchema(BaseModel):
     status: str
 
 
@@ -229,6 +229,27 @@ class RetailerCreatedActivitySchema(BaseModel):
     new_values: RetailerConfigCreatedDataSchema
 
 
+class RetailerStatusUpdateActivitySchema(BaseModel):
+    new_values: RetailerStatusUpdateDataSchema
+    original_values: RetailerStatusUpdateDataSchema
+
+
+class RetailerUpdateDataSchema(BaseModel):
+    status: str | None
+    name: str | None
+    slug: str | None
+    account_number_prefix: str | None
+    loyalty_name: str | None
+    balance_lifespan: int | None
+    balance_reset_advanced_warning_days: int | None
+    enrolment_config: list[dict] | None
+    marketing_preference_config: list[dict] | None
+
+
 class RetailerUpdateActivitySchema(BaseModel):
-    new_values: RetailerConfigUpdateDataSchema
-    original_values: RetailerConfigUpdateDataSchema
+    new_values: RetailerUpdateDataSchema
+    original_values: RetailerUpdateDataSchema
+
+
+class RetailerDeletedActivitySchema(BaseModel):
+    original_values: RetailerUpdateDataSchema

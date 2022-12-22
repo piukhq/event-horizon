@@ -901,7 +901,7 @@ marketing_pref:
     )
 
     assert payload == {
-        "type": ActivityType.RETAILER.name,
+        "type": ActivityType.RETAILER_CREATED.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{retailer_name} retailer created",
@@ -975,7 +975,7 @@ last_name:
     )
 
     assert payload == {
-        "type": ActivityType.RETAILER.name,
+        "type": ActivityType.RETAILER_CREATED.name,
         "datetime": fake_now,
         "underlying_datetime": activity_datetime,
         "summary": f"{retailer_name} retailer created",
@@ -1118,6 +1118,95 @@ def test_get_retailer_status_update_activity_data(mocker: MockFixture) -> None:
                 },
                 "original_values": {
                     "status": original_status,
+                },
+            },
+        },
+    }
+
+
+def test_get_retailer_update_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    retailer_slug = "test-retailer"
+    retailer_name = "Test retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    original_values = {"balance_reset_advanced_warning_days": 10, "balance_lifespan": 20}
+    new_values = {"balance_reset_advanced_warning_days": 7, "balance_lifespan": 30}
+
+    payload = ActivityType.get_retailer_update_activity_data(
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        retailer_name=retailer_name,
+        retailer_slug=retailer_slug,
+        new_values=new_values,
+        original_values=original_values,
+    )
+
+    assert payload == {
+        "type": ActivityType.RETAILER_CHANGED.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{retailer_name} changed",
+        "reasons": ["Updated"],
+        "activity_identifier": retailer_slug,
+        "user_id": user_name,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [],
+        "data": {
+            "retailer": {
+                "new_values": new_values,
+                "original_values": original_values,
+            },
+        },
+    }
+
+
+def test_get_retailer_delete_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    retailer_slug = "test-retailer"
+    retailer_name = "Test retailer"
+    loyalty_name = "STAMP"
+    activity_datetime = datetime.now(tz=timezone.utc)
+
+    payload = ActivityType.get_retailer_deletion_activity_data(
+        sso_username=user_name,
+        activity_datetime=activity_datetime,
+        retailer_name=retailer_name,
+        retailer_slug=retailer_slug,
+        original_values={
+            "status": "ACTIVE",
+            "name": retailer_name,
+            "slug": retailer_slug,
+            "loyalty_name": loyalty_name,
+        },
+    )
+
+    assert payload == {
+        "type": ActivityType.RETAILER_DELETED.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{retailer_name} deleted",
+        "reasons": ["Deleted"],
+        "activity_identifier": retailer_slug,
+        "user_id": user_name,
+        "associated_value": "N/A",
+        "retailer": retailer_slug,
+        "campaigns": [],
+        "data": {
+            "retailer": {
+                "original_values": {
+                    "status": "ACTIVE",
+                    "name": retailer_name,
+                    "slug": retailer_slug,
+                    "loyalty_name": loyalty_name,
                 },
             },
         },

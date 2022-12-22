@@ -46,6 +46,8 @@ def test_session_data_fixture() -> SessionTestData:
         retailer_slug="test-retailer",
         retailer_name="Test Retailer",
         polaris_retailer_id=1,
+        retailer_status="TEST",
+        loyalty_name="ACCUMULATOR",
     )
 
     return SessionTestData(
