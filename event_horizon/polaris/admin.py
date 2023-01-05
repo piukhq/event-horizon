@@ -396,7 +396,7 @@ marketing_pref:
                 sync_send_activity(
                     ActivityType.get_retailer_update_activity_data(
                         sso_username=self.sso_username,
-                        activity_datetime=datetime.now(tz=timezone.utc),
+                        activity_datetime=model.updated_at,
                         retailer_name=model.name,
                         retailer_slug=model.slug,
                         new_values=new_values,
