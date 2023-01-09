@@ -31,7 +31,10 @@ from event_horizon.hubble.account_activity_rtbf import anonymise_account_activit
 from event_horizon.polaris.custom_actions import DeleteRetailerAction
 from event_horizon.polaris.db import AccountHolder, RetailerConfig
 from event_horizon.polaris.utils import generate_payloads_for_delete_account_holder_activity
-from event_horizon.polaris.validators import validate_balance_reset_advanced_warning_days
+from event_horizon.polaris.validators import (
+    validate_balance_reset_advanced_warning_days,
+    validate_retailer_config_new_values,
+)
 
 from .db import AccountHolderCampaignBalance, AccountHolderPendingReward, AccountHolderProfile, AccountHolderReward
 from .validators import validate_account_number_prefix, validate_marketing_config, validate_retailer_config
@@ -385,13 +388,7 @@ marketing_pref:
                     routing_key=ActivityType.RETAILER_CREATED.value,
                 )
         else:
-            new_values: dict = {}
-            original_values: dict = {}
-
-            for field in form:
-                if (new_val := getattr(model, field.name)) != field.object_data:
-                    new_values[field.name] = new_val
-                    original_values[field.name] = field.object_data
+            new_values, original_values = validate_retailer_config_new_values(form, model)
             if new_values:
                 sync_send_activity(
                     ActivityType.get_retailer_update_activity_data(

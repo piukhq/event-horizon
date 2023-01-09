@@ -1,17 +1,19 @@
 # pylint: disable=redefined-outer-name
 
 from dataclasses import dataclass
-from typing import Generator
+from typing import Generator, NamedTuple
 from unittest import mock
 
 import pytest
 import wtforms
 
+from event_horizon.polaris.db import RetailerConfig
 from event_horizon.polaris.validators import (
     validate_account_number_prefix,
     validate_balance_reset_advanced_warning_days,
     validate_marketing_config,
     validate_retailer_config,
+    validate_retailer_config_new_values,
 )
 
 
@@ -24,6 +26,21 @@ def mock_config_field() -> mock.MagicMock:
 def patched_optional_profile_field_names() -> Generator:
     with mock.patch("event_horizon.polaris.validators._get_optional_profile_field_names", new=lambda: ["phone"]):
         yield
+
+
+@pytest.fixture()
+def retailer_config() -> RetailerConfig:
+    retailer_config = RetailerConfig()
+    retailer_config.name = "TEST"
+    retailer_config.slug = "test-retailer"
+    retailer_config.account_number_prefix = "TET"
+    retailer_config.marketing_preference_config = (
+        "marketing_pref:\n  label: Would you like to receive marketing?\n  type: boolean\n"
+    )
+    retailer_config.loyalty_name = "Test Retailer"
+    retailer_config.balance_lifespan = 20
+    retailer_config.balance_reset_advanced_warning_days = 7
+    return retailer_config
 
 
 def test_validate_retailer_config_empty(mock_form: mock.MagicMock, mock_config_field: mock.MagicMock) -> None:
@@ -413,3 +430,104 @@ def test_validate_balance_reset_advanced_warning_days(
         validate_balance_reset_advanced_warning_days(mock_form, retailer_status)
     except Exception as ex:
         assert ex.args[0] == expectation_data.response
+
+
+@dataclass
+class RetailerUpdateExpectationData:
+    response: tuple[dict, dict]
+
+
+class MockForm(NamedTuple):
+    name: mock.Mock
+    slug: mock.Mock
+    account_number_prefix: mock.Mock
+    loyalty_name: mock.Mock
+    balance_lifespan: mock.Mock
+    balance_reset_advanced_warning_days: mock.Mock
+    marketing_preference_config: mock.Mock
+
+
+def mock_field(name: str, object_data: str | int) -> mock.MagicMock:
+    field_data = mock.MagicMock()
+    field_data.configure_mock(name=name, object_data=object_data, spec=wtforms.Field)
+    return field_data
+
+
+test_retailer_update_data = [
+    [
+        "retailer update marketing_preferences",
+        MockForm(
+            name=mock_field(name="name", object_data="TEST"),
+            slug=mock_field(name="slug", object_data="test-retailer"),
+            account_number_prefix=mock_field(name="account_number_prefix", object_data="TET"),
+            loyalty_name=mock_field(name="loyalty_name", object_data="Test Retailer"),
+            balance_lifespan=mock_field(name="balance_lifespan", object_data=20),
+            balance_reset_advanced_warning_days=mock_field(name="balance_reset_advanced_warning_days", object_data=7),
+            marketing_preference_config=mock_field(
+                name="marketing_preference_config",
+                object_data="marketing_pref:\n  label: Would you like to receive marketing123?\n  type: boolean\n",
+            ),
+        ),
+        RetailerUpdateExpectationData(
+            response=(
+                {
+                    "marketing_preference_config": [
+                        {"key": "marketing_pref", "label": "Would you like to receive marketing?", "type": "boolean"}
+                    ]
+                },
+                {
+                    "marketing_preference_config": [
+                        {"key": "marketing_pref", "label": "Would you like to receive marketing123?", "type": "boolean"}
+                    ]
+                },
+            )
+        ),
+    ],
+    [
+        "retailer update balance_lifespan",
+        MockForm(
+            name=mock_field(name="name", object_data="TEST"),
+            slug=mock_field(name="slug", object_data="test-retailer"),
+            account_number_prefix=mock_field(name="account_number_prefix", object_data="TET"),
+            loyalty_name=mock_field(name="loyalty_name", object_data="Test Retailer"),
+            balance_lifespan=mock_field(name="balance_lifespan", object_data=30),
+            balance_reset_advanced_warning_days=mock_field(name="balance_reset_advanced_warning_days", object_data=7),
+            marketing_preference_config=mock_field(
+                name="marketing_preference_config",
+                object_data="marketing_pref:\n  label: Would you like to receive marketing?\n  type: boolean\n",
+            ),
+        ),
+        RetailerUpdateExpectationData(response=({"balance_lifespan": 20}, {"balance_lifespan": 30})),
+    ],
+    [
+        "retailer update retailer name",
+        MockForm(
+            name=mock_field(name="name", object_data="Old Name"),
+            slug=mock_field(name="slug", object_data="test-retailer"),
+            account_number_prefix=mock_field(name="account_number_prefix", object_data="TET"),
+            loyalty_name=mock_field(name="loyalty_name", object_data="Test Retailer"),
+            balance_lifespan=mock_field(name="balance_lifespan", object_data=20),
+            balance_reset_advanced_warning_days=mock_field(name="balance_reset_advanced_warning_days", object_data=7),
+            marketing_preference_config=mock_field(
+                name="marketing_preference_config",
+                object_data="marketing_pref:\n  label: Would you like to receive marketing?\n  type: boolean\n",
+            ),
+        ),
+        RetailerUpdateExpectationData(response=({"name": "TEST"}, {"name": "Old Name"})),
+    ],
+]
+
+
+@pytest.mark.parametrize(
+    "_description,mock_form,retailer_update_expectation_data",
+    test_retailer_update_data,
+    ids=[f"{i[0]}" for i in test_retailer_update_data],
+)
+def test_validate_retailer_config_new_values(
+    _description: str,
+    retailer_config: RetailerConfig,
+    mock_form: MockForm,
+    retailer_update_expectation_data: RetailerUpdateExpectationData,
+) -> None:
+
+    assert validate_retailer_config_new_values(mock_form, retailer_config) == retailer_update_expectation_data.response
