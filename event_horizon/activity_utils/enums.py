@@ -526,6 +526,9 @@ class ActivityType(Enum):
         new_values: dict,
         original_values: dict,
     ) -> dict:
+        if "profile_config" in new_values:
+            new_values["enrolment_config"] = new_values.pop("profile_config")
+            original_values["enrolment_config"] = original_values.pop("profile_config")
 
         payload = {
             "type": cls.RETAILER_CHANGED.name,

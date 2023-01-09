@@ -9,6 +9,8 @@ import yaml
 
 from pydantic import BaseConfig, BaseModel, ConstrainedStr, validator
 
+from event_horizon.polaris.db import RetailerConfig
+
 from .db.models import metadata
 
 REQUIRED_POLARIS_JOIN_FIELDS = ["first_name", "last_name", "email"]
@@ -156,3 +158,31 @@ def validate_balance_reset_advanced_warning_days(
             raise wtforms.ValidationError(
                 "The balance_reset_advanced_warning_days must be less than the balance_lifespan"
             )
+
+
+def validate_retailer_config_new_values(form: wtforms.Form, model: "RetailerConfig") -> tuple[dict, dict]:
+    new_values: dict = {}
+    original_values: dict = {}
+
+    for field in form:
+        if (new_val := getattr(model, field.name)) != field.object_data:
+            new_values[field.name] = new_val
+            original_values[field.name] = field.object_data
+
+    def format_from_yaml(key_name: str) -> None:
+        if key_name in new_values:
+            if loaded_data := yaml.safe_load(new_values[key_name]):
+                new_values[key_name] = [{"key": k, **v} for k, v in loaded_data.items()]
+            else:
+                new_values[key_name] = [{key_name: ""}]
+            if original_values[key_name]:
+                original_values[key_name] = [
+                    {"key": k, **v} for k, v in yaml.safe_load(original_values[key_name]).items()
+                ]
+            else:
+                original_values[key_name] = [{key_name: ""}]
+
+    format_from_yaml("marketing_preference_config")
+    format_from_yaml("profile_config")
+
+    return new_values, original_values
