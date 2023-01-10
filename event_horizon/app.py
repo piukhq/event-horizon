@@ -1,7 +1,9 @@
 import logging
+
 from typing import Any
 
 import sentry_sdk
+
 from authlib.integrations.flask_client import OAuth
 from eralchemy2 import render_er
 from flask import Blueprint, Flask, Response
@@ -19,13 +21,7 @@ from event_horizon.hubble.db.session import engine as hubble_engine
 from event_horizon.polaris.db import db_session as polaris_db_session
 from event_horizon.polaris.db.models import Base as PolarisModelBase
 from event_horizon.polaris.db.session import engine as polaris_engine
-from event_horizon.settings import (
-    OAUTH_SERVER_METADATA_URL,
-    QUERY_LOG_LEVEL,
-    ROUTE_BASE,
-    SENTRY_DSN,
-    SENTRY_ENV,
-)
+from event_horizon.settings import OAUTH_SERVER_METADATA_URL, QUERY_LOG_LEVEL, ROUTE_BASE, SENTRY_DSN, SENTRY_ENV
 from event_horizon.vela.db import db_session as vela_db_session
 from event_horizon.vela.db.models import Base as VelaModelBase
 from event_horizon.vela.db.session import engine as vela_engine
