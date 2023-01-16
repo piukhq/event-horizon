@@ -205,6 +205,14 @@ class RewardCampaignAdmin(BaseModelView):
     column_filters = ("retailer.slug", "reward_slug", "campaign_slug", "campaign_status")
 
 
+class RewardFileLogAdmin(BaseModelView):
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_searchable_list = ("id", "file_name")
+    column_filters = ("file_name", "file_agent_type", "created_at")
+
+
 class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
     endpoint_prefix = settings.CARINA_ENDPOINT_PREFIX
     redis = settings.redis

@@ -81,3 +81,10 @@ class RewardCampaign(Base, UpdatedAtMixin):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.id})"
+
+
+class RewardFileLog(Base, UpdatedAtMixin):
+    __tablename__ = "reward_file_log"
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.id})"
