@@ -501,7 +501,7 @@ class CampaignAdmin(CanDeleteModelView):
                 )
 
             except DataError:
-                error_msg = f"Cloned campaign slug '{new_slug}' would exceed max slug length of 32 characters."
+                error_msg = f"Cloned campaign slug '{new_slug}' would exceed max slug length of 120 characters."
 
             if error_msg:
                 nested.rollback()
