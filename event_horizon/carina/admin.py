@@ -1,5 +1,6 @@
 import logging
 
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 import requests
@@ -16,8 +17,11 @@ from retry_tasks_lib.admin.views import (
 from sqlalchemy.future import select
 
 from event_horizon import settings
+from event_horizon.activity_utils.enums import ActivityType
+from event_horizon.activity_utils.tasks import sync_send_activity
 from event_horizon.admin.model_views import BaseModelView, CanDeleteModelView
 from event_horizon.carina.db import Reward, RewardConfig
+from event_horizon.carina.db.models import Retailer
 from event_horizon.carina.validators import (
     validate_optional_yaml,
     validate_required_fields_values_yaml,
@@ -160,6 +164,12 @@ class RewardAdmin(BaseModelView):
 
         return super().is_action_allowed(name)
 
+    def _get_rewards_from_ids(self, reward_ids: list[str]) -> list[Reward]:
+        return self.session.execute(select(Reward).where(Reward.id.in_(reward_ids))).scalars().all()
+
+    def _get_retailer_by_id(self, retailer_id: int) -> Retailer:
+        return self.session.execute(select(Retailer).where(Retailer.id == retailer_id)).scalar_one()
+
     @action(
         "delete-rewards",
         "Delete",
@@ -167,8 +177,17 @@ class RewardAdmin(BaseModelView):
         "This action is unreversible. Proceed?",
     )
     def delete_rewards(self, reward_ids: list[str]) -> None:
-        reward: Reward
-        for reward in self.session.scalars(select(Reward).where(Reward.id.in_(reward_ids))):
+        # Get rewards for all selected ids
+        rewards = self._get_rewards_from_ids(reward_ids)
+
+        selected_retailer_id: int = rewards[0].retailer_id
+        for reward in rewards:
+            # Fail if all rewards are not eligible for deleting
+            if reward.retailer_id != selected_retailer_id:
+                self.session.rollback()
+                flash("Not all selected rewards are for the same retailer", category="error")
+                return
+
             if reward.allocated or reward.deleted:
                 self.session.rollback()
                 flash("Not all selected rewards are eligible for deletion", category="error")
@@ -177,6 +196,17 @@ class RewardAdmin(BaseModelView):
             self.session.delete(reward)
 
         self.session.commit()
+
+        # Synchronously send activity for rewards deleted if successfully deleted
+        rewards_deleted_count = len(rewards)
+        retailer = self._get_retailer_by_id(selected_retailer_id)
+        activity_payload = ActivityType.get_reward_deleted_activity_data(
+            activity_datetime=datetime.now(tz=timezone.utc),
+            retailer_slug=retailer.slug,
+            sso_username=self.sso_username,
+            rewards_deleted_count=rewards_deleted_count,
+        )
+        sync_send_activity(activity_payload, routing_key=ActivityType.REWARD_DELETED.value)
         flash("Successfully deleted selected rewards")
 
 

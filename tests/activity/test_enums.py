@@ -1211,3 +1211,35 @@ def test_get_retailer_delete_activity_data(mocker: MockFixture) -> None:
             },
         },
     }
+
+
+def test_get_reward_deleted_activity_data(mocker: MockFixture) -> None:
+    mock_datetime = mocker.patch("event_horizon.activity_utils.enums.datetime")
+    fake_now = datetime.now(tz=timezone.utc)
+    mock_datetime.now.return_value = fake_now
+
+    user_name = "TestUser"
+    retailer_slug = "test-retailer"
+    activity_datetime = datetime.now(tz=timezone.utc)
+    mock_rewards_deleted_count = 5
+
+    payload = ActivityType.get_reward_deleted_activity_data(
+        activity_datetime=activity_datetime,
+        retailer_slug=retailer_slug,
+        sso_username=user_name,
+        rewards_deleted_count=mock_rewards_deleted_count,
+    )
+
+    assert payload == {
+        "type": ActivityType.REWARD_DELETED.name,
+        "datetime": fake_now,
+        "underlying_datetime": activity_datetime,
+        "summary": f"{retailer_slug} reward(s) deleted",
+        "reasons": ["Reward(s) deleted"],
+        "activity_identifier": "N/A",
+        "user_id": user_name,
+        "associated_value": "Deleted",
+        "retailer": retailer_slug,
+        "campaigns": [],
+        "data": {"rewards_deleted": mock_rewards_deleted_count},
+    }
