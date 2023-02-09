@@ -113,8 +113,8 @@ def validate_marketing_config(form: wtforms.Form, field: wtforms.Field) -> None:
             formatted_errors.append(f"{' -> '.join(loc)}: {err.get('msg')}")
 
         raise wtforms.ValidationError(", ".join(formatted_errors))
-    else:
-        field.data = yaml.dump(validated_data.dict(exclude_unset=True)["__root__"], sort_keys=True)
+
+    field.data = yaml.dump(validated_data.dict(exclude_unset=True)["__root__"], sort_keys=True)
 
 
 # pylint: disable=unused-argument

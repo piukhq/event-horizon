@@ -8,12 +8,6 @@ import requests
 from flask import Markup, flash, redirect, url_for
 from flask_admin.actions import action
 from requests import RequestException
-from retry_tasks_lib.admin.views import (
-    RetryTaskAdminBase,
-    TaskTypeAdminBase,
-    TaskTypeKeyAdminBase,
-    TaskTypeKeyValueAdminBase,
-)
 from sqlalchemy.future import select
 
 from event_horizon import settings
@@ -128,10 +122,9 @@ class RewardConfigAdmin(BaseModelView):
             logging.exception("Could not deactivate reward type", exc_info=exc)
 
     def _get_reward_config(self, reward_config_id: int) -> RewardConfig:
-        reward_config: RewardConfig | None = self.session.get(RewardConfig, reward_config_id)
-        if not reward_config:
-            raise ValueError(f"No RewardConfig with id {reward_config_id}")
-        return reward_config
+        if reward_config := self.session.get(RewardConfig, reward_config_id):
+            return reward_config
+        raise ValueError(f"No RewardConfig with id {reward_config_id}")
 
 
 class RewardAdmin(BaseModelView):
@@ -144,17 +137,14 @@ class RewardAdmin(BaseModelView):
     column_formatters = {"rewardconfig": reward_config_format}
 
     def is_accessible(self) -> bool:
-        if not self.is_read_write_user:
-            return False
-
-        return super().is_accessible()
+        return super().is_accessible() if self.is_read_write_user else False
 
     def inaccessible_callback(self, name: str, **kwargs: dict | None) -> "Response":
         if self.is_read_write_user:
-            return redirect(url_for(f"{settings.CARINA_ENDPOINT_PREFIX}/rewards.index_view"))
+            return redirect(url_for("rewards.index_view"))
 
         if self.is_read_only_user:
-            return redirect(url_for(f"{settings.CARINA_ENDPOINT_PREFIX}/ro-rewards.index_view"))
+            return redirect(url_for("ro-rewards.index_view"))
 
         return super().inaccessible_callback(name, **kwargs)
 
@@ -241,20 +231,3 @@ class RewardFileLogAdmin(BaseModelView):
     can_delete = False
     column_searchable_list = ("id", "file_name")
     column_filters = ("file_name", "file_agent_type", "created_at")
-
-
-class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
-    endpoint_prefix = settings.CARINA_ENDPOINT_PREFIX
-    redis = settings.redis
-
-
-class TaskTypeAdmin(BaseModelView, TaskTypeAdminBase):
-    pass
-
-
-class TaskTypeKeyAdmin(BaseModelView, TaskTypeKeyAdminBase):
-    pass
-
-
-class TaskTypeKeyValueAdmin(BaseModelView, TaskTypeKeyValueAdminBase):
-    pass
