@@ -70,7 +70,7 @@ def test_validate_increment_multiplier__stamp__inc_has_no_decimal(
     mock_form: mock.MagicMock, mock_field: mock.MagicMock
 ) -> None:
     mock_form.campaign = mock.Mock(data=mock.Mock(loyalty_type=STAMPS))
-    mock_field.data = Decimal("1")
+    mock_field.data = Decimal(1)
 
     try:
         validate_increment_multiplier(mock_form, mock_field)

@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from retry_tasks_lib.db.models import RetryTask, TaskType, TaskTypeKey, TaskTypeKeyValue
-
 from event_horizon.settings import POLARIS_ENDPOINT_PREFIX
 
 from .admin import (
@@ -16,10 +14,6 @@ from .admin import (
     EmailTemplateKeyAdmin,
     ReadOnlyAccountHolderRewardAdmin,
     RetailerConfigAdmin,
-    RetryTaskAdmin,
-    TaskTypeAdmin,
-    TaskTypeKeyAdmin,
-    TaskTypeKeyValueAdmin,
 )
 from .db import (
     AccountHolder,
@@ -38,16 +32,18 @@ from .db import (
 if TYPE_CHECKING:
     from flask_admin import Admin
 
+POLARIS_MENU_TITLE = "Customer Management"
+
 
 def register_polaris_admin(event_horizon_admin: "Admin") -> None:
-    polaris_menu_title = "Customer Management"
     event_horizon_admin.add_view(
         AccountHolderAdmin(
             AccountHolder,
             db_session,
             "Account Holders",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holders",
-            category=polaris_menu_title,
+            endpoint="account-holders",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/account-holders",
+            category=POLARIS_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -55,8 +51,9 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             AccountHolderProfile,
             db_session,
             "Profiles",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/profiles",
-            category=polaris_menu_title,
+            endpoint="profiles",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/profiles",
+            category=POLARIS_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -64,8 +61,9 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             AccountHolderMarketingPreference,
             db_session,
             "Marketing Preferences",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/marketing-preferences",
-            category=polaris_menu_title,
+            endpoint="marketing-preferences",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/marketing-preferences",
+            category=POLARIS_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -73,8 +71,9 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             AccountHolderReward,
             db_session,
             "Account Holder Rewards",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-rewards",
-            category=polaris_menu_title,
+            endpoint="account-holder-rewards",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-rewards",
+            category=POLARIS_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -82,8 +81,9 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             AccountHolderReward,
             db_session,
             "Account Holder Rewards",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/ro-account-holder-rewards",
-            category=polaris_menu_title,
+            endpoint="ro-account-holder-rewards",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/ro-account-holder-rewards",
+            category=POLARIS_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -91,8 +91,9 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             AccountHolderPendingReward,
             db_session,
             "Account Holder Pending Rewards",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-pending-rewards",
-            category=polaris_menu_title,
+            endpoint="account-holder-pending-rewards",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-pending-rewards",
+            category=POLARIS_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -100,8 +101,9 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             AccountHolderCampaignBalance,
             db_session,
             "Account Holder Campaign Balances",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-campaign-balances",
-            category=polaris_menu_title,
+            endpoint="account-holder-campaign-balances",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-campaign-balances",
+            category=POLARIS_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -109,8 +111,9 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             AccountHolderTransactionHistory,
             db_session,
             "Account Holder Transaction History",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-transaction-history",
-            category=polaris_menu_title,
+            endpoint="account-holder-transaction-history",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/account-holder-transaction-history",
+            category=POLARIS_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -118,8 +121,9 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             RetailerConfig,
             db_session,
             "Retailers' Config",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/retailers-config",
-            category=polaris_menu_title,
+            endpoint="retailers-config",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/retailers-config",
+            category=POLARIS_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -127,8 +131,9 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             EmailTemplate,
             db_session,
             "Email Templates",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/email-templates",
-            category=polaris_menu_title,
+            endpoint="email-templates",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/email-templates",
+            category=POLARIS_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -136,43 +141,8 @@ def register_polaris_admin(event_horizon_admin: "Admin") -> None:
             EmailTemplateKey,
             db_session,
             "Email Template Keys",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/email-template-keys",
-            category=polaris_menu_title,
-        )
-    )
-    event_horizon_admin.add_view(
-        RetryTaskAdmin(
-            RetryTask,
-            db_session,
-            "Tasks",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/tasks",
-            category=polaris_menu_title,
-        )
-    )
-    event_horizon_admin.add_view(
-        TaskTypeAdmin(
-            TaskType,
-            db_session,
-            "Task Types",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/task-types",
-            category=polaris_menu_title,
-        )
-    )
-    event_horizon_admin.add_view(
-        TaskTypeKeyAdmin(
-            TaskTypeKey,
-            db_session,
-            "Task Type Keys",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/task-type-keys",
-            category=polaris_menu_title,
-        )
-    )
-    event_horizon_admin.add_view(
-        TaskTypeKeyValueAdmin(
-            TaskTypeKeyValue,
-            db_session,
-            "Task Type Key Values",
-            endpoint=f"{POLARIS_ENDPOINT_PREFIX}/task-type-key-values",
-            category=polaris_menu_title,
+            endpoint="email-template-keys",
+            url=f"{POLARIS_ENDPOINT_PREFIX}/email-template-keys",
+            category=POLARIS_MENU_TITLE,
         )
     )

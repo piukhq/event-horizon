@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from retry_tasks_lib.db.models import RetryTask, TaskType, TaskTypeKey, TaskTypeKeyValue
-
 from event_horizon.settings import VELA_ENDPOINT_PREFIX
 
 from .admin import (
@@ -10,11 +8,7 @@ from .admin import (
     ProcessedTransactionAdmin,
     RetailerRewardsAdmin,
     RetailerStoreAdmin,
-    RetryTaskAdmin,
     RewardRuleAdmin,
-    TaskTypeAdmin,
-    TaskTypeKeyAdmin,
-    TaskTypeKeyValueAdmin,
     TransactionAdmin,
 )
 from .db import (
@@ -32,16 +26,19 @@ if TYPE_CHECKING:
     from flask_admin import Admin
 
 
+VELA_MENU_TITLE = "Retailer Campaign Management"
+
+
 def register_vela_admin(event_horizon_admin: "Admin") -> None:
-    vela_menu_title = "Retailer Campaign Management"
 
     event_horizon_admin.add_view(
         RetailerRewardsAdmin(
             RetailerRewards,
             db_session,
             "Retailer Rewards",
-            endpoint=f"{VELA_ENDPOINT_PREFIX}/retailer-rewards",
-            category=vela_menu_title,
+            endpoint="retailer-rewards",
+            url=f"{VELA_ENDPOINT_PREFIX}/retailer-rewards",
+            category=VELA_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -49,18 +46,29 @@ def register_vela_admin(event_horizon_admin: "Admin") -> None:
             RetailerStore,
             db_session,
             "Retailer's Stores",
-            endpoint=f"{VELA_ENDPOINT_PREFIX}/retailer-stores",
-            category=vela_menu_title,
+            endpoint="retailer-stores",
+            url=f"{VELA_ENDPOINT_PREFIX}/retailer-stores",
+            category=VELA_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
         CampaignAdmin(
-            Campaign, db_session, "Campaigns", endpoint=f"{VELA_ENDPOINT_PREFIX}/campaigns", category=vela_menu_title
+            Campaign,
+            db_session,
+            "Campaigns",
+            endpoint="campaigns",
+            url=f"{VELA_ENDPOINT_PREFIX}/campaigns",
+            category=VELA_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
         EarnRuleAdmin(
-            EarnRule, db_session, "Earn Rules", endpoint=f"{VELA_ENDPOINT_PREFIX}/earn-rules", category=vela_menu_title
+            EarnRule,
+            db_session,
+            "Earn Rules",
+            endpoint="earn-rules",
+            url=f"{VELA_ENDPOINT_PREFIX}/earn-rules",
+            category=VELA_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -68,8 +76,9 @@ def register_vela_admin(event_horizon_admin: "Admin") -> None:
             RewardRule,
             db_session,
             "Reward Rules",
-            endpoint=f"{VELA_ENDPOINT_PREFIX}/reward-rules",
-            category=vela_menu_title,
+            endpoint="reward-rules",
+            url=f"{VELA_ENDPOINT_PREFIX}/reward-rules",
+            category=VELA_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -77,8 +86,9 @@ def register_vela_admin(event_horizon_admin: "Admin") -> None:
             Transaction,
             db_session,
             "Transactions",
-            endpoint=f"{VELA_ENDPOINT_PREFIX}/transactions",
-            category=vela_menu_title,
+            endpoint="transactions",
+            url=f"{VELA_ENDPOINT_PREFIX}/transactions",
+            category=VELA_MENU_TITLE,
         )
     )
     event_horizon_admin.add_view(
@@ -86,43 +96,8 @@ def register_vela_admin(event_horizon_admin: "Admin") -> None:
             ProcessedTransaction,
             db_session,
             "Processed Transactions",
-            endpoint=f"{VELA_ENDPOINT_PREFIX}/processed-transactions",
-            category=vela_menu_title,
-        )
-    )
-    event_horizon_admin.add_view(
-        RetryTaskAdmin(
-            RetryTask,
-            db_session,
-            "Tasks",
-            endpoint=f"{VELA_ENDPOINT_PREFIX}/tasks",
-            category=vela_menu_title,
-        )
-    )
-    event_horizon_admin.add_view(
-        TaskTypeAdmin(
-            TaskType,
-            db_session,
-            "Task Types",
-            endpoint=f"{VELA_ENDPOINT_PREFIX}/task-types",
-            category=vela_menu_title,
-        )
-    )
-    event_horizon_admin.add_view(
-        TaskTypeKeyAdmin(
-            TaskTypeKey,
-            db_session,
-            "Task Type Keys",
-            endpoint=f"{VELA_ENDPOINT_PREFIX}/task-type-keys",
-            category=vela_menu_title,
-        )
-    )
-    event_horizon_admin.add_view(
-        TaskTypeKeyValueAdmin(
-            TaskTypeKeyValue,
-            db_session,
-            "Task Type Key Values",
-            endpoint=f"{VELA_ENDPOINT_PREFIX}/task-type-key-values",
-            category=vela_menu_title,
+            endpoint="processed-transactions",
+            url=f"{VELA_ENDPOINT_PREFIX}/processed-transactions",
+            category=VELA_MENU_TITLE,
         )
     )

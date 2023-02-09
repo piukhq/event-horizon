@@ -13,12 +13,6 @@ from flask import flash, redirect, request, session, url_for
 from flask_admin import expose
 from flask_admin.actions import action
 from flask_admin.model import typefmt
-from retry_tasks_lib.admin.views import (
-    RetryTaskAdminBase,
-    TaskTypeAdminBase,
-    TaskTypeKeyAdminBase,
-    TaskTypeKeyValueAdminBase,
-)
 from sqlalchemy import inspect
 from sqlalchemy.exc import DataError, IntegrityError
 from sqlalchemy.future import select
@@ -85,9 +79,7 @@ class CampaignAdmin(CanDeleteModelView):
     # validator seemed to be bypassed in that view
 
     def is_action_allowed(self, name: str) -> bool:
-        if name == "delete":
-            return False
-        return super().is_action_allowed(name)
+        return False if name == "delete" else super().is_action_allowed(name)
 
     def get_easter_egg(self) -> EasterEgg | None:
         try:
@@ -123,7 +115,7 @@ class CampaignAdmin(CanDeleteModelView):
         if not self.user_info or self.user_session_expired:
             return redirect(url_for("auth_views.login"))
 
-        campaigns_index_uri = url_for("vela/campaigns.index_view")
+        campaigns_index_uri = url_for("campaigns.index_view")
         if not self.can_edit:
             return redirect(campaigns_index_uri)
 
@@ -182,12 +174,12 @@ class CampaignAdmin(CanDeleteModelView):
                 flash(msg, category="error")
                 logging.exception(msg, exc_info=ex)
                 return False
-            else:
-                self.after_model_delete(model)
-                return True
-        else:
-            flash("Only verified users can do this.", "error")
-            return False
+
+            self.after_model_delete(model)
+            return True
+
+        flash("Only verified users can do this.", "error")
+        return False
 
     def after_model_delete(self, model: Campaign) -> None:
         # Synchronously send activity for a campaign deletion after successful deletion
@@ -225,18 +217,15 @@ class CampaignAdmin(CanDeleteModelView):
         return allocation_window
 
     def _get_flash_message(self, status: str, campaign_slug: str, issue_pending_rewards: bool | None = False) -> str:
-        pending_rewards_action = "deleted"
-        if issue_pending_rewards:
-            pending_rewards_action = "converted"
-
-        flash_message = f"""Selected campaigns' status has been successfully changed to {status} and pending
-                            rewards were {pending_rewards_action}"""
-
+        pending_rewards_action = "converted" if issue_pending_rewards else "deleted"
         refund_window = self._check_for_refund_window(campaign_slug)
-        if refund_window == 0:
-            flash_message = f"""Campaign {campaign_slug} was ended but it was not configured for
+        return (
+            f"""Campaign {campaign_slug} was ended but it was not configured for
                                 pending rewards"""
-        return flash_message
+            if refund_window == 0
+            else f"""Selected campaigns' status has been successfully changed to {status} and pending
+                            rewards were {pending_rewards_action}"""
+        )
 
     def _send_campaign_status_change_request(
         self, retailer_slug: str, campaign_slugs: list[str], status: str, issue_pending_rewards: bool | None = False
@@ -407,7 +396,7 @@ class CampaignAdmin(CanDeleteModelView):
         "Are you sure you want to proceed?",
     )
     def end_campaigns_action(self, ids: list[str]) -> "Response":
-        return redirect(url_for("vela/campaigns.end_campaigns", ids=ids))
+        return redirect(url_for("campaigns.end_campaigns", ids=ids))
 
     def _send_cloned_campaign_activities(
         self, retailer_slug: str, campaign: Campaign, earn_rules: list["EarnRule"], reward_rules: list[RewardRule]
@@ -487,7 +476,7 @@ class CampaignAdmin(CanDeleteModelView):
         with self.session.begin_nested() as nested:
 
             error_msg: str | None = None
-            new_slug = "CLONE_" + campaign.slug
+            new_slug = f"CLONE_{campaign.slug}"
             new_campaign = clone_instance(campaign)
             new_campaign.slug = new_slug
             new_campaign.status = "DRAFT"
@@ -561,8 +550,7 @@ class CampaignAdmin(CanDeleteModelView):
             flash("The campaign's retailer status must be TEST.", category="error")
             return
 
-        new_campaign = self._clone_campaign_and_rules_instances(campaign)
-        if new_campaign:
+        if new_campaign := self._clone_campaign_and_rules_instances(campaign):
             flash(
                 "Successfully cloned campaign, reward rules, and earn rules from campaign: "
                 f"{campaign.slug} (id {campaign.id}) to campaign {new_campaign.slug} (id {new_campaign.id})."
@@ -824,20 +812,3 @@ class TransactionAdmin(BaseModelView):
 class ProcessedTransactionAdmin(BaseModelView):
     column_filters = ("retailerrewards.slug", "created_at", "datetime")
     column_searchable_list = ("transaction_id", "payment_transaction_id", "account_holder_uuid")
-
-
-class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
-    endpoint_prefix = settings.VELA_ENDPOINT_PREFIX
-    redis = settings.redis
-
-
-class TaskTypeAdmin(BaseModelView, TaskTypeAdminBase):
-    pass
-
-
-class TaskTypeKeyAdmin(BaseModelView, TaskTypeKeyAdminBase):
-    pass
-
-
-class TaskTypeKeyValueAdmin(BaseModelView, TaskTypeKeyValueAdminBase):
-    pass

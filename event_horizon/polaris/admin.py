@@ -10,12 +10,6 @@ import yaml
 from flask import Markup, flash, redirect, request, session, url_for
 from flask_admin import expose
 from flask_admin.actions import action
-from retry_tasks_lib.admin.views import (
-    RetryTaskAdminBase,
-    TaskTypeAdminBase,
-    TaskTypeKeyAdminBase,
-    TaskTypeKeyValueAdminBase,
-)
 from sqlalchemy import update
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
@@ -58,7 +52,7 @@ def _account_holder_repr(
             "<strong>Email:</strong>&nbsp;{}<br />"
             "<strong>UUID:</strong>&nbsp;{}"
         ).format(
-            url_for(f"{settings.POLARIS_ENDPOINT_PREFIX}/account-holders.details_view", id=model.account_holder_id),
+            url_for("account-holders.details_view", id=model.account_holder_id),
             model.account_holder_id,
             model.accountholder.email,
             model.accountholder.account_holder_uuid,
@@ -96,7 +90,7 @@ class AccountHolderAdmin(BaseModelView):
         "accountholdermarketingpreference_collection",
         "balance_adjustment_collection",
     )
-    column_labels = dict(retailerconfig="Retailer")
+    column_labels = {"retailerconfig": "Retailer"}
     column_searchable_list = ("id", "email", "account_holder_uuid", "account_number")
     form_widget_args = {
         "opt_out_token": {"readonly": True},
@@ -184,8 +178,8 @@ class AccountHolderAdmin(BaseModelView):
 class AccountHolderProfileAdmin(BaseModelView):
     can_create = False
     column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
-    column_labels = dict(accountholder="Account Holder")
-    column_formatters = dict(accountholder=_account_holder_repr)
+    column_labels = {"accountholder": "Account Holder"}
+    column_formatters = {"accountholder": _account_holder_repr}
     column_default_sort = ("accountholder.created_at", True)
 
 
@@ -197,30 +191,27 @@ class AccountHolderRewardAdmin(BaseModelView):
         "accountholder.account_holder_uuid",
         "code",
     )
-    column_labels = dict(accountholder="Account Holder")
+    column_labels = {"accountholder": "Account Holder"}
     column_filters = ("accountholder.retailerconfig.slug", "status", "reward_slug", "campaign_slug", "issued_date")
-    column_formatters = dict(accountholder=_account_holder_repr)
+    column_formatters = {"accountholder": _account_holder_repr}
     form_widget_args = {
         "reward_id": {"readonly": True},
         "reward_code": {"readonly": True},
         "accountholder": {"disabled": True},
     }
-    column_formatters_export = dict(accountholder=_account_holder_export_repr)
+    column_formatters_export = {"accountholder": _account_holder_export_repr}
     column_export_exclude_list = ["idempotency_token", "code"]
     can_export = True
 
     def is_accessible(self) -> bool:
-        if not self.is_read_write_user:
-            return False
-
-        return super().is_accessible()
+        return super().is_accessible() if self.is_read_write_user else False
 
     def inaccessible_callback(self, name: str, **kwargs: dict | None) -> "Response":
         if self.is_read_write_user:
-            return redirect(url_for(f"{settings.POLARIS_ENDPOINT_PREFIX}/account-holder-rewards.index_view"))
+            return redirect(url_for("account-holder-rewards.index_view"))
 
         if self.is_read_only_user:
-            return redirect(url_for(f"{settings.POLARIS_ENDPOINT_PREFIX}/ro-account-holder-rewards.index_view"))
+            return redirect(url_for("ro-account-holder-rewards.index_view"))
 
         return super().inaccessible_callback(name, **kwargs)
 
@@ -233,8 +224,7 @@ class ReadOnlyAccountHolderRewardAdmin(AccountHolderRewardAdmin):
     def is_accessible(self) -> bool:
         if self.is_read_write_user:
             return False
-        res = super(AccountHolderRewardAdmin, self).is_accessible()
-        return res
+        return super(AccountHolderRewardAdmin, self).is_accessible()
 
 
 class AccountHolderPendingRewardAdmin(BaseModelView):
@@ -244,9 +234,9 @@ class AccountHolderPendingRewardAdmin(BaseModelView):
         "accountholder.email",
         "accountholder.account_holder_uuid",
     )
-    column_labels = dict(accountholder="Account Holder", id="Pending Reward id")
+    column_labels = {"accountholder": "Account Holder", "id": "Pending Reward id"}
     column_filters = ("accountholder.retailerconfig.slug", "campaign_slug", "created_date", "conversion_date")
-    column_formatters = dict(accountholder=_account_holder_repr)
+    column_formatters = {"accountholder": _account_holder_repr}
     form_widget_args = {"accountholder": {"disabled": True}}
     column_export_exclude_list = ["idempotency_token"]
     column_export_list = [
@@ -353,12 +343,14 @@ marketing_pref:
             "validators": [wtforms.validators.NumberRange(min=0), InputRequired()],
         },
     }
-    column_formatters = dict(
-        profile_config=lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.profile_config) + Markup("</pre>"),
-        marketing_preference_config=lambda v, c, model, p: Markup("<pre>")
+    column_formatters = {
+        "profile_config": lambda v, c, model, p: Markup("<pre>")
+        + Markup.escape(model.profile_config)
+        + Markup("</pre>"),
+        "marketing_preference_config": lambda v, c, model, p: Markup("<pre>")
         + Markup.escape(model.marketing_preference_config)
         + Markup("</pre>"),
-    )
+    }
 
     def after_model_change(self, form: wtforms.Form, model: "RetailerConfig", is_created: bool) -> None:
         if is_created:
@@ -469,7 +461,7 @@ marketing_pref:
         if not self.user_info or self.user_session_expired:
             return redirect(url_for("auth_views.login"))
 
-        retailers_index_uri = url_for("polaris/retailers-config.index_view")
+        retailers_index_uri = url_for("retailers-config.index_view")
         if not self.can_edit:
             return redirect(retailers_index_uri)
 
@@ -524,15 +516,15 @@ marketing_pref:
         "Only one non active retailer allowed for this action. This action is unreversible, Proceed?",
     )
     def delete_retailer_action(self, ids: list[str]) -> "Response":
-        return redirect(url_for("polaris/retailers-config.delete_retailer", ids=ids))
+        return redirect(url_for("retailers-config.delete_retailer", ids=ids))
 
 
 class AccountHolderCampaignBalanceAdmin(BaseModelView):
     can_create = False
     column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
-    column_labels = dict(accountholder="Account Holder")
+    column_labels = {"accountholder": "Account Holder"}
     column_filters = ("accountholder.retailerconfig.slug", "campaign_slug")
-    column_formatters = dict(accountholder=_account_holder_repr)
+    column_formatters = {"accountholder": _account_holder_repr}
     form_widget_args = {"accountholder": {"disabled": True}}
 
 
@@ -542,23 +534,6 @@ class AccountHolderMarketingPreferenceAdmin(BaseModelView):
     column_labels = {"accountholder": "Account Holder"}
     column_formatters = {"accountholder": _account_holder_repr}
     column_default_sort = ("accountholder.created_at", True)
-
-
-class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
-    endpoint_prefix = settings.POLARIS_ENDPOINT_PREFIX
-    redis = settings.redis
-
-
-class TaskTypeAdmin(BaseModelView, TaskTypeAdminBase):
-    pass
-
-
-class TaskTypeKeyAdmin(BaseModelView, TaskTypeKeyAdminBase):
-    pass
-
-
-class TaskTypeKeyValueAdmin(BaseModelView, TaskTypeKeyValueAdminBase):
-    pass
 
 
 class EmailTemplateAdmin(CanDeleteModelView):
@@ -577,7 +552,7 @@ class EmailTemplateAdmin(CanDeleteModelView):
         "created_at",
         "updated_at",
     )
-    column_labels = dict(emailtemplatekey_collection="Template Key", retailerconfig="Retailer")
+    column_labels = {"emailtemplatekey_collection": "Template Key", "retailerconfig": "Retailer"}
 
 
 class EmailTemplateKeyAdmin(BaseModelView):
@@ -593,7 +568,7 @@ class EmailTemplateKeyAdmin(BaseModelView):
         "created_at",
         "updated_at",
     )
-    column_labels = dict(display_name="Display Name")
+    column_labels = {"display_name": "Display Name"}
 
 
 class AccountHolderTransactionHistoryAdmin(BaseModelView):
