@@ -487,25 +487,26 @@ marketing_pref:
 
         if del_ret_action.form.validate_on_submit():
             del session["action_context"]
-            del_ret_action.delete_retailer()
+            if del_ret_action.delete_retailer():
 
-            original_values: dict = {
-                "status": del_ret_action.session_data.retailer_status,
-                "name": del_ret_action.session_data.retailer_name,
-                "slug": del_ret_action.session_data.retailer_slug,
-                "loyalty_name": del_ret_action.session_data.loyalty_name,
-            }
+                original_values: dict = {
+                    "status": del_ret_action.session_data.retailer_status,
+                    "name": del_ret_action.session_data.retailer_name,
+                    "slug": del_ret_action.session_data.retailer_slug,
+                    "loyalty_name": del_ret_action.session_data.loyalty_name,
+                }
 
-            sync_send_activity(
-                ActivityType.get_retailer_deletion_activity_data(
-                    sso_username=self.sso_username,
-                    activity_datetime=datetime.now(tz=timezone.utc),
-                    retailer_name=del_ret_action.session_data.retailer_name,
-                    retailer_slug=del_ret_action.session_data.retailer_slug,
-                    original_values=original_values,
-                ),
-                routing_key=ActivityType.RETAILER_DELETED.value,
-            )
+                sync_send_activity(
+                    ActivityType.get_retailer_deletion_activity_data(
+                        sso_username=self.sso_username,
+                        activity_datetime=datetime.now(tz=timezone.utc),
+                        retailer_name=del_ret_action.session_data.retailer_name,
+                        retailer_slug=del_ret_action.session_data.retailer_slug,
+                        original_values=original_values,
+                    ),
+                    routing_key=ActivityType.RETAILER_DELETED.value,
+                )
+
             return redirect(retailers_index_uri)
 
         return self.render(

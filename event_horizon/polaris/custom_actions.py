@@ -118,10 +118,10 @@ class DeleteRetailerAction:
         )
         hubble_db_session.flush()
 
-    def delete_retailer(self) -> None:
+    def delete_retailer(self) -> bool:
         if not self.form.acceptance.data:
             flash("User did not agree to proceed, action halted.")
-            return
+            return False
 
         try:
             self._delete_polaris_retailer_data()
@@ -140,7 +140,7 @@ class DeleteRetailerAction:
                 self.session_data.polaris_retailer_id,
             )
             flash("Something went wrong, database changes rolled back", category="error")
-            return
+            return False
 
         polaris_db_session.commit()
         vela_db_session.commit()
@@ -150,3 +150,4 @@ class DeleteRetailerAction:
             f"All rows related to retailer {self.session_data.retailer_name} ({self.session_data.polaris_retailer_id}) "
             "have been deleted."
         )
+        return True
