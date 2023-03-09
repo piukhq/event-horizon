@@ -545,7 +545,7 @@ class AccountHolderMarketingPreferenceAdmin(BaseModelView):
 
 
 class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
-    endpoint_prefix = settings.POLARIS_ENDPOINT_PREFIX
+    endpoint_prefix = f"{settings.POLARIS_ENDPOINT_PREFIX}/"
     redis = settings.redis
 
 

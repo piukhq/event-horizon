@@ -827,7 +827,7 @@ class ProcessedTransactionAdmin(BaseModelView):
 
 
 class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
-    endpoint_prefix = settings.VELA_ENDPOINT_PREFIX
+    endpoint_prefix = f"{settings.VELA_ENDPOINT_PREFIX}/"
     redis = settings.redis
 
 

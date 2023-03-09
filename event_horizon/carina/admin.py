@@ -244,7 +244,7 @@ class RewardFileLogAdmin(BaseModelView):
 
 
 class RetryTaskAdmin(BaseModelView, RetryTaskAdminBase):
-    endpoint_prefix = settings.CARINA_ENDPOINT_PREFIX
+    endpoint_prefix = f"{settings.CARINA_ENDPOINT_PREFIX}/"
     redis = settings.redis
 
 
