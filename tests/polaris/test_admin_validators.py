@@ -1,7 +1,8 @@
 # pylint: disable=redefined-outer-name
+import json
 
 from dataclasses import dataclass
-from typing import Generator, NamedTuple
+from typing import Any, Generator, NamedTuple
 from unittest import mock
 
 import pytest
@@ -373,27 +374,24 @@ test_data = [
         ExpectationData(response="You cannot change this field for an active retailer"),
     ],
     [
-        "not able to set a balance_lifespan without a balance_reset_advanced_warning_days for ACTIVE retailers",
-        SetupData(
-            original_warning_days=0,
-            new_warning_days=0,
-            status="ACTIVE",
-            balance_lifespan=30,
-        ),
-        ExpectationData(
-            response="You must set both the balance_lifespan with the balance_reset_advanced_warning_days "
-            "for active retailers"
-        ),
-    ],
-    [
-        "able to set a balance_lifespan without a balance_reset_advanced_warning_days for TEST retailers",
+        "not able to set a balance_lifespan without a balance_reset_advanced_warning_days",
         SetupData(
             original_warning_days=0,
             new_warning_days=0,
             status="TEST",
             balance_lifespan=30,
         ),
-        ExpectationData(response=None),
+        ExpectationData(response="You must set both the balance_lifespan with the balance_reset_advanced_warning_days"),
+    ],
+    [
+        "not able to set a balance_lifespan without a balance_reset_advanced_warning_days for TEST retailers",
+        SetupData(
+            original_warning_days=0,
+            new_warning_days=0,
+            status="TEST",
+            balance_lifespan=30,
+        ),
+        ExpectationData(response="You must set both the balance_lifespan with the balance_reset_advanced_warning_days"),
     ],
     [
         "not able to have balance_reset_advanced_warning_days without a balance_lifespan",
@@ -418,13 +416,22 @@ def test_validate_balance_reset_advanced_warning_days(
     setup_data: SetupData,
     expectation_data: ExpectationData,
 ) -> None:
-    mock_form: wtforms.Form = {
+    class MockForm:
+        def __init__(self, data: Any) -> None:  # noqa: ANN401
+            self.__dict__.update(data)
+
+    def build_form(data: dict) -> Any:  # noqa: ANN401
+        return json.loads(json.dumps(data), object_hook=MockForm)
+
+    data = {
         "balance_reset_advanced_warning_days": {
             "data": setup_data.new_warning_days,
             "object_data": setup_data.original_warning_days,
         },
         "balance_lifespan": {"data": setup_data.balance_lifespan},
     }
+
+    mock_form: wtforms.Form = build_form(data)
     retailer_status = setup_data.status
     try:
         validate_balance_reset_advanced_warning_days(mock_form, retailer_status)
