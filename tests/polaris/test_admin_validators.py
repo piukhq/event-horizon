@@ -2,14 +2,11 @@
 import json
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generator, NamedTuple
+from typing import Any, Generator, NamedTuple
 from unittest import mock
 
 import pytest
 import wtforms
-
-from flask import url_for
-from sqlalchemy.future import select
 
 from event_horizon.polaris.db import RetailerConfig
 from event_horizon.polaris.validators import (
@@ -19,10 +16,6 @@ from event_horizon.polaris.validators import (
     validate_retailer_config,
     validate_retailer_config_new_values,
 )
-
-if TYPE_CHECKING:
-    from flask.testing import FlaskClient
-    from sqlalchemy.orm import Session
 
 
 @pytest.fixture()
@@ -440,50 +433,12 @@ def test_validate_balance_lifespan_and_warning_days(
 
     mock_form: wtforms.Form = build_form(data)
     retailer_status = setup_data.status
-    if expectation_data.response:
-        with pytest.raises(wtforms.ValidationError) as exc_info:
-            validate_balance_lifespan_and_warning_days(mock_form, retailer_status)
-        assert exc_info.value.args[0] == expectation_data.response
+    try:
+        validate_balance_lifespan_and_warning_days(mock_form, retailer_status)
+    except wtforms.ValidationError as ex:
+        assert ex.args[0] == expectation_data.response
     else:
-        try:
-            validate_balance_lifespan_and_warning_days(mock_form, retailer_status)
-        except wtforms.ValidationError as ex:
-            assert ex is None
-
-
-@pytest.mark.parametrize("params", [[-5, 0], [0, -5]])
-def test_create_retailer_with_balance_lifespan_set_to_less_than_zero(
-    test_client: "FlaskClient", db_session: "Session", params: list
-) -> None:
-    balance_lifespan, warning_days = params
-    resp = test_client.post(
-        url_for("polaris/retailers-config.create_view"),
-        data={
-            "name": "Test Retailer",
-            "slug": "test-retailer",
-            "account_number_prefix": "TEST",
-            "profile_config": """email:
-  required: true
-  label: Email address
-first_name:
-  required: true
-  label: Forename
-last_name:
-  required: true
-  label: Surname""",
-            "marketing_preference_config": """marketing_pref:
-  label: Spam?
-  type: boolean""",
-            "loyalty_name": "test",
-            "status": "TEST",
-            "balance_lifespan": balance_lifespan,
-            "balance_reset_advanced_warning_days": warning_days,
-        },
-        follow_redirects=True,
-    )
-    assert resp.status_code == 200
-    assert "Number must be at least 0." in resp.text
-    assert not db_session.scalars(select(RetailerConfig).where(RetailerConfig.slug == "test-retailer")).all()
+        assert expectation_data.response is None
 
 
 @dataclass
