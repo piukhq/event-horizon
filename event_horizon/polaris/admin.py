@@ -32,7 +32,7 @@ from event_horizon.polaris.custom_actions import DeleteRetailerAction
 from event_horizon.polaris.db import AccountHolder, RetailerConfig
 from event_horizon.polaris.utils import generate_payloads_for_delete_account_holder_activity
 from event_horizon.polaris.validators import (
-    validate_balance_reset_advanced_warning_days,
+    validate_balance_lifespan_and_warning_days,
     validate_retailer_config_new_values,
 )
 
@@ -403,7 +403,7 @@ marketing_pref:
                 )
 
     def on_model_change(self, form: wtforms.Form, model: "RetailerConfig", is_created: bool) -> None:
-        validate_balance_reset_advanced_warning_days(form, retailer_status=model.status)
+        validate_balance_lifespan_and_warning_days(form, retailer_status=model.status)
         if not is_created and form.balance_lifespan.object_data == 0 and form.balance_lifespan.data > 0:
             reset_date = (datetime.now(tz=timezone.utc) + timedelta(days=model.balance_lifespan)).date()
             stmt = (
