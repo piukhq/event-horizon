@@ -23,7 +23,7 @@ from event_horizon.carina.validators import (
 )
 
 if TYPE_CHECKING:
-
+    from jinja2.runtime import Context
     from werkzeug.wrappers import Response
 
 
@@ -37,6 +37,16 @@ def reward_config_format(view: BaseModelView, context: dict, model: "Reward", na
             "<strong>retailer:</strong> {2}"
             "</a>"
         ).format(model.rewardconfig.id, model.rewardconfig.reward_slug, model.rewardconfig.retailer.slug)
+    )
+
+
+def reward_file_log_format(_v: type[BaseModelView], _c: "Context", model: "Reward", _p: str) -> str | None:
+    return (
+        Markup("<strong><a href='{0}'>{1}</a></strong>").format(
+            url_for("reward-file-log.details_view", id=model.rewardfilelog.id), model.rewardfilelog.file_name
+        )
+        if model.rewardfilelog
+        else None
     )
 
 
@@ -132,9 +142,9 @@ class RewardAdmin(BaseModelView):
     can_edit = False
     can_delete = False
     column_searchable_list = ("rewardconfig.id", "rewardconfig.reward_slug", "retailer.slug")
-    column_labels = {"rewardconfig": "Reward config"}
-    column_filters = ("retailer.slug", "rewardconfig.reward_slug", "allocated", "deleted")
-    column_formatters = {"rewardconfig": reward_config_format}
+    column_labels = {"rewardconfig": "Reward config", "rewardfilelog": "Reward filename"}
+    column_filters = ("retailer.slug", "rewardconfig.reward_slug", "allocated", "deleted", "rewardfilelog.file_name")
+    column_formatters = {"rewardconfig": reward_config_format, "rewardfilelog": reward_file_log_format}
 
     def is_accessible(self) -> bool:
         return super().is_accessible() if self.is_read_write_user else False
