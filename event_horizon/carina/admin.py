@@ -27,16 +27,18 @@ if TYPE_CHECKING:
     from werkzeug.wrappers import Response
 
 
-# pylint: disable=unused-argument
-def reward_config_format(view: BaseModelView, context: dict, model: "Reward", name: str) -> str:
+def reward_config_format(_v: BaseModelView, _c: dict, model: "Reward", _p: str) -> str:
     return Markup(
-        (
-            f"<a href='{settings.ROUTE_BASE}/reward-config/details/?id='{0}' style='white-space: nowrap;'>"
-            "<strong>id:</strong> {0}</br>"
-            "<strong>type:</strong> {1}</br>"
-            "<strong>retailer:</strong> {2}"
-            "</a>"
-        ).format(model.rewardconfig.id, model.rewardconfig.reward_slug, model.rewardconfig.retailer.slug)
+        "<a href='{0}' style='white-space: nowrap;'>"
+        "<strong>id:</strong> {1}</br>"
+        "<strong>type:</strong> {2}</br>"
+        "<strong>retailer:</strong> {3}"
+        "</a>"
+    ).format(
+        url_for("reward-configs.details_view", id=model.rewardconfig.id),
+        model.rewardconfig.id,
+        model.rewardconfig.reward_slug,
+        model.rewardconfig.retailer.slug,
     )
 
 
