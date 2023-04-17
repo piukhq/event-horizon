@@ -529,6 +529,7 @@ class AccountHolderCampaignBalanceAdmin(BaseModelView):
 
 
 class AccountHolderMarketingPreferenceAdmin(BaseModelView):
+    can_export = True
     column_list = (
         "accountholder",
         "accountholder.retailerconfig",
@@ -543,6 +544,7 @@ class AccountHolderMarketingPreferenceAdmin(BaseModelView):
     column_labels = {"accountholder": "Account Holder", "accountholder.retailerconfig": "Retailer"}
     column_formatters = {"accountholder": _account_holder_repr}
     column_default_sort = ("accountholder.created_at", True)
+    column_export_list = ("accountholder.email", "key_name", "value", "accountholder.account_number", "updated_at")
 
 
 class EmailTemplateAdmin(CanDeleteModelView):

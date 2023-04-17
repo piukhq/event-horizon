@@ -41,7 +41,7 @@ def is_test(v: str) -> bool:
 FLASK_ADMIN_SWATCH = get_env("EVENT_HORIZON_THEME", "simplex")
 TESTING = get_env("TESTING", "False", conv=is_test)
 
-KEY_VAULT_URI = get_env("KEY_VAULT_URI", "https://bink-uksouth-dev-com.vault.azure.net/")
+KEY_VAULT_URI = get_env("KEY_VAULT_URI", "https://uksouth-dev-2p5g.vault.azure.net/")
 key_vault = KeyVault(KEY_VAULT_URI)
 
 SECRET_KEY = get_env("SECRET_KEY") or key_vault.get_secret("bpl-event-horizon-secret-key")
