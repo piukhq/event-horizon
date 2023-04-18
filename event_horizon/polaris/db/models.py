@@ -13,7 +13,10 @@ class AccountHolder(Base, UpdatedAtMixin):
     __tablename__ = "account_holder"
 
     accountholderprofile_collection = relationship(
-        "AccountHolderProfile", backref="account_holder", cascade="all, delete-orphan"
+        "AccountHolderProfile",
+        backref="account_holder",
+        cascade="all, delete-orphan",
+        uselist=False,
     )
     accountholderreward_collection = relationship(
         "AccountHolderReward", backref="account_holder", cascade="all, delete-orphan"
