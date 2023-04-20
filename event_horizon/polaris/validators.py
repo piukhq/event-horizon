@@ -1,7 +1,7 @@
 import json
 import re
 
-from typing import Literal, Type
+from typing import Literal
 
 import pydantic
 import wtforms
@@ -24,7 +24,6 @@ def _get_optional_profile_field_names() -> list[str]:  # pragma: no cover
     ]
 
 
-# pylint: disable=unused-argument
 def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
     class FieldOptionsConfig(BaseConfig):
         extra = pydantic.Extra.forbid
@@ -33,7 +32,7 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
         required: bool
         label: str | None = None
 
-        Config = FieldOptionsConfig  # type: Type[BaseConfig]
+        Config = FieldOptionsConfig  # type: type[BaseConfig]
 
     def ensure_required_true(options: FieldOptions) -> FieldOptions:
         if not options.required:
@@ -52,7 +51,7 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
         field for field in _get_optional_profile_field_names() if field in form_data
     ]
 
-    RetailerConfigModel = pydantic.create_model(  # type: ignore [call-overload]  # pylint: disable=invalid-name
+    RetailerConfigModel = pydantic.create_model(  # type: ignore [call-overload]  # noqa: N806
         "RetailerConfigModel",
         __config__=FieldOptionsConfig,
         __validators__={
@@ -67,13 +66,11 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
     except pydantic.ValidationError as ex:
         raise wtforms.ValidationError(
             ", ".join([f"{' -> '.join(err.get('loc'))}: {err.get('msg')}" for err in json.loads(ex.json())])
-        )
+        ) from None
 
 
-# pylint: disable=unused-argument
 def validate_marketing_config(form: wtforms.Form, field: wtforms.Field) -> None:
-
-    if field.data == "":
+    if field.data == "":  # noqa: PLC1901
         return
 
     class LabelVal(ConstrainedStr):
@@ -85,7 +82,7 @@ def validate_marketing_config(form: wtforms.Form, field: wtforms.Field) -> None:
         to_lower = True
 
     class FieldOptions(BaseModel):
-        type: Literal["boolean", "integer", "float", "string", "string_list", "date", "datetime"]
+        type: Literal["boolean", "integer", "float", "string", "string_list", "date", "datetime"]  # noqa: A003
         label: LabelVal
 
         extra = pydantic.Extra.forbid  # type: pydantic.Extra
@@ -112,12 +109,11 @@ def validate_marketing_config(form: wtforms.Form, field: wtforms.Field) -> None:
 
             formatted_errors.append(f"{' -> '.join(loc)}: {err.get('msg')}")
 
-        raise wtforms.ValidationError(", ".join(formatted_errors))
+        raise wtforms.ValidationError(", ".join(formatted_errors)) from None
 
     field.data = yaml.dump(validated_data.dict(exclude_unset=True)["__root__"], sort_keys=True)
 
 
-# pylint: disable=unused-argument
 def validate_account_number_prefix(form: wtforms.Form, field: wtforms.Field) -> None:
     required = re.compile(r"^[a-zA-Z]{2,4}$")
     if not bool(required.match(field.data)):

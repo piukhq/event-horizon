@@ -1,5 +1,3 @@
-# pylint: disable=no-value-for-parameter,no-member
-
 import json
 import uuid
 

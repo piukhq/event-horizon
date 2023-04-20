@@ -1,5 +1,3 @@
-from typing import Any
-
 from flask.blueprints import Blueprint
 from sqlalchemy.sql import text
 
@@ -10,12 +8,12 @@ healthz_bp = Blueprint("healthz", __name__)
 
 
 @healthz_bp.route("/livez", methods=["GET"])
-def livez() -> Any:
+def livez() -> dict:
     return {}
 
 
 @healthz_bp.route("/readyz", methods=["GET"])
-def readyz() -> Any:
+def readyz() -> tuple[dict, int]:
     payload = {}
     status_code = 200
     db_errors = []

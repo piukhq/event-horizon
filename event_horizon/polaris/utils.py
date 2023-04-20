@@ -1,5 +1,6 @@
+from collections.abc import Generator
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, literal
 from sqlalchemy.dialects.postgresql import insert

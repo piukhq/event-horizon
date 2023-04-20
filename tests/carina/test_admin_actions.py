@@ -1,5 +1,3 @@
-# pylint: disable=no-value-for-parameter,no-member
-
 from typing import Any, NamedTuple
 from unittest import mock
 

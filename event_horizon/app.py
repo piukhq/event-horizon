@@ -45,7 +45,6 @@ class RelativeLocationHeaderResponse(Response):
     autocorrect_location_header = False
 
 
-# pylint: disable=import-outside-toplevel
 def create_app(config_name: str = "event_horizon.settings") -> Flask:
     CarinaModelBase.prepare(carina_engine, reflect=True)
     PolarisModelBase.prepare(polaris_engine, reflect=True)
@@ -122,7 +121,7 @@ def create_app(config_name: str = "event_horizon.settings") -> Flask:
     app.register_blueprint(eh_bp)
 
     @app.teardown_appcontext
-    def remove_session(exception: BaseException | None = None) -> Any:  # pylint: disable=unused-argument
+    def remove_session(exception: BaseException | None = None) -> Any:
         carina_db_session.remove()
         polaris_db_session.remove()
         vela_db_session.remove()

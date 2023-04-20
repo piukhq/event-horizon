@@ -134,7 +134,6 @@ def test_validate_earn_rule_increment__stamps__inc_has_blank_val(
     )
 
 
-# pylint: disable=unused-argument
 @mock.patch("event_horizon.vela.validators._count_earn_rules")
 def test_validate_campaign_loyalty_type__new_object(
     mock__count_earn_rules: mock.MagicMock, mock_form: mock.MagicMock, mock_field: mock.MagicMock

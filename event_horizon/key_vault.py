@@ -50,4 +50,4 @@ class KeyVault:
             val = json.loads(secret.value)  # type: ignore [arg-type]
         except json.decoder.JSONDecodeError:
             return secret.value
-        return val[key] if key is not None else val  # pylint: disable=no-else-return # oh pylint :(
+        return val[key] if key is not None else val

@@ -116,7 +116,7 @@ def test_validate_optional_yaml_none(mock_form: mock.MagicMock, mock_field: mock
     mock_field.data = None
     validate_optional_yaml(mock_form, mock_field)
 
-    assert mock_field.data == ""
+    assert mock_field.data == ""  # noqa: PLC1901
 
 
 def test_validate_optional_yaml_invalid_yaml(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:

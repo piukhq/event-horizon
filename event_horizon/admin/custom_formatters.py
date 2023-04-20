@@ -1,6 +1,6 @@
 import json
 
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING
 
 from flask import Markup
 
@@ -10,8 +10,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.automap import AutomapBase
 
 
-# pylint: disable=unused-argument
-def format_json_field(v: Type["ModelView"], c: "Context", model: Type["AutomapBase"], p: str) -> str:
+def format_json_field(v: type["ModelView"], c: "Context", model: type["AutomapBase"], p: str) -> str:
     return (
         Markup("<pre>") + Markup.escape(json.dumps(getattr(model, p), indent=2, ensure_ascii=False)) + Markup("</pre>")
     )

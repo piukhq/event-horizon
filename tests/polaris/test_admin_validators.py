@@ -1,8 +1,8 @@
-# pylint: disable=redefined-outer-name
 import json
 
+from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Any, Generator, NamedTuple
+from typing import Any, NamedTuple
 from unittest import mock
 
 import pytest
@@ -316,7 +316,7 @@ Marketing_conf :
     mock_config_field.data = ""
 
     validate_marketing_config(mock_form, mock_config_field)
-    assert mock_config_field.data == ""
+    assert mock_config_field.data == ""  # noqa: PLC1901
 
 
 @dataclass
@@ -417,10 +417,10 @@ def test_validate_balance_lifespan_and_warning_days(
     expectation_data: ExpectationData,
 ) -> None:
     class MockForm:
-        def __init__(self, data: Any) -> None:  # noqa: ANN401
+        def __init__(self, data: Any) -> None:
             self.__dict__.update(data)
 
-    def build_form(data: dict) -> Any:  # noqa: ANN401
+    def build_form(data: dict) -> Any:
         return json.loads(json.dumps(data), object_hook=MockForm)
 
     data = {
@@ -538,5 +538,4 @@ def test_validate_retailer_config_new_values(
     mock_form: MockForm,
     retailer_update_expectation_data: RetailerUpdateExpectationData,
 ) -> None:
-
     assert validate_retailer_config_new_values(mock_form, retailer_config) == retailer_update_expectation_data.response

@@ -2,21 +2,19 @@ import base64
 import pickle
 
 from abc import ABC
-from typing import Type, TypeVar
+from typing import TypeVar
 
-TSessionDataMethodsMixin = TypeVar(  # pylint: disable=invalid-name
-    "TSessionDataMethodsMixin", bound="SessionDataMethodsMixin"
-)
+TSessionDataMethodsMixin = TypeVar("TSessionDataMethodsMixin", bound="SessionDataMethodsMixin")
 
 
-class SessionDataMethodsMixin(ABC):
+class SessionDataMethodsMixin(ABC):  # noqa: B024
     def to_base64_str(self) -> str:
         return base64.b64encode(pickle.dumps(self)).decode()
 
     @classmethod
-    def from_base64_str(cls: Type[TSessionDataMethodsMixin], base64_session_data: str) -> TSessionDataMethodsMixin:
+    def from_base64_str(cls: type[TSessionDataMethodsMixin], base64_session_data: str) -> TSessionDataMethodsMixin:
         try:
-            parsed_data = pickle.loads(base64.b64decode(base64_session_data.encode()))
+            parsed_data = pickle.loads(base64.b64decode(base64_session_data.encode()))  # noqa: S301
         except Exception as ex:
             raise ValueError("unexpected value for 'base64_session_data'") from ex
 
