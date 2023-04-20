@@ -111,7 +111,6 @@ class CampaignAdmin(CanDeleteModelView):
 
     @expose("/custom-actions/end-campaigns", methods=["GET", "POST"])
     def end_campaigns(self) -> "Response":
-
         if not self.user_info or self.user_session_expired:
             return redirect(url_for("auth_views.login"))
 
@@ -343,7 +342,6 @@ class CampaignAdmin(CanDeleteModelView):
         return super().on_model_change(form, model, is_created)
 
     def after_model_change(self, form: wtforms.Form, model: "Campaign", is_created: bool) -> None:
-
         if is_created:
             # Synchronously send activity for campaign creation after successfull campaign creation
             sync_send_activity(
@@ -461,12 +459,10 @@ class CampaignAdmin(CanDeleteModelView):
 
     def _clone_campaign_and_rules_instances(self, campaign: Campaign) -> Campaign | None:
         def clone_instance(old_model_instance: Any) -> Any:
-
             mapper = inspect(type(old_model_instance))
             new_model_instance = type(old_model_instance)()
 
             for name, col in mapper.columns.items():
-
                 if not (col.primary_key or col.unique or name in ("created_at", "updated_at")):
                     setattr(new_model_instance, name, getattr(old_model_instance, name))
 
@@ -474,7 +470,6 @@ class CampaignAdmin(CanDeleteModelView):
 
         nested: "SessionTransaction"
         with self.session.begin_nested() as nested:
-
             error_msg: str | None = None
             new_slug = f"CLONE_{campaign.slug}"
             new_campaign = clone_instance(campaign)
@@ -736,7 +731,6 @@ class RewardRuleAdmin(CanDeleteModelView):
         return super().on_model_change(form, model, is_created)
 
     def after_model_change(self, form: wtforms.Form, model: "RewardRule", is_created: bool) -> None:
-
         if is_created:
             # Synchronously send activity for reward rule creation after successful creation
             sync_send_activity(

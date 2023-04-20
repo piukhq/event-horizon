@@ -1,7 +1,8 @@
 import logging
 
+from collections.abc import Generator
 from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING, Generator, Type
+from typing import TYPE_CHECKING
 
 import requests
 import wtforms
@@ -38,14 +39,12 @@ if TYPE_CHECKING:
     from werkzeug.wrappers import Response
 
 
-# pylint: disable=unused-argument
 def _account_holder_repr(
-    v: Type[BaseModelView],
+    v: type[BaseModelView],
     c: "Context",
     model: AccountHolderProfile | AccountHolderReward | AccountHolderCampaignBalance,
     p: str,
 ) -> str:
-
     return Markup(
         (
             "<strong><a href='{}'>ID:</a></strong>&nbsp;{}<br />"
@@ -60,12 +59,8 @@ def _account_holder_repr(
     )
 
 
-# pylint: disable=unused-argument
 def _account_holder_export_repr(
-    v: Type[BaseModelView],
-    c: "Context",
-    model: AccountHolderReward | AccountHolderPendingReward,
-    p: str,
+    v: type[BaseModelView], c: "Context", model: AccountHolderReward | AccountHolderPendingReward, p: str
 ) -> str:
     return model.accountholder.account_holder_uuid
 
@@ -219,7 +214,7 @@ class AccountHolderRewardAdmin(BaseModelView):
 class ReadOnlyAccountHolderRewardAdmin(AccountHolderRewardAdmin):
     column_details_exclude_list = ["code", "associated_url"]
     column_exclude_list = ["code", "associated_url"]
-    column_export_exclude_list = AccountHolderRewardAdmin.column_export_exclude_list + ["associated_url"]
+    column_export_exclude_list = [*AccountHolderRewardAdmin.column_export_exclude_list, "associated_url"]
 
     def is_accessible(self) -> bool:
         if self.is_read_write_user:
@@ -272,7 +267,7 @@ class RetailerConfigAdmin(BaseModelView):
         "balance_reset_advanced_warning_days",
         "status",
     )
-    column_details_list = ("created_at", "updated_at") + form_create_rules
+    column_details_list = ("created_at", "updated_at", *form_create_rules)
     form_excluded_columns = ("account_holder_collection",)
     form_widget_args = {
         "account_number_length": {"disabled": True},
@@ -289,7 +284,7 @@ class RetailerConfigAdmin(BaseModelView):
         "balance_reset_advanced_warning_days",
     )
 
-    profile_config_placeholder = """
+    profile_config_placeholder = """\
 email:
   required: true
   label: Email address
@@ -298,14 +293,14 @@ first_name:
   label: Forename
 last_name:
   required: true
-  label: Surname
-""".strip()
+  label: Surname\
+"""
 
-    marketing_config_placeholder = """
+    marketing_config_placeholder = """\
 marketing_pref:
   type: boolean
-  label: Would you like to receive marketing?
-""".strip()
+  label: Would you like to receive marketing?\
+"""
 
     form_args = {
         "profile_config": {
@@ -480,7 +475,6 @@ marketing_pref:
         if del_ret_action.form.validate_on_submit():
             del session["action_context"]
             if del_ret_action.delete_retailer():
-
                 original_values: dict = {
                     "status": del_ret_action.session_data.retailer_status,
                     "name": del_ret_action.session_data.retailer_name,

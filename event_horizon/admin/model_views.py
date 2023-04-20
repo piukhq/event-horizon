@@ -66,7 +66,7 @@ class AuthorisedModelView(ModelView, UserSessionMixin):
             return False
         return not self.user_session_expired and self.user_is_authorized
 
-    def inaccessible_callback(self, name: str, **kwargs: dict | None) -> "Response":
+    def inaccessible_callback(self, name: str, **kwargs: dict | None) -> "Response":  # noqa: ARG002
         if self.user_info and not self.user_is_authorized:
             return abort(403)
         session.pop("user", None)

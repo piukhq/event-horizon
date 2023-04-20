@@ -15,7 +15,6 @@ INVALID_YAML_ERROR = StopValidation("The submitted YAML is not valid.")
 
 
 def validate_retailer_fetch_type(form: wtforms.Form, field: wtforms.Field) -> None:
-
     if field.data not in form.retailer.data.fetch_types:
         raise wtforms.ValidationError("Fetch Type not allowed for this retailer")
 
@@ -27,7 +26,7 @@ def _validate_required_fields_values(required_fields: dict, fields_to_check: dic
         anystr_strip_whitespace = True
         min_anystr_length = 2
 
-    RequiredFieldsValuesModel = pd.create_model(  # type: ignore  # pylint: disable=invalid-name
+    RequiredFieldsValuesModel = pd.create_model(  # type: ignore  # noqa: N806
         "RequiredFieldsValuesModel",
         __config__=Config,
         **{k: (FIELD_TYPES[v], ...) for k, v in required_fields.items()},
@@ -36,9 +35,9 @@ def _validate_required_fields_values(required_fields: dict, fields_to_check: dic
     try:
         return RequiredFieldsValuesModel(**fields_to_check)
     except pd.ValidationError as ex:
-        raise StopValidation(  # pylint: disable=raise-missing-from
+        raise StopValidation(
             ", ".join([f"{' -> '.join(err.get('loc'))}: {err.get('msg')}" for err in json.loads(ex.json())])
-        )
+        ) from None
 
 
 def validate_required_fields_values_yaml(form: wtforms.Form, field: wtforms.Field) -> None:
@@ -53,7 +52,7 @@ def validate_required_fields_values_yaml(form: wtforms.Form, field: wtforms.Fiel
         else:
             field_data = yaml.safe_load(field.data)
     except (yaml.YAMLError, AttributeError):  # pragma: no cover
-        raise INVALID_YAML_ERROR  # pylint: disable=raise-missing-from
+        raise INVALID_YAML_ERROR from None
 
     if required_fields is None:
         if field_data == required_fields:
@@ -68,9 +67,8 @@ def validate_required_fields_values_yaml(form: wtforms.Form, field: wtforms.Fiel
     field.data = yaml.dump(_validate_required_fields_values(required_fields, field_data).dict(), indent=2)
 
 
-def validate_optional_yaml(form: wtforms.Form, field: wtforms.Field) -> None:  # pylint: disable=unused-argument
+def validate_optional_yaml(form: wtforms.Form, field: wtforms.Field) -> None:
     try:
-
         if field.data in (None, ""):
             field.data = ""
             return
@@ -78,7 +76,7 @@ def validate_optional_yaml(form: wtforms.Form, field: wtforms.Field) -> None:  #
         field_data = yaml.safe_load(field.data)
 
     except (yaml.YAMLError, AttributeError):  # pragma: no cover
-        raise INVALID_YAML_ERROR  # pylint: disable=raise-missing-from
+        raise INVALID_YAML_ERROR from None
 
     if not isinstance(field_data, dict):
         raise INVALID_YAML_ERROR

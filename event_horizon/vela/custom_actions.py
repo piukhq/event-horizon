@@ -1,8 +1,9 @@
 import logging
 
+from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Callable, Generator, cast
+from typing import TYPE_CHECKING, cast
 
 from flask import flash
 from sqlalchemy.future import select
@@ -23,9 +24,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 @dataclass
 class CampaignRow:
-    id: int  # pylint: disable=invalid-name
+    id: int  # noqa: A003
     slug: str
-    type: str
+    type: str  # noqa: A003
     reward_goal: int
     reward_slug: str
 
@@ -40,7 +41,7 @@ class SessionFormData(SessionDataMethodsMixin):
 
 @dataclass
 class ActivityData:
-    type: ActivityType
+    type: ActivityType  # noqa: A003
     payload: dict
     error_message: str
 
@@ -65,24 +66,23 @@ class CampaignEndAction:
 
     @staticmethod
     def _get_and_validate_campaigns(campaign_rows: list) -> tuple[CampaignRow | None, CampaignRow | None, list[str]]:
-
         errors: list[str] = []
         try:
-            active_campaign, *extra_active = [
+            active_campaign, *extra_active = (
                 CampaignRow(cmp.id, cmp.slug, cmp.loyalty_type, cmp.reward_goal, cmp.reward_slug)
                 for cmp in campaign_rows
                 if cmp.status == "ACTIVE"
-            ]
+            )
         except ValueError:
             active_campaign = None
             extra_active = []
 
         try:
-            draft_campaign, *extra_draft = [
+            draft_campaign, *extra_draft = (
                 CampaignRow(cmp.id, cmp.slug, cmp.loyalty_type, cmp.reward_goal, cmp.reward_slug)
                 for cmp in campaign_rows
                 if cmp.status == "DRAFT"
-            ]
+            )
         except ValueError:
             draft_campaign = None
             extra_draft = []
@@ -160,7 +160,6 @@ class CampaignEndAction:
             self._session_form_data.optional_fields_needed
         )
         if not self._session_form_data.optional_fields_needed:
-
             for field_name in self.form_optional_fields:
                 delattr(self.form, field_name)
 
@@ -176,7 +175,6 @@ class CampaignEndAction:
         transfer_balance_requested: bool,
         transfer_pending_rewards_requested: bool,
     ) -> None:
-
         pending_rewards_transfer_activity_payloads: Generator[dict, None, None] | None = None
         balance_change_activity_payloads: Generator[dict, None, None] | None = None
         msg = f"Transfer from campaign '{from_campaign.slug}' to campaign '{to_campaign.slug}'."
@@ -184,7 +182,6 @@ class CampaignEndAction:
         # start a session savepoint to ensure all polaris changes are either successful or rolled back.
         savepoint: "SessionTransaction"
         with polaris_db_session.begin_nested() as savepoint:
-
             if transfer_pending_rewards_requested:
                 msg += "\n Pending Rewards transferred."
                 pending_rewards_transfer_activity_payloads = transfer_pending_rewards(
@@ -237,7 +234,6 @@ class CampaignEndAction:
         if success:
             sync_send_activity(activity_data.payload, routing_key=activity_data.type.value)
         else:
-
             self.logger.error(
                 "%s\n%s payload: \n%s", activity_data.error_message, activity_data.type.name, activity_data.payload
             )

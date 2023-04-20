@@ -1,9 +1,9 @@
 import base64
 import pickle
 
+from collections.abc import Generator
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Generator
+from datetime import datetime, timezone
 from unittest.mock import ANY, MagicMock
 
 import pytest
@@ -95,9 +95,8 @@ def test_session_form_data_methods(test_session_form_data: SessionFormTestData) 
 def test_campaign_end_action_session_form_data(
     end_action: CampaignEndAction, test_session_form_data: SessionFormTestData
 ) -> None:
-
     with pytest.raises(ValueError) as ex_info:
-        end_action.session_form_data  # pylint: disable=pointless-statement
+        end_action.session_form_data
 
     assert ex_info.value.args[0] == (
         "validate_selected_campaigns or update_form must be called before accessing session_form_data"
@@ -110,7 +109,6 @@ def test_campaign_end_action_session_form_data(
 def test_campaign_end_action_update_form_ok(
     end_action: CampaignEndAction, test_session_form_data: SessionFormTestData
 ) -> None:
-
     end_action.update_form(test_session_form_data.b64str)
     assert end_action.session_form_data == test_session_form_data.value
 
@@ -157,7 +155,6 @@ def test_campaign_end_action_update_form_invalid_content(end_action: CampaignEnd
 def test_campaign_end_action_validate_selected_campaigns_ok(
     end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, mocker: MockerFixture
 ) -> None:
-
     mock_campaigns_rows = [
         MagicMock(
             id=1,
@@ -408,7 +405,7 @@ def test_campaign_end_action_end_campaigns_ok(
 ) -> None:
     assert test_session_form_data.value.draft_campaign, "using wrong fixture"
 
-    mock_start_date = datetime.utcnow()  # DB returns naive UTC datetimes
+    mock_start_date = datetime.now(tz=timezone.utc).replace(tzinfo=None)  # DB returns naive UTC datetimes
     mock_send_activity = mocker.patch("event_horizon.vela.custom_actions.sync_send_activity")
     end_action_mocks.get_start_date.return_value = mock_start_date
 
@@ -463,7 +460,6 @@ def test_campaign_end_action_end_campaigns_no_draft_ok(
     test_session_form_data_no_draft: SessionFormTestData,
     end_action_mocks: EndActionMockedCalls,
 ) -> None:
-
     end_action._session_form_data = test_session_form_data_no_draft.value
     end_action.update_form("")
     end_action.form.handle_pending_rewards.data = PendingRewardChoices.REMOVE
@@ -514,7 +510,6 @@ def test_campaign_end_action_end_campaigns_no_transfer_ok(
 def test_campaign_end_action_end_campaigns_transfer_balance_but_no_draft_error(
     end_action: CampaignEndAction, test_session_form_data: SessionFormTestData, end_action_mocks: EndActionMockedCalls
 ) -> None:
-
     end_action._session_form_data = test_session_form_data.value
     end_action.update_form("")
     end_action._session_form_data.draft_campaign = None

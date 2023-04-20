@@ -14,10 +14,7 @@ auth_bp = Blueprint("auth_views", __name__, url_prefix=ROUTE_BASE)
 
 @auth_bp.route("/login/")
 def login() -> "Response":
-    if OAUTH_REDIRECT_URI:
-        redirect_uri = OAUTH_REDIRECT_URI
-    else:
-        redirect_uri = url_for("auth_views.authorize", _external=True)
+    redirect_uri = OAUTH_REDIRECT_URI or url_for("auth_views.authorize", _external=True)
 
     return oauth.event_horizon.authorize_redirect(redirect_uri)
 

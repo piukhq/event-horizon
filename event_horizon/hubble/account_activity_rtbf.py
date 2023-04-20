@@ -48,10 +48,7 @@ def _encode_value(account_holder_uuid: str | UUID, value: Any | None) -> str:
     If the value to hash isn't the account_holder_uuid, account_holder_uuid is still
     required as it is used as suffix and the combined str is hashed
     """
-    if not value:
-        identifier = str(account_holder_uuid)
-    else:
-        identifier = value + str(account_holder_uuid)
+    identifier = str(account_holder_uuid) if not value else value + str(account_holder_uuid)
 
     encoded_value = hashlib.sha224((identifier).encode("utf-8")).hexdigest()
     return encoded_value

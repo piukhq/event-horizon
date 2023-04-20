@@ -1,7 +1,8 @@
 import base64
 import pickle
 
-from typing import Generator, NamedTuple
+from collections.abc import Generator
+from typing import NamedTuple
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,7 +15,7 @@ from event_horizon.polaris.custom_actions import DeleteRetailerAction, SessionDa
 
 
 class MockedRetailerConfig(NamedTuple):
-    id: int
+    id: int  # noqa: A003
     slug: str
     name: str
     status: str
@@ -104,9 +105,8 @@ def test_session_data_methods(test_session_data: SessionTestData) -> None:
 def test_delete_retailer_action_session_form_data(
     delete_action: DeleteRetailerAction, test_session_data: SessionTestData
 ) -> None:
-
     with pytest.raises(ValueError) as ex_info:
-        delete_action.session_data  # pylint: disable=pointless-statement
+        delete_action.session_data
 
     assert ex_info.value.args[0] == "session_data is not set"
 

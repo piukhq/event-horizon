@@ -1,4 +1,4 @@
-from typing import Iterator
+from collections.abc import Iterator
 
 from cosmos_message_lib import get_connection_and_exchange, verify_payload_and_send_activity
 

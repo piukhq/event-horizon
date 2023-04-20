@@ -1,5 +1,3 @@
-# pylint: disable=too-many-lines
-
 import uuid
 
 from datetime import datetime, timedelta, timezone
@@ -255,7 +253,6 @@ def test_get_earn_rule_created_activity_data(mocker: MockFixture) -> None:
             },
         ),
     ):
-
         payload = ActivityType.get_earn_rule_created_activity_data(
             retailer_slug=retailer_slug,
             campaign_name=campaign_name,
@@ -735,11 +732,7 @@ def test_get_balance_change_activity_data(mocker: MockFixture) -> None:
     new_balance = 1200
 
     for loyalty_type in ("STAMPS", "ACCUMULATOR"):
-
-        if loyalty_type == "STAMPS":
-            expected_associated_value = "12 stamps"
-        else:
-            expected_associated_value = "£12.00"
+        expected_associated_value = "12 stamps" if loyalty_type == "STAMPS" else "£12.00"
 
         payload = ActivityType.get_balance_change_activity_data(
             retailer_slug=retailer_slug,

@@ -37,11 +37,8 @@ isort .
 info "xenon"
 xenon --no-assert -a A -m B -b B .
 
-info "flakeheaven"
-flakeheaven lint
-
-info "pylint"
-pylint event_horizon tests wsgi.py
+info "ruff"
+ruff event_horizon tests wsgi.py
 
 info "mypy"
 mypy .

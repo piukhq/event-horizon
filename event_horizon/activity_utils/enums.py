@@ -464,7 +464,6 @@ class ActivityType(Enum):
         }
         return payload
 
-    # pylint: disable=too-many-locals
     @classmethod
     def get_retailer_created_activity_data(
         cls,
@@ -515,7 +514,6 @@ class ActivityType(Enum):
         }
         return payload
 
-    # pylint: disable=too-many-locals
     @classmethod
     def get_retailer_update_activity_data(
         cls,
@@ -551,7 +549,6 @@ class ActivityType(Enum):
         }
         return payload
 
-    # pylint: disable=too-many-locals
     @classmethod
     def get_retailer_deletion_activity_data(
         cls,
