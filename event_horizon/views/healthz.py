@@ -32,4 +32,5 @@ def readyz() -> tuple[dict, int]:
         payload = {"postgres": db_errors}
         status_code = 500
 
+    # deepcode ignore ServerInformationExposure: this is an internal endpoint
     return payload, status_code

@@ -1,3 +1,5 @@
+# file deepcode ignore NoHardcodedCredentials/test: this is a test file
+
 import uuid
 
 from datetime import datetime, timedelta, timezone
