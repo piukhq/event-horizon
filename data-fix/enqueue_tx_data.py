@@ -1,14 +1,19 @@
-import json
 import argparse
-from cosmos_message_lib import (
-    get_connection_and_exchange,
-    verify_payload_and_send_activity,
-)
-from sqlalchemy.pool import NullPool
+import json
+
 from datetime import datetime, timezone
-from os import getenv
+
+from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, select, MetaData, Table
+
+from event_horizon.activity_utils.tasks import sync_send_activity
+from event_horizon.hubble.db.models import Activity
+from event_horizon.hubble.db.models import Base as HubbleModelBase
+from event_horizon.hubble.db.session import SyncSessionMaker as HubbleSyncSessionMaker
+from event_horizon.hubble.db.session import engine as hubble_sync_engine
+from event_horizon.polaris.db.models import AccountHolderTransactionHistory
+from event_horizon.polaris.db.models import Base as PolarisModelBase
+from event_horizon.polaris.db.session import engine as polaris_sync_engine
 
 # Parse script args
 parser = argparse.ArgumentParser(description="Process cleaned tx data")
@@ -20,79 +25,19 @@ input_file_path = args.filename
 # Check dryrun mode
 dry_run = args.dryrun if args.dryrun is not None else False
 
-#####################################
-# DB Config
-USE_NULL_POOL: bool = False
-TESTING: bool = False
-
-null_pool = {"poolclass": NullPool} if USE_NULL_POOL or TESTING else {}
-
-# application_name
-POLARIS_CONNECT_ARGS = {"application_name": "polaris"}
-HUBBLE_CONNECT_ARGS = {"application_name": "hubble"}
-SQL_DEBUG: bool = False
-
-# Polaris DB
-POLARIS_DATABASE_URI = getenv("POLARIS_DATABASE_URI", "postgresql://postgres:pass@localhost:5552/polaris")
-
-DATABASE_URI = getenv("DATABASE_URI", "postgresql://postgres:pass@localhost:5552/{}")
-HUBBLE_DATABASE_URI = DATABASE_URI.format("hubble")
-#####################################
 ##############################################
 # RABBIT CONFIG
-RABBITMQ_DSN = getenv("RABBITMQ_DSN", "amqp://guest:guest@localhost:5672//")
-MESSAGE_EXCHANGE_NAME: str = "hubble-activities"
 TX_IMPORT_ROUTING_KEY: str = "activity.vela.tx.import"
 TX_HISTORY_ROUTING_KEY: str = "activity.vela.tx.processed"
 ##############################################
 
-polaris_sync_engine = create_engine(
-    POLARIS_DATABASE_URI,
-    connect_args=POLARIS_CONNECT_ARGS,
-    pool_pre_ping=True,
-    echo=SQL_DEBUG,
-    future=True,
-    **null_pool,
-)
+# DB config
+PolarisModelBase.prepare(polaris_sync_engine, reflect=True)
+HubbleModelBase.prepare(hubble_sync_engine, reflect=True)
 PolarisSyncSessionMaker = sessionmaker(bind=polaris_sync_engine, future=True, expire_on_commit=False)
 
-# Hubble DB
-hubble_sync_engine = create_engine(
-    HUBBLE_DATABASE_URI,
-    connect_args=HUBBLE_CONNECT_ARGS,
-    pool_pre_ping=True,
-    echo=SQL_DEBUG,
-    future=True,
-    **null_pool,
-)
-HubbleSyncSessionMaker = sessionmaker(bind=hubble_sync_engine, future=True, expire_on_commit=False)
-
-# RabbitMQ connection
-connection, exchange = get_connection_and_exchange(
-    rabbitmq_dsn=RABBITMQ_DSN,
-    message_exchange_name=MESSAGE_EXCHANGE_NAME,
-)
-
-# Table bindings
-metadata = MetaData()
-AccountHolderTransactionHistory = Table(
-    "account_holder_transaction_history",
-    metadata,
-    autoload_with=polaris_sync_engine,
-)
-Activity = Table(
-    "activity",
-    metadata,
-    autoload_with=hubble_sync_engine,
-)
-
-
-def sync_send_activity(payload: dict, *, routing_key: str) -> None:
-    verify_payload_and_send_activity(connection, exchange, payload, routing_key)
-
-
 # Read the JSON file and load data into memory
-with open(input_file_path, "r") as json_file:
+with open(input_file_path) as json_file:
     data = json.load(json_file)
 
 tx_history_event_count = 0
@@ -106,14 +51,14 @@ for event in data:
     with HubbleSyncSessionMaker() as hubble_db_session, PolarisSyncSessionMaker() as polaris_db_session:
         # Query polaris table
         polaris_result = polaris_db_session.execute(
-            select(AccountHolderTransactionHistory.c.id).where(
-                AccountHolderTransactionHistory.c.transaction_id == transaction_id
+            select(AccountHolderTransactionHistory.id).where(
+                AccountHolderTransactionHistory.transaction_id == transaction_id
             )
         ).one_or_none()
 
         # Query hubble table
         hubble_result = (
-            hubble_db_session.execute(select(Activity.c.id).where(Activity.c.activity_identifier == transaction_id))
+            hubble_db_session.execute(select(Activity.id).where(Activity.activity_identifier == transaction_id))
             .scalars()
             .all()
         )
