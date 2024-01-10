@@ -409,7 +409,7 @@ test_data = [
 @pytest.mark.parametrize(
     "_description,setup_data,expectation_data",
     test_data,
-    ids=[f"{i[0]}" for i in test_data],
+    ids=[str(i[0]) for i in test_data],
 )
 def test_validate_balance_lifespan_and_warning_days(
     _description: str,
@@ -530,7 +530,7 @@ test_retailer_update_data = [
 @pytest.mark.parametrize(
     "_description,mock_form,retailer_update_expectation_data",
     test_retailer_update_data,
-    ids=[f"{i[0]}" for i in test_retailer_update_data],
+    ids=[str(i[0]) for i in test_retailer_update_data],
 )
 def test_validate_retailer_config_new_values(
     _description: str,
