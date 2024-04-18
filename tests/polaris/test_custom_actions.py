@@ -15,7 +15,7 @@ from event_horizon.polaris.custom_actions import DeleteRetailerAction, SessionDa
 
 
 class MockedRetailerConfig(NamedTuple):
-    id: int  # noqa: A003
+    id: int
     slug: str
     name: str
     status: str

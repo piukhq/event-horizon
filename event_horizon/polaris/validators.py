@@ -1,12 +1,10 @@
 import json
 import re
-
 from typing import Literal
 
 import pydantic
 import wtforms
 import yaml
-
 from pydantic import BaseConfig, BaseModel, ConstrainedStr, validator
 
 from event_horizon.polaris.db import RetailerConfig
@@ -70,7 +68,7 @@ def validate_retailer_config(form: wtforms.Form, field: wtforms.Field) -> None:
 
 
 def validate_marketing_config(form: wtforms.Form, field: wtforms.Field) -> None:
-    if field.data == "":  # noqa: PLC1901
+    if not field.data:
         return
 
     class LabelVal(ConstrainedStr):
@@ -82,7 +80,7 @@ def validate_marketing_config(form: wtforms.Form, field: wtforms.Field) -> None:
         to_lower = True
 
     class FieldOptions(BaseModel):
-        type: Literal["boolean", "integer", "float", "string", "string_list", "date", "datetime"]  # noqa: A003
+        type: Literal["boolean", "integer", "float", "string", "string_list", "date", "datetime"]
         label: LabelVal
 
         extra = pydantic.Extra.forbid  # type: pydantic.Extra
