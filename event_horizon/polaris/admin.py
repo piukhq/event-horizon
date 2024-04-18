@@ -1,7 +1,7 @@
 import logging
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import requests
 import wtforms
@@ -84,9 +84,9 @@ class AccountHolderAdmin(BaseModelView):
         "accountholdermarketingpreference_collection",
         "balance_adjustment_collection",
     )
-    column_labels = {"retailerconfig": "Retailer"}
+    column_labels: ClassVar[dict[str, str]] = {"retailerconfig": "Retailer"}
     column_searchable_list = ("id", "email", "account_holder_uuid", "account_number")
-    form_widget_args = {
+    form_widget_args: ClassVar[dict[str, dict]] = {
         "opt_out_token": {"readonly": True},
     }
 
@@ -172,8 +172,8 @@ class AccountHolderAdmin(BaseModelView):
 class AccountHolderProfileAdmin(BaseModelView):
     can_create = False
     column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
-    column_labels = {"accountholder": "Account Holder"}
-    column_formatters = {"accountholder": _account_holder_repr}
+    column_labels: ClassVar[dict[str, str]] = {"accountholder": "Account Holder"}
+    column_formatters: ClassVar[dict[str, Callable]] = {"accountholder": _account_holder_repr}
     column_default_sort = ("accountholder.created_at", True)
 
 
@@ -185,16 +185,16 @@ class AccountHolderRewardAdmin(BaseModelView):
         "accountholder.account_holder_uuid",
         "code",
     )
-    column_labels = {"accountholder": "Account Holder"}
+    column_labels: ClassVar[dict[str, str]] = {"accountholder": "Account Holder"}
     column_filters = ("accountholder.retailerconfig.slug", "status", "reward_slug", "campaign_slug", "issued_date")
-    column_formatters = {"accountholder": _account_holder_repr}
-    form_widget_args = {
+    column_formatters: ClassVar[dict[str, Callable]] = {"accountholder": _account_holder_repr}
+    form_widget_args: ClassVar[dict[str, dict]] = {
         "reward_id": {"readonly": True},
         "reward_code": {"readonly": True},
         "accountholder": {"disabled": True},
     }
-    column_formatters_export = {"accountholder": _account_holder_export_repr}
-    column_export_exclude_list = ["idempotency_token", "code"]
+    column_formatters_export: ClassVar[dict[str, Callable]] = {"accountholder": _account_holder_export_repr}
+    column_export_exclude_list: ClassVar[list[str]] = ["idempotency_token", "code"]
     can_export = True
 
     def is_accessible(self) -> bool:
@@ -211,9 +211,12 @@ class AccountHolderRewardAdmin(BaseModelView):
 
 
 class ReadOnlyAccountHolderRewardAdmin(AccountHolderRewardAdmin):
-    column_details_exclude_list = ["code", "associated_url"]
-    column_exclude_list = ["code", "associated_url"]
-    column_export_exclude_list = [*AccountHolderRewardAdmin.column_export_exclude_list, "associated_url"]
+    column_details_exclude_list: ClassVar[list[str]] = ["code", "associated_url"]
+    column_exclude_list: ClassVar[list[str]] = ["code", "associated_url"]
+    column_export_exclude_list: ClassVar[list[str]] = [
+        *AccountHolderRewardAdmin.column_export_exclude_list,
+        "associated_url",
+    ]
 
     def is_accessible(self) -> bool:
         if self.is_read_write_user:
@@ -228,12 +231,12 @@ class AccountHolderPendingRewardAdmin(BaseModelView):
         "accountholder.email",
         "accountholder.account_holder_uuid",
     )
-    column_labels = {"accountholder": "Account Holder", "id": "Pending Reward id"}
+    column_labels: ClassVar[dict[str, str]] = {"accountholder": "Account Holder", "id": "Pending Reward id"}
     column_filters = ("accountholder.retailerconfig.slug", "campaign_slug", "created_date", "conversion_date")
-    column_formatters = {"accountholder": _account_holder_repr}
-    form_widget_args = {"accountholder": {"disabled": True}}
-    column_export_exclude_list = ["idempotency_token"]
-    column_export_list = [
+    column_formatters: ClassVar[dict[str, Callable]] = {"accountholder": _account_holder_repr}
+    form_widget_args: ClassVar[dict[str, dict]] = {"accountholder": {"disabled": True}}
+    column_export_exclude_list: ClassVar[list[str]] = ["idempotency_token"]
+    column_export_list: ClassVar[list[str]] = [
         "accountholder.account_holder_uuid",
         "created_at",
         "updated_at",
@@ -253,7 +256,7 @@ class AccountHolderPendingRewardAdmin(BaseModelView):
 class RetailerConfigAdmin(BaseModelView):
     column_filters = ("created_at", "status")
     column_searchable_list = ("id", "slug", "name")
-    column_labels = {"profile_config": "Enrolment Config"}
+    column_labels: ClassVar[dict[str, str]] = {"profile_config": "Enrolment Config"}
     column_exclude_list = ("profile_config", "marketing_preference_config")
     form_create_rules = (
         "name",
@@ -268,7 +271,7 @@ class RetailerConfigAdmin(BaseModelView):
     )
     column_details_list = ("created_at", "updated_at", *form_create_rules)
     form_excluded_columns = ("account_holder_collection",)
-    form_widget_args = {
+    form_widget_args: ClassVar[dict[str, dict]] = {
         "account_number_length": {"disabled": True},
         "profile_config": {"rows": 20},
         "marketing_preference_config": {"rows": 10},
@@ -301,7 +304,7 @@ marketing_pref:
   label: Would you like to receive marketing?\
 """
 
-    form_args = {
+    form_args: ClassVar[dict[str, dict]] = {
         "profile_config": {
             "label": "Enrolment Field Configuration",
             "validators": [
@@ -337,7 +340,7 @@ marketing_pref:
             "validators": [wtforms.validators.NumberRange(min=0), InputRequired()],
         },
     }
-    column_formatters = {
+    column_formatters: ClassVar[dict[str, Callable]] = {
         "profile_config": lambda v, c, model, p: Markup("<pre>")
         + Markup.escape(model.profile_config)
         + Markup("</pre>"),
@@ -515,10 +518,10 @@ marketing_pref:
 class AccountHolderCampaignBalanceAdmin(BaseModelView):
     can_create = False
     column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
-    column_labels = {"accountholder": "Account Holder"}
+    column_labels: ClassVar[dict[str, str]] = {"accountholder": "Account Holder"}
     column_filters = ("accountholder.retailerconfig.slug", "campaign_slug")
-    column_formatters = {"accountholder": _account_holder_repr}
-    form_widget_args = {"accountholder": {"disabled": True}}
+    column_formatters: ClassVar[dict[str, Callable]] = {"accountholder": _account_holder_repr}
+    form_widget_args: ClassVar[dict[str, dict]] = {"accountholder": {"disabled": True}}
 
 
 class AccountHolderMarketingPreferenceAdmin(BaseModelView):
@@ -534,7 +537,7 @@ class AccountHolderMarketingPreferenceAdmin(BaseModelView):
     )
     column_searchable_list = ("accountholder.id", "accountholder.email", "accountholder.account_holder_uuid")
     column_filters = ("key_name", "value_type", "accountholder.retailerconfig.slug", "value")
-    column_labels = {
+    column_labels: ClassVar[dict[str, str]] = {
         "accountholder": "Account Holder",
         "accountholder.retailerconfig": "Retailer",
         "accountholder.account_number": "Account Number",
@@ -543,7 +546,7 @@ class AccountHolderMarketingPreferenceAdmin(BaseModelView):
         "accountholder.accountholderprofile_collection.last_name": "Last name",
         "accountholder.accountholderprofile_collection.date_of_birth": "Date of Birth",
     }
-    column_formatters = {"accountholder": _account_holder_repr}
+    column_formatters: ClassVar[dict[str, Callable]] = {"accountholder": _account_holder_repr}
     column_default_sort = ("accountholder.created_at", True)
     column_export_list = (
         "accountholder.email",
@@ -573,7 +576,10 @@ class EmailTemplateAdmin(CanDeleteModelView):
         "created_at",
         "updated_at",
     )
-    column_labels = {"emailtemplatekey_collection": "Template Key", "retailerconfig": "Retailer"}
+    column_labels: ClassVar[dict[str, str]] = {
+        "emailtemplatekey_collection": "Template Key",
+        "retailerconfig": "Retailer",
+    }
 
 
 class EmailTemplateKeyAdmin(BaseModelView):
@@ -589,7 +595,7 @@ class EmailTemplateKeyAdmin(BaseModelView):
         "created_at",
         "updated_at",
     )
-    column_labels = {"display_name": "Display Name"}
+    column_labels: ClassVar[dict[str, str]] = {"display_name": "Display Name"}
 
 
 class AccountHolderTransactionHistoryAdmin(BaseModelView):
@@ -602,8 +608,8 @@ class AccountHolderTransactionHistoryAdmin(BaseModelView):
         "transaction_id",
     )
     column_filters = ("datetime", "location_name")
-    column_labels = {"accountholder": "Account Holder"}
-    column_formatters = {
+    column_labels: ClassVar[dict[str, str]] = {"accountholder": "Account Holder"}
+    column_formatters: ClassVar[dict[str, Callable]] = {
         "accountholder": _account_holder_repr,
         "earned": format_json_field,
     }

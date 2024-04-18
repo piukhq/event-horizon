@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import ClassVar
+
 from event_horizon.admin.custom_filters import StringInArrayColumn, StringNotInArrayColumn
 from event_horizon.admin.custom_formatters import format_json_field
 from event_horizon.admin.model_views import BaseModelView
@@ -47,4 +50,4 @@ class ActivityAdmin(BaseModelView):
         StringInArrayColumn(Activity.campaigns, "Campaigns"),
         StringNotInArrayColumn(Activity.campaigns, "Campaigns"),
     )
-    column_formatters = {"data": format_json_field}
+    column_formatters: ClassVar[dict[str, Callable]] = {"data": format_json_field}

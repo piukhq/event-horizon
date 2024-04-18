@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 
-def transfer_balance(
+def transfer_balance(  # noqa: PLR0913
     db_session: "Session",
     *,
     retailer_slug: str,
@@ -83,7 +83,7 @@ def transfer_balance(
     )
 
 
-def transfer_pending_rewards(
+def transfer_pending_rewards(  # noqa: PLR0913
     db_session: "Session",
     *,
     retailer_slug: str,
@@ -121,7 +121,6 @@ def generate_payloads_for_delete_account_holder_activity(
     account_holders: list[AccountHolder],
     sso_username: str,
 ) -> Generator[dict, None, None]:  # pragma: no cover
-
     return (
         ActivityType.get_account_holder_deleted_activity_data(
             activity_datetime=datetime.now(tz=timezone.utc),

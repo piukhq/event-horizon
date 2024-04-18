@@ -1,7 +1,6 @@
 import logging
-
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from flask import abort, flash, redirect, session, url_for
 from flask_admin.contrib.sqla import ModelView
@@ -11,8 +10,8 @@ if TYPE_CHECKING:
 
 
 class UserSessionMixin:
-    RO_AZURE_ROLES = {"Viewer"}
-    RW_AZURE_ROLES = {"Admin", "Editor"}
+    RO_AZURE_ROLES: ClassVar[set[str]] = {"Viewer"}
+    RW_AZURE_ROLES: ClassVar[set[str]] = {"Admin", "Editor"}
     ALL_AZURE_ROLES = RW_AZURE_ROLES | RO_AZURE_ROLES
 
     @property

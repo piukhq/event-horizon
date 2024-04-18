@@ -1,6 +1,7 @@
 import logging
+from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import requests
 from flask import flash, redirect, url_for
@@ -56,7 +57,7 @@ class FetchTypeAdmin(BaseModelView):
     can_edit = False
     can_delete = False
     column_searchable_list = ("name",)
-    column_formatters = {
+    column_formatters: ClassVar[dict[str, Callable]] = {
         "required_fields": lambda v, c, model, p: Markup("<pre>")
         + Markup.escape(model.required_fields)
         + Markup("</pre>"),
@@ -65,13 +66,13 @@ class FetchTypeAdmin(BaseModelView):
 
 class RetailerFetchTypeAdmin(CanDeleteModelView):
     column_searchable_list = ("retailer.slug", "fetchtype.name")
-    form_widget_args = {
+    form_widget_args: ClassVar[dict[str, dict]] = {
         "agent_config": {"rows": 5},
     }
-    column_formatters = {
+    column_formatters: ClassVar[dict[str, Callable]] = {
         "agent_config": lambda v, c, model, p: Markup("<pre>") + Markup.escape(model.agent_config) + Markup("</pre>"),
     }
-    form_args = {
+    form_args: ClassVar[dict[str, dict]] = {
         "agent_config": {
             "description": "Optional configuration in YAML format",
             "validators": [
@@ -84,10 +85,10 @@ class RetailerFetchTypeAdmin(CanDeleteModelView):
 class RewardConfigAdmin(BaseModelView):
     column_filters = ("retailer.slug", "reward_slug")
     form_excluded_columns = ("reward_collection", "rewardallocation_collection", "created_at", "updated_at")
-    form_widget_args = {
+    form_widget_args: ClassVar[dict[str, dict]] = {
         "required_fields_values": {"rows": 5},
     }
-    form_args = {
+    form_args: ClassVar[dict[str, dict]] = {
         "fetchtype": {
             "validators": [
                 validate_retailer_fetch_type,
@@ -100,7 +101,7 @@ class RewardConfigAdmin(BaseModelView):
             ],
         },
     }
-    column_formatters = {
+    column_formatters: ClassVar[dict[str, Callable]] = {
         "required_fields_values": lambda v, c, model, p: Markup("<pre>")
         + Markup.escape(model.required_fields_values)
         + Markup("</pre>"),
@@ -143,9 +144,12 @@ class RewardAdmin(BaseModelView):
     can_edit = False
     can_delete = False
     column_searchable_list = ("rewardconfig.id", "rewardconfig.reward_slug", "retailer.slug")
-    column_labels = {"rewardconfig": "Reward config", "rewardfilelog": "Reward filename"}
+    column_labels: ClassVar[dict[str, str]] = {"rewardconfig": "Reward config", "rewardfilelog": "Reward filename"}
     column_filters = ("retailer.slug", "rewardconfig.reward_slug", "allocated", "deleted", "rewardfilelog.file_name")
-    column_formatters = {"rewardconfig": reward_config_format, "rewardfilelog": reward_file_log_format}
+    column_formatters: ClassVar[dict[str, Callable]] = {
+        "rewardconfig": reward_config_format,
+        "rewardfilelog": reward_file_log_format,
+    }
 
     def is_accessible(self) -> bool:
         return super().is_accessible() if self.is_read_write_user else False
@@ -212,9 +216,9 @@ class RewardAdmin(BaseModelView):
 
 
 class ReadOnlyRewardAdmin(RewardAdmin):
-    column_details_exclude_list = ["code"]
-    column_export_exclude_list = ["code"]
-    column_exclude_list = ["code"]
+    column_details_exclude_list: ClassVar[list[str]] = ["code"]
+    column_export_exclude_list: ClassVar[list[str]] = ["code"]
+    column_exclude_list: ClassVar[list[str]] = ["code"]
 
     def is_accessible(self) -> bool:
         if self.is_read_write_user:
