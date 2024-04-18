@@ -1,5 +1,4 @@
 import json
-
 from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Any, NamedTuple
@@ -316,7 +315,7 @@ Marketing_conf :
     mock_config_field.data = ""
 
     validate_marketing_config(mock_form, mock_config_field)
-    assert mock_config_field.data == ""  # noqa: PLC1901
+    assert not mock_config_field.data
 
 
 @dataclass

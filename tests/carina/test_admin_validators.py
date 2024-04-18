@@ -2,7 +2,6 @@ from unittest import mock
 
 import pytest
 import wtforms
-
 from wtforms.validators import StopValidation
 
 from event_horizon.carina.validators import (
@@ -116,7 +115,7 @@ def test_validate_optional_yaml_none(mock_form: mock.MagicMock, mock_field: mock
     mock_field.data = None
     validate_optional_yaml(mock_form, mock_field)
 
-    assert mock_field.data == ""  # noqa: PLC1901
+    assert not mock_field.data
 
 
 def test_validate_optional_yaml_invalid_yaml(mock_form: mock.MagicMock, mock_field: mock.MagicMock) -> None:

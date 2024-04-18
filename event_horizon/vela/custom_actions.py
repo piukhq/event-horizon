@@ -1,5 +1,4 @@
 import logging
-
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -24,9 +23,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 @dataclass
 class CampaignRow:
-    id: int  # noqa: A003
+    id: int
     slug: str
-    type: str  # noqa: A003
+    type: str
     reward_goal: int
     reward_slug: str
 
@@ -41,7 +40,7 @@ class SessionFormData(SessionDataMethodsMixin):
 
 @dataclass
 class ActivityData:
-    type: ActivityType  # noqa: A003
+    type: ActivityType
     payload: dict
     error_message: str
 
