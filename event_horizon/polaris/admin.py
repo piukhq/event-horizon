@@ -1,5 +1,4 @@
 import logging
-
 from collections.abc import Generator
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
@@ -7,10 +6,10 @@ from typing import TYPE_CHECKING
 import requests
 import wtforms
 import yaml
-
-from flask import Markup, flash, redirect, request, session, url_for
+from flask import flash, redirect, request, session, url_for
 from flask_admin import expose
 from flask_admin.actions import action
+from markupsafe import Markup
 from sqlalchemy import update
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload

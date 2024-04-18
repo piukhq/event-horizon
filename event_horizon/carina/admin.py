@@ -1,12 +1,11 @@
 import logging
-
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 import requests
-
-from flask import Markup, flash, redirect, url_for
+from flask import flash, redirect, url_for
 from flask_admin.actions import action
+from markupsafe import Markup
 from requests import RequestException
 from sqlalchemy.future import select
 
