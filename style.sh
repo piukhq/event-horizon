@@ -28,11 +28,8 @@ warn() {
     echo "${bold}${red}!! ${white}${@}${reset}"
 }
 
-info "black"
-black .
-
-info "isort"
-isort .
+info "format"
+ruff format .
 
 info "xenon"
 xenon --no-assert -a A -m B -b B .
