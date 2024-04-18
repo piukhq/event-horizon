@@ -30,7 +30,6 @@ VELA_MENU_TITLE = "Retailer Campaign Management"
 
 
 def register_vela_admin(event_horizon_admin: "Admin") -> None:
-
     event_horizon_admin.add_view(
         RetailerRewardsAdmin(
             RetailerRewards,
