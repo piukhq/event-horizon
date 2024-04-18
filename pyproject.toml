@@ -54,7 +54,7 @@ types-requests = "^2.28.11"
 httpretty = "^1.1.4"
 pytest-mock = "^3.8.2"
 ipython = "^8.5.0"
-refurb = "^1.9.0"
+refurb = "^2.0.0"
 ruff = "^0.3.0"
 
 [tool.poetry-dynamic-versioning]
