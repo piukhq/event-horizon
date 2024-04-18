@@ -2,7 +2,7 @@ import json
 
 from typing import TYPE_CHECKING
 
-from flask import Markup
+from markupsafe import Markup
 
 if TYPE_CHECKING:
     from flask_admin.contrib.sqla import ModelView

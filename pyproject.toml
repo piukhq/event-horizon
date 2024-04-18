@@ -18,7 +18,7 @@ priority = "explicit"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-Flask = "^2.2.2"
+Flask = "^3.0.0"
 Flask-Admin = "^1.6.0"
 psycopg2-binary = "^2.9.3"
 Authlib = "^1.1.0"
