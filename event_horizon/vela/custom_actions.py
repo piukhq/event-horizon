@@ -2,7 +2,7 @@ import logging
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
 from flask import flash
 from sqlalchemy.future import select
@@ -47,7 +47,7 @@ class ActivityData:
 
 class CampaignEndAction:
     logger = logging.getLogger("campaign-end-action")
-    form_optional_fields = ["transfer_balance", "convert_rate", "qualify_threshold"]
+    form_optional_fields: ClassVar[list[str]] = ["transfer_balance", "convert_rate", "qualify_threshold"]
 
     def __init__(self, db_session: "Session") -> None:
         self.vela_db_session = db_session
@@ -162,7 +162,7 @@ class CampaignEndAction:
             for field_name in self.form_optional_fields:
                 delattr(self.form, field_name)
 
-    def _transfer_balance_and_pending_rewards(
+    def _transfer_balance_and_pending_rewards(  # noqa: PLR0913
         self,
         *,
         retailer_slug: str,

@@ -43,7 +43,7 @@ class ActivityType(Enum):
     ACCOUNT_DELETED = f"activity.{PROJECT_NAME}.account.deleted"
 
     @classmethod
-    def get_campaign_created_activity_data(
+    def get_campaign_created_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -55,7 +55,6 @@ class ActivityType(Enum):
         start_date: utc_datetime | None = None,
         end_date: utc_datetime | None = None,
     ) -> dict:
-
         payload = {
             "type": cls.CAMPAIGN.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -83,7 +82,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_campaign_updated_activity_data(
+    def get_campaign_updated_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -94,7 +93,6 @@ class ActivityType(Enum):
         new_values: dict,
         original_values: dict,
     ) -> dict:
-
         payload = {
             "type": cls.CAMPAIGN.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -117,7 +115,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_campaign_deleted_activity_data(
+    def get_campaign_deleted_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -129,7 +127,6 @@ class ActivityType(Enum):
         start_date: utc_datetime | None = None,
         end_date: utc_datetime | None = None,
     ) -> dict:
-
         payload = {
             "type": cls.CAMPAIGN.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -158,7 +155,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_earn_rule_created_activity_data(
+    def get_earn_rule_created_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -197,7 +194,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_earn_rule_updated_activity_data(
+    def get_earn_rule_updated_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -208,7 +205,6 @@ class ActivityType(Enum):
         new_values: dict,
         original_values: dict,
     ) -> dict:
-
         payload = {
             "type": cls.EARN_RULE.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -231,7 +227,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_earn_rule_deleted_activity_data(
+    def get_earn_rule_deleted_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -244,7 +240,6 @@ class ActivityType(Enum):
         increment_multiplier: Decimal,
         max_amount: int,
     ) -> dict:
-
         payload = {
             "type": cls.EARN_RULE.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -270,7 +265,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_reward_rule_created_activity_data(
+    def get_reward_rule_created_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -283,7 +278,6 @@ class ActivityType(Enum):
         reward_slug: str,
         reward_cap: int | None,
     ) -> dict:
-
         payload = {
             "type": cls.REWARD_RULE.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -310,7 +304,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_balance_change_activity_data(
+    def get_balance_change_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -321,7 +315,6 @@ class ActivityType(Enum):
         new_balance: int,
         loyalty_type: str,
     ) -> dict:
-
         match loyalty_type:
             case "STAMPS":
                 stamp_balance = new_balance // 100
@@ -352,7 +345,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_campaign_migration_activity_data(
+    def get_campaign_migration_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -365,7 +358,6 @@ class ActivityType(Enum):
         pending_rewards: str,
         transfer_balance_requested: bool,
     ) -> dict:
-
         payload = {
             "type": cls.CAMPAIGN_MIGRATION.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -392,7 +384,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_reward_rule_updated_activity_data(
+    def get_reward_rule_updated_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -403,7 +395,6 @@ class ActivityType(Enum):
         new_values: dict,
         original_values: dict,
     ) -> dict:
-
         payload = {
             "type": cls.REWARD_RULE.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -425,7 +416,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_reward_rule_deleted_activity_data(
+    def get_reward_rule_deleted_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -438,7 +429,6 @@ class ActivityType(Enum):
         refund_window: int,
         reward_cap: int | None,
     ) -> dict:
-
         payload = {
             "type": cls.REWARD_RULE.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -465,7 +455,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_retailer_created_activity_data(
+    def get_retailer_created_activity_data(  # noqa: PLR0913
         cls,
         *,
         sso_username: str,
@@ -515,7 +505,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_retailer_update_activity_data(
+    def get_retailer_update_activity_data(  # noqa: PLR0913
         cls,
         *,
         sso_username: str,
@@ -550,7 +540,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_retailer_deletion_activity_data(
+    def get_retailer_deletion_activity_data(  # noqa: PLR0913
         cls,
         *,
         sso_username: str,
@@ -559,7 +549,6 @@ class ActivityType(Enum):
         retailer_slug: str,
         original_values: dict,
     ) -> dict:
-
         payload = {
             "type": cls.RETAILER_DELETED.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -580,7 +569,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_retailer_status_update_activity_data(
+    def get_retailer_status_update_activity_data(  # noqa: PLR0913
         cls,
         *,
         sso_username: str,
@@ -590,7 +579,6 @@ class ActivityType(Enum):
         retailer_name: str,
         retailer_slug: str,
     ) -> dict:
-
         payload = {
             "type": cls.RETAILER_STATUS.name,
             "datetime": datetime.now(tz=timezone.utc),
@@ -611,7 +599,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_reward_status_activity_data(
+    def get_reward_status_activity_data(  # noqa: PLR0913
         cls,
         *,
         retailer_slug: str,
@@ -621,7 +609,6 @@ class ActivityType(Enum):
         activity_datetime: datetime,
         pending_reward_uuid: str,
     ) -> dict:
-
         payload = RewardStatusWholeActivitySchema(
             type=cls.REWARD_STATUS.name,
             datetime=datetime.now(tz=timezone.utc),
@@ -642,7 +629,7 @@ class ActivityType(Enum):
         return payload
 
     @classmethod
-    def get_account_holder_deleted_activity_data(
+    def get_account_holder_deleted_activity_data(  # noqa: PLR0913
         cls,
         *,
         activity_datetime: datetime,
@@ -652,7 +639,6 @@ class ActivityType(Enum):
         retailer_slug: str,
         sso_username: str,
     ) -> dict:
-
         payload = ActivitySchema(
             type=cls.ACCOUNT_DELETED.name,
             datetime=datetime.now(tz=timezone.utc),
@@ -677,7 +663,6 @@ class ActivityType(Enum):
         sso_username: str,
         rewards_deleted_count: int,
     ) -> dict:
-
         return {
             "type": cls.REWARD_DELETED.name,
             "datetime": datetime.now(tz=timezone.utc),

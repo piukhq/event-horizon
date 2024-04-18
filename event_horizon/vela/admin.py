@@ -1,13 +1,11 @@
 import logging
-
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from random import getrandbits
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import requests
 import wtforms
-
 from cosmos_message_lib.schemas import ActivitySchema
 from flask import flash, redirect, request, session, url_for
 from flask_admin import expose
@@ -58,11 +56,11 @@ class EasterEgg:
 
 class CampaignAdmin(CanDeleteModelView):
     column_auto_select_related = True
-    action_disallowed_list = ["delete"]
+    action_disallowed_list: ClassVar[list[str]] = ["delete"]
     column_filters = ("retailerrewards.slug", "status")
     column_searchable_list = ("slug", "name")
-    column_labels = {"retailerrewards": "Retailer"}
-    form_args = {
+    column_labels: ClassVar[dict[str, str]] = {"retailerrewards": "Retailer"}
+    form_args: ClassVar[dict[str, dict]] = {
         "loyalty_type": {"validators": [DataRequired(), validate_campaign_loyalty_type]},
         "status": {"validators": [validate_campaign_status_change]},
     }
@@ -567,12 +565,12 @@ class EarnRuleAdmin(CanDeleteModelView):
         "updated_at",
         "max_amount",
     )
-    column_labels = {
+    column_labels: ClassVar[dict[str, str]] = {
         "campaign.name": "Campaign",
         "campaign.retailerrewards": "Retailer",
         "campaign.loyalty_type": "LoyaltyType",
     }
-    form_args = {
+    form_args: ClassVar[dict[str, dict]] = {
         "increment": {
             "validators": [validate_earn_rule_increment, wtforms.validators.NumberRange(min=1)],
             "description": (
@@ -672,12 +670,12 @@ class RewardRuleAdmin(CanDeleteModelView):
         "created_at",
         "updated_at",
     )
-    column_labels = {
+    column_labels: ClassVar[dict[str, str]] = {
         "campaign.name": "Campaign",
         "campaign.retailerrewards": "Retailer",
         "allocation_window": "Refund Window",
     }
-    form_args = {
+    form_args: ClassVar[dict[str, dict]] = {
         "reward_goal": {
             "validators": [wtforms.validators.NumberRange(min=1)],
             "description": (
@@ -784,11 +782,11 @@ class RetailerRewardsAdmin(BaseModelView):
 
 
 class RetailerStoreAdmin(BaseModelView):
-    column_labels = {"retailerrewards": "Retailer"}
+    column_labels: ClassVar[dict[str, str]] = {"retailerrewards": "Retailer"}
     column_filters = ("retailerrewards.slug", "created_at")
     column_searchable_list = ("store_name", "mid")
 
-    form_args = {
+    form_args: ClassVar[dict[str, dict]] = {
         "store_name": {
             "validators": [DataRequired(message="Store name is required")],
         },
