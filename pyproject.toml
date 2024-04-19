@@ -30,7 +30,7 @@ pydantic = "^1.10.2"
 azure-keyvault = "^4.2.0"
 azure-identity = "^1.11.0"
 sentry-sdk = { extras = ["flask"], version = "^1.9.9" }
-gunicorn = "^20.1.0"
+gunicorn = "^22.0.0"
 redis = "^4.3.4"
 rq = "^1.11.1"
 Flask-WTF = "^1.0.1"
